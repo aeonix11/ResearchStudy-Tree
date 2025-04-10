@@ -18,33 +18,45 @@
             width: 100%;
             height: 100vh;
             position: relative;
+            overflow: hidden;
         }
         #info-panel {
             width: 300px;
-            background: white;
+            background: rgba(40, 40, 40, 0.85);
             padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
             z-index: 10;
             overflow-y: auto;
             transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
         }
         #info-title {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #333;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
         #info-content {
             font-size: 14px;
             line-height: 1.5;
-            color: #555;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
         }
         #canvas {
             flex: 1;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
             background: #fff;
             overflow: auto;
-            height: 100%;
             background-image: url('wp3703442-iron-man-4k-wallpapers.png');
             background-size: cover;
             background-position: center;
@@ -512,12 +524,12 @@
                             
                             if (distance === 0) {
                                 // If nodes are exactly on top of each other, move them apart randomly
-                                nodes[i].x -= 50;
-                                nodes[j].x += 50;
+                                nodes[i].x -= 70;
+                                nodes[j].x += 70;
                             } else {
                                 // Move nodes apart along their center line
-                                const moveX = (dx / distance) * 25;
-                                const moveY = (dy / distance) * 25;
+                                const moveX = (dx / distance) * 40;
+                                const moveY = (dy / distance) * 40;
                                 
                                 nodes[i].x -= moveX;
                                 nodes[i].y -= moveY;
@@ -531,9 +543,9 @@
         }
 
         // Function to increase spacing between nodes
-        function increaseSpacing(horizontalFactor = 1.5, verticalFactor = 1.5) {
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
             // Add offset to move everything right of info panel
-            const infoPanelOffset = 400; // 300px width + 40px padding
+            const infoPanelOffset = 450; // Increased from 400 to 450 for more space
             
             // Find the minimum x and y to maintain relative positioning
             const minX = Math.min(...nodes.map(node => node.x));
@@ -548,6 +560,11 @@
                 // Apply spacing factors and restore offset with additional right shift
                 node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
                 node.y = minY + (relativeY * verticalFactor);
+                
+                // Ensure no node is positioned behind the sidebar
+                if (node.x < 350) { // 300px sidebar width + 50px buffer
+                    node.x = 350;
+                }
             });
 
             // Resolve any collisions after spacing
@@ -555,7 +572,7 @@
         }
 
         // Apply increased spacing and resolve collisions
-        increaseSpacing(1.8, 1.5);
+        increaseSpacing(2.2, 2.0);
 
         // Draw lines between nodes
         function drawLines() {

@@ -18,33 +18,45 @@
             width: 100%;
             height: 100vh;
             position: relative;
+            overflow: hidden;
         }
         #info-panel {
             width: 300px;
-            background: white;
+            background: rgba(40, 40, 40, 0.85);
             padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
             z-index: 10;
             overflow-y: auto;
             transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
         }
         #info-title {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #333;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
         #info-content {
             font-size: 14px;
             line-height: 1.5;
-            color: #555;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
         }
         #canvas {
             flex: 1;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
             background: #fff;
             overflow: auto;
-            height: 100%;
             background-image: url('wp3703442-iron-man-4k-wallpapers.png');
             background-size: cover;
             background-position: center;
@@ -621,10 +633,17 @@
 
         const nodes = [
             // Tier 1: Foundations - Math Breakdown
-            { id: "arithmetic", x: 100, y: 50, title: "Arithmetic", tooltip: "Basic number operations. Unlocks: Algebra, Geometry. Projects: All", prereqs: [], unlocks: ["algebra", "geometry"] },
-            { id: "addition_subtraction", x: 20, y: 120, title: "Addition & Subtraction", tooltip: "Core arithmetic skills. Prereqs: None. Unlocks: Arithmetic. Projects: All", prereqs: [], unlocks: ["arithmetic"] },
-            { id: "multiplication_division", x: 100, y: 120, title: "Multiplication & Division", tooltip: "Scaling and partitioning numbers. Prereqs: Addition & Subtraction. Unlocks: Arithmetic. Projects: All", prereqs: ["addition_subtraction"], unlocks: ["arithmetic"] },
-            { id: "fractions_decimals", x: 180, y: 120, title: "Fractions & Decimals", tooltip: "Rational numbers. Prereqs: Multiplication & Division. Unlocks: Arithmetic. Projects: All", prereqs: ["multiplication_division"], unlocks: ["arithmetic"] },
+            // Parent Node: Arithmetic
+            { id: "arithmetic", x: 100, y: 50, title: "Arithmetic", tooltip: "Mastery of numbers and their operations. Includes all basics for robotics math (e.g., sensor sums, power scaling). Unlocks: Algebra, Geometry. Projects: All. Tip: Build a strong base here!", prereqs: [], unlocks: ["algebra", "geometry"] },
+
+            // Node 1: Numbers and Operations
+            { id: "numbers_operations", x: 20, y: 120, title: "Numbers & Operations", tooltip: "Core of arithmetic: number types (integers, rationals) and operations (add, subtract, multiply, divide). Vital for robotics calculations (e.g., summing forces, dividing power). Prereqs: None. Unlocks: Arithmetic. Projects: All. Example: 3 + 5 = 8, 12 ÷ 4 = 3", prereqs: [], unlocks: ["arithmetic"] },
+
+            // Node 2: Properties and Expressions
+            { id: "properties_expressions", x: 100, y: 120, title: "Properties & Expressions", tooltip: "Rules and structures: properties (e.g., 2 × (3 + 4) = 6 + 8), order of operations (PEMDAS), exponents (e.g., 2³ = 8). Key for robotics equations (e.g., distributing torque). Prereqs: Numbers & Operations. Unlocks: Arithmetic. Projects: All. Tip: Master PEMDAS!", prereqs: ["numbers_operations"], unlocks: ["arithmetic"] },
+
+            // Node 3: Fractions, Proportions, and Approximations
+            { id: "fractions_proportions_approx", x: 180, y: 120, title: "Fractions, Proportions & Approx", tooltip: "Advanced arithmetic: fractions/decimals (e.g., 1/2 + 1/3), proportions (e.g., 2:3 gear ratio), estimation (e.g., 49 × 21 ≈ 1000). Used in robotics precision and quick checks. Prereqs: Properties & Expressions. Unlocks: Arithmetic. Projects: All", prereqs: ["properties_expressions"], unlocks: ["arithmetic"] },
 
             { id: "algebra", x: 300, y: 50, title: "Algebra", tooltip: "Variables and equations. Prereqs: Arithmetic. Unlocks: Trigonometry, Calculus. Projects: All", prereqs: ["arithmetic"], unlocks: ["trigonometry", "calculus"] },
             { id: "linear_equations", x: 220, y: 120, title: "Linear Equations", tooltip: "Solving ax + b = c. Prereqs: Arithmetic. Unlocks: Algebra. Projects: All", prereqs: ["arithmetic"], unlocks: ["algebra"] },
@@ -793,9 +812,9 @@
         }
 
         // Function to increase spacing between nodes
-        function increaseSpacing(horizontalFactor = 1.5, verticalFactor = 1.5) {
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
             // Add offset to move everything right of info panel
-            const infoPanelOffset = 400; // 300px width + 40px padding
+            const infoPanelOffset = 320; // 300px width + 20px padding
             
             // Find the minimum x and y to maintain relative positioning
             const minX = Math.min(...nodes.map(node => node.x));
@@ -816,23 +835,13 @@
             resolveCollisions();
         }
 
-        // Add toggle functionality
-        toggleButton.addEventListener('click', () => {
-            infoPanel.classList.toggle('active');
-        });
-
-        // Close panel when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768 && 
-                !infoPanel.contains(e.target) && 
-                !toggleButton.contains(e.target) && 
-                infoPanel.classList.contains('active')) {
-                infoPanel.classList.remove('active');
-            }
+        // Update initial node positions to start after info panel
+        nodes.forEach(node => {
+            node.x += 320; // Add info panel width + padding to all initial x positions
         });
 
         // Apply increased spacing and resolve collisions
-        increaseSpacing(1.8, 1.5);
+        increaseSpacing(2.2, 2.0);
 
         // Draw lines between nodes
         function drawLines() {
@@ -861,7 +870,7 @@
         // Add tier class to nodes based on their categories from the document
         nodes.forEach(node => {
             // Tier 1: Foundations
-            if (['arithmetic', 'addition_subtraction', 'multiplication_division', 'fractions_decimals',
+            if (['arithmetic', 'numbers_operations', 'properties_expressions', 'fractions_proportions_approx',
                  'algebra', 'linear_equations', 'systems_of_equations', 'quadratics',
                  'geometry', 'points_lines', 'angles_polygons', 'circles',
                  'trigonometry', 'trig_functions', 'trig_identities', 'unit_circle',
