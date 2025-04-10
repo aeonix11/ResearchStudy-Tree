@@ -45,6 +45,26 @@
             background: #fff;
             overflow: auto;
             height: 100%;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line, .tier-section {
+            position: relative;
+            z-index: 2;
         }
         .node {
             position: absolute;
@@ -58,7 +78,6 @@
             cursor: pointer;
             transition: all 0.3s;
             font-size: 14px;
-            z-index: 2;
         }
         .node.engineering {
             background: #2196F3;
@@ -69,7 +88,6 @@
         .node:hover {
             background: #45a049;
             transform: scale(1.05);
-            z-index: 3;
         }
         .node.engineering:hover {
             background: #1e88e5;
@@ -108,6 +126,24 @@
             cursor: pointer;
             font-size: 14px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #cycle-background {
+            position: fixed;
+            top: 10px;
+            right: 150px;
+            z-index: 100;
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        #cycle-background:hover {
+            background: #1976D2;
         }
         @media (max-width: 768px) {
             #info-panel {
@@ -185,6 +221,7 @@
 </head>
 <body>
     <button id="toggle-info">Toggle Info Panel</button>
+    <button id="cycle-background">Change Background</button>
     <div class="container">
         <div id="info-panel">
             <div id="info-title">Tech Tree Information</div>
@@ -574,6 +611,21 @@
         // Create tier sections before drawing lines
         createTierSections();
         drawLines();
+
+        // Add background cycling functionality
+        const backgrounds = [
+            'wp3703442-iron-man-4k-wallpapers.png',
+            'wp3703432-iron-man-4k-wallpapers.jpg',
+            'wp3703427-iron-man-4k-wallpapers.jpg'
+        ];
+        let currentBgIndex = 0;
+
+        const cycleButton = document.getElementById('cycle-background');
+
+        cycleButton.addEventListener('click', () => {
+            currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
+            canvas.style.backgroundImage = `url('${backgrounds[currentBgIndex]}')`;
+        });
     </script>
 </body>
 </html>
