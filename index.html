@@ -58,6 +58,7 @@
             cursor: pointer;
             transition: all 0.3s;
             font-size: 14px;
+            z-index: 2;
         }
         .node.engineering {
             background: #2196F3;
@@ -68,6 +69,7 @@
         .node:hover {
             background: #45a049;
             transform: scale(1.05);
+            z-index: 3;
         }
         .node.engineering:hover {
             background: #1e88e5;
@@ -77,14 +79,15 @@
         }
         .line {
             position: absolute;
-            background: #666;
+            background: #ddd;
             transform-origin: 0 0;
             transition: all 0.3s;
+            z-index: 1;
         }
         .line.highlight {
             background: #ffeb3b;
             height: 3px !important;
-            z-index: 5;
+            z-index: 1;
         }
         #toggle-info {
             display: none;
