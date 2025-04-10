@@ -260,20 +260,53 @@
         const infoPanel = document.getElementById("info-panel");
         const toggleButton = document.getElementById("toggle-info");
 
-        // Add toggle functionality
-        toggleButton.addEventListener('click', () => {
-            infoPanel.classList.toggle('active');
-        });
+        // Add collision detection and resolution
+        function checkCollision(node1, node2) {
+            const padding = 20; // Minimum space between nodes
+            return !(node1.x + 140 + padding < node2.x || 
+                    node1.x > node2.x + 140 + padding || 
+                    node1.y + 40 + padding < node2.y || 
+                    node1.y > node2.y + 40 + padding);
+        }
 
-        // Close panel when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768 && 
-                !infoPanel.contains(e.target) && 
-                !toggleButton.contains(e.target) && 
-                infoPanel.classList.contains('active')) {
-                infoPanel.classList.remove('active');
+        function resolveCollisions() {
+            let hasCollision = true;
+            let iterations = 0;
+            const maxIterations = 100; // Prevent infinite loops
+            
+            while (hasCollision && iterations < maxIterations) {
+                hasCollision = false;
+                iterations++;
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (checkCollision(nodes[i], nodes[j])) {
+                            hasCollision = true;
+                            
+                            // Calculate the direction to move nodes apart
+                            const dx = nodes[j].x - nodes[i].x;
+                            const dy = nodes[j].y - nodes[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance === 0) {
+                                // If nodes are exactly on top of each other, move them apart randomly
+                                nodes[i].x -= 50;
+                                nodes[j].x += 50;
+                            } else {
+                                // Move nodes apart along their center line
+                                const moveX = (dx / distance) * 25;
+                                const moveY = (dy / distance) * 25;
+                                
+                                nodes[i].x -= moveX;
+                                nodes[i].y -= moveY;
+                                nodes[j].x += moveX;
+                                nodes[j].y += moveY;
+                            }
+                        }
+                    }
+                }
             }
-        });
+        }
 
         // Function to increase spacing between nodes
         function increaseSpacing(horizontalFactor = 1.5, verticalFactor = 1.5) {
@@ -291,9 +324,27 @@
                 node.x = minX + (relativeX * horizontalFactor);
                 node.y = minY + (relativeY * verticalFactor);
             });
+
+            // Resolve any collisions after spacing
+            resolveCollisions();
         }
 
-        // Apply increased spacing
+        // Add toggle functionality
+        toggleButton.addEventListener('click', () => {
+            infoPanel.classList.toggle('active');
+        });
+
+        // Close panel when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && 
+                !infoPanel.contains(e.target) && 
+                !toggleButton.contains(e.target) && 
+                infoPanel.classList.contains('active')) {
+                infoPanel.classList.remove('active');
+            }
+        });
+
+        // Apply increased spacing and resolve collisions
         increaseSpacing(1.8, 1.5);
 
         // Draw lines between nodes
