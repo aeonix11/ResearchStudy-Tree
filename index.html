@@ -122,6 +122,60 @@
                 padding-top: 50px;
             }
         }
+        .tier-section {
+            position: absolute;
+            left: 400px;
+            padding: 10px;
+            border-radius: 5px;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 1;
+            pointer-events: none;
+            width: 200px;
+            text-align: right;
+            transform: translateY(-50%);
+        }
+        .tier-1 {
+            background: rgba(136, 136, 136, 0.1);
+            border-left: 4px solid #888888;
+        }
+        .tier-2 {
+            background: rgba(30, 144, 255, 0.1);
+            border-left: 4px solid #1E90FF;
+        }
+        .tier-3 {
+            background: rgba(147, 112, 219, 0.1);
+            border-left: 4px solid #9370DB;
+        }
+        .tier-4 {
+            background: rgba(255, 128, 0, 0.1);
+            border-left: 4px solid #FF8000;
+        }
+        .node.tier-1 {
+            background: #888888;
+        }
+        .node.tier-2 {
+            background: #1E90FF;
+        }
+        .node.tier-3 {
+            background: #9370DB;
+        }
+        .node.tier-4 {
+            background: #FF8000;
+        }
+        .node.tier-1:hover {
+            background: #666666;
+        }
+        .node.tier-2:hover {
+            background: #0066CC;
+        }
+        .node.tier-3:hover {
+            background: #7B68EE;
+        }
+        .node.tier-4:hover {
+            background: #FF6600;
+        }
     </style>
 </head>
 <body>
@@ -375,10 +429,109 @@
             });
         }
 
-        // Create nodes
+        // Add tier class to nodes based on their categories from the document
         nodes.forEach(node => {
-            const div = document.createElement("div");
-            div.className = `node ${node.class || ''}`;
+            // Tier 1: Foundations
+            if (['arithmetic', 'addition_subtraction', 'multiplication_division', 'fractions_decimals',
+                 'algebra', 'linear_equations', 'systems_of_equations', 'quadratics',
+                 'geometry', 'points_lines', 'angles_polygons', 'circles',
+                 'trigonometry', 'trig_functions', 'trig_identities', 'unit_circle',
+                 'calculus', 'limits', 'derivatives', 'integrals',
+                 'diff_equations', 'first_order_de', 'second_order_de',
+                 'mechanics', 'kinematics_physics', 'newtons_laws', 'work_energy',
+                 'programming_python', 'variables_loops', 'functions_python', 'numpy',
+                 'electronics', 'ohms_law', 'breadboarding', 'components',
+                 'mechanical_design', 'sketching_fusion', 'extruding', 'assemblies'].includes(node.id)) {
+                node.tier = 'tier-1';
+            }
+            // Tier 2: Core Skills
+            else if (['aerodynamics', 'lift_drag', 'thrust', 'stability_flight',
+                     'kinematics', 'forward_kinematics', 'inverse_kinematics', 'gait_planning',
+                     'embedded_programming', 'microcontrollers', 'interrupts', 'timers',
+                     'control_systems_pid', 'pid_basics', 'tuning_pid',
+                     'simulation', 'matlab_basics', 'simulink'].includes(node.id)) {
+                node.tier = 'tier-2';
+            }
+            // Tier 3: Project Enablers
+            else if (['drone_engineering', 'flight_controllers', 'esc_tuning', 'autonomy_basics',
+                     'robotics_ros', 'ros_nodes', 'sensor_fusion',
+                     'pcb_design', 'kicad_basics', 'power_circuits',
+                     'rf_communication', 'mavlink', 'lora',
+                     'power_systems', 'lipo_management', 'solar_integration'].includes(node.id)) {
+                node.tier = 'tier-3';
+            }
+            // Tier 4: Advanced Mastery
+            else if (['ai_ml', 'opencv', 'tensorflow', 'edge_ai',
+                     'hybrid_systems', 'multi_mode_control',
+                     'military_tech', 'encryption', 'swarming',
+                     'system_integration', 'custom_os', 'middleware'].includes(node.id)) {
+                node.tier = 'tier-4';
+            }
+        });
+
+        // Function to calculate tier boundaries
+        function calculateTierBoundaries() {
+            const tierBoundaries = {};
+            nodes.forEach(node => {
+                if (!tierBoundaries[node.tier]) {
+                    tierBoundaries[node.tier] = {
+                        minY: node.y,
+                        maxY: node.y + 40, // node height
+                        nodes: []
+                    };
+                }
+                tierBoundaries[node.tier].nodes.push(node);
+                tierBoundaries[node.tier].minY = Math.min(tierBoundaries[node.tier].minY, node.y);
+                tierBoundaries[node.tier].maxY = Math.max(tierBoundaries[node.tier].maxY, node.y + 40);
+            });
+            return tierBoundaries;
+        }
+
+        // Define tier sections with smart positioning
+        const tierBoundaries = calculateTierBoundaries();
+        const tierSections = [
+            { 
+                id: 'tier1', 
+                title: 'Tier 1: Foundations (6-12 Months)', 
+                tier: 'tier-1'
+            },
+            { 
+                id: 'tier2', 
+                title: 'Tier 2: Core Skills (12-24 Months)', 
+                tier: 'tier-2'
+            },
+            { 
+                id: 'tier3', 
+                title: 'Tier 3: Project Enablers (2-3 Years)', 
+                tier: 'tier-3'
+            },
+            { 
+                id: 'tier4', 
+                title: 'Tier 4: Advanced Mastery (3-5+ Years)', 
+                tier: 'tier-4'
+            }
+        ];
+
+        // Create tier section descriptions with smart positioning
+        function createTierSections() {
+            tierSections.forEach(section => {
+                const div = document.createElement('div');
+                div.className = `tier-section ${section.id}`;
+                
+                // Calculate vertical center of the tier
+                const boundary = tierBoundaries[section.tier];
+                const centerY = boundary.minY + (boundary.maxY - boundary.minY) / 2;
+                
+                div.style.top = `${centerY}px`;
+                div.innerHTML = section.title;
+                canvas.appendChild(div);
+            });
+        }
+
+        // Create nodes with tier classes
+        nodes.forEach(node => {
+            const div = document.createElement('div');
+            div.className = `node ${node.class || ''} ${node.tier}`;
             div.id = node.id;
             div.style.left = `${node.x}px`;
             div.style.top = `${node.y}px`;
@@ -414,6 +567,8 @@
             canvas.appendChild(div);
         });
 
+        // Create tier sections before drawing lines
+        createTierSections();
         drawLines();
     </script>
 </body>
