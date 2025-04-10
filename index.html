@@ -79,15 +79,20 @@
         }
         .line {
             position: absolute;
-            background: #ddd;
             transform-origin: 0 0;
             transition: all 0.3s;
             z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
         }
         .line.highlight {
-            background: #ffeb3b;
+            opacity: 1;
             height: 3px !important;
             z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
         }
         #toggle-info {
             display: none;
@@ -419,7 +424,6 @@
                         line.setAttribute("data-from", node.id);
                         line.setAttribute("data-to", target.id);
                         line.style.width = `${length}px`;
-                        line.style.height = "2px";
                         line.style.left = `${node.x + 70}px`;
                         line.style.top = `${node.y + 20}px`;
                         line.style.transform = `rotate(${angle}deg)`;
