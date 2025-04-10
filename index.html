@@ -70,14 +70,35 @@
             position: absolute;
             width: 140px;
             height: 40px;
-            background: #4CAF50;
-            color: white;
-            text-align: center;
-            line-height: 40px;
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            color: white;
+        }
+        .node::before {
+            content: attr(data-progress) '%';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .node[data-progress]:not([data-progress="0"])::before {
+            opacity: 1;
         }
         .node.engineering {
             background: #2196F3;
@@ -86,8 +107,8 @@
             background: #F44336;
         }
         .node:hover {
-            background: #45a049;
             transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
         .node.engineering:hover {
             background: #1e88e5;
@@ -199,35 +220,35 @@
             box-shadow: 0 0 15px rgba(255, 128, 0, 0.3);
         }
         .node.tier-1 {
-            background: linear-gradient(135deg, #888888, #666666);
+            background: linear-gradient(135deg, rgba(136, 136, 136, 0.85), rgba(102, 102, 102, 0.85));
             box-shadow: 0 0 10px rgba(136, 136, 136, 0.5);
         }
         .node.tier-2 {
-            background: linear-gradient(135deg, #1E90FF, #0066CC);
+            background: linear-gradient(135deg, rgba(30, 144, 255, 0.85), rgba(0, 102, 204, 0.85));
             box-shadow: 0 0 10px rgba(30, 144, 255, 0.5);
         }
         .node.tier-3 {
-            background: linear-gradient(135deg, #9370DB, #7B68EE);
+            background: linear-gradient(135deg, rgba(147, 112, 219, 0.85), rgba(123, 104, 238, 0.85));
             box-shadow: 0 0 10px rgba(147, 112, 219, 0.5);
         }
         .node.tier-4 {
-            background: linear-gradient(135deg, #FF8000, #FF6600);
+            background: linear-gradient(135deg, rgba(255, 128, 0, 0.85), rgba(255, 102, 0, 0.85));
             box-shadow: 0 0 10px rgba(255, 128, 0, 0.5);
         }
         .node.tier-1:hover {
-            background: linear-gradient(135deg, #666666, #444444);
+            background: linear-gradient(135deg, rgba(102, 102, 102, 0.85), rgba(68, 68, 68, 0.85));
             box-shadow: 0 0 15px rgba(136, 136, 136, 0.7);
         }
         .node.tier-2:hover {
-            background: linear-gradient(135deg, #0066CC, #004C99);
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.85), rgba(0, 76, 153, 0.85));
             box-shadow: 0 0 15px rgba(30, 144, 255, 0.7);
         }
         .node.tier-3:hover {
-            background: linear-gradient(135deg, #7B68EE, #6A5ACD);
+            background: linear-gradient(135deg, rgba(123, 104, 238, 0.85), rgba(106, 90, 205, 0.85));
             box-shadow: 0 0 15px rgba(147, 112, 219, 0.7);
         }
         .node.tier-4:hover {
-            background: linear-gradient(135deg, #FF6600, #FF4500);
+            background: linear-gradient(135deg, rgba(255, 102, 0, 0.85), rgba(255, 69, 0, 0.85));
             box-shadow: 0 0 15px rgba(255, 128, 0, 0.7);
         }
         .node.clickable {
@@ -242,11 +263,110 @@
             50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
             100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
         }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s;
+        }
+        .status-not-started {
+            background-color: #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 2s infinite;
+        }
+        .status-finished {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+            50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 0 0 5px 5px;
+        }
+        .progress-bar.in-progress {
+            background: linear-gradient(90deg, #FFC107, #FF9800);
+        }
+        .progress-bar.finished {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+        .progress-bar.not-started {
+            width: 0 !important;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+        .progress-summary {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
     <button id="toggle-info">Toggle Info Panel</button>
-    <button id="cycle-background">Change Background</button>
     <div class="container">
         <div id="info-panel">
             <div id="info-title">Tech Tree Information</div>
@@ -256,6 +376,249 @@
     </div>
 
     <script>
+        // Initialize nodeProgress as an object
+        let nodeProgress = {};
+
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('nodeProgress');
+            if (savedProgress) {
+                try {
+                    const parsed = JSON.parse(savedProgress);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        nodeProgress = parsed;
+                        console.log('Loaded progress from localStorage:', nodeProgress);
+                        
+                        // Apply saved status to all nodes
+                        nodes.forEach(nodeData => {
+                            const status = nodeProgress[nodeData.id] || 'not-started';
+                            const node = document.getElementById(nodeData.id);
+                            if (node) {
+                                const indicator = node.querySelector('.status-indicator');
+                                const progressBar = node.querySelector('.progress-bar');
+                                
+                                if (indicator && progressBar) {
+                                    // Remove all status classes
+                                    indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                                    progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                                    
+                                    // Add current status class
+                                    indicator.classList.add(`status-${status}`);
+                                    progressBar.classList.add(status);
+                                    
+                                    // Set progress bar width based on status
+                                    if (status === 'in-progress') {
+                                        progressBar.style.width = '50%';
+                                    } else if (status === 'finished') {
+                                        progressBar.style.width = '100%';
+                                    } else {
+                                        progressBar.style.width = '0%';
+                                    }
+                                    
+                                    console.log(`Initialized node ${nodeData.id} with status: ${status}`);
+                                }
+                            }
+                        });
+                    } else {
+                        console.error('Invalid progress data in localStorage');
+                        nodeProgress = {};
+                    }
+                } catch (e) {
+                    console.error('Error parsing nodeProgress from localStorage:', e);
+                    nodeProgress = {};
+                }
+            } else {
+                console.log('No saved progress found in localStorage');
+                nodeProgress = {};
+            }
+            
+            // Check for subpage progress
+            const arithmeticProgress = localStorage.getItem('arithmeticMainProgress');
+            const algebraProgress = localStorage.getItem('algebraMainProgress');
+            
+            // Update main nodes based on subpage progress
+            if (arithmeticProgress) {
+                const progress = parseFloat(arithmeticProgress);
+                if (progress > 0) {
+                    // Update the arithmetic node's progress bar
+                    const node = document.getElementById('arithmetic');
+                    if (node) {
+                        const progressBar = node.querySelector('.progress-bar');
+                        if (progressBar) {
+                            progressBar.style.width = `${progress}%`;
+                            
+                            // Update status based on progress
+                            if (progress === 100) {
+                                updateNodeStatus('arithmetic', 'finished');
+                            } else if (progress > 0) {
+                                updateNodeStatus('arithmetic', 'in-progress');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (algebraProgress) {
+                const progress = parseFloat(algebraProgress);
+                if (progress > 0) {
+                    // Update the algebra node's progress bar
+                    const node = document.getElementById('algebra');
+                    if (node) {
+                        const progressBar = node.querySelector('.progress-bar');
+                        if (progressBar) {
+                            progressBar.style.width = `${progress}%`;
+                            
+                            // Update status based on progress
+                            if (progress === 100) {
+                                updateNodeStatus('algebra', 'finished');
+                            } else if (progress > 0) {
+                                updateNodeStatus('algebra', 'in-progress');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function saveProgress() {
+            if (typeof nodeProgress !== 'object' || nodeProgress === null) {
+                console.error('Invalid nodeProgress object:', nodeProgress);
+                nodeProgress = {};
+            }
+            console.log('Saving progress to localStorage:', nodeProgress);
+            localStorage.setItem('nodeProgress', JSON.stringify(nodeProgress));
+        }
+        
+        function updateNodeStatus(nodeId, status) {
+            if (typeof nodeProgress !== 'object' || nodeProgress === null) {
+                nodeProgress = {};
+            }
+            
+            console.log(`Updating node ${nodeId} to status: ${status}`);
+            console.log('Current nodeProgress:', nodeProgress);
+            
+            // Update the status in memory
+            nodeProgress[nodeId] = status;
+            
+            // Save to localStorage
+            saveProgress();
+            console.log('Updated nodeProgress:', nodeProgress);
+            
+            // Update visual indicators
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const indicator = node.querySelector('.status-indicator');
+                const progressBar = node.querySelector('.progress-bar');
+                
+                if (!indicator || !progressBar) {
+                    console.error(`Could not find indicator or progress bar for node ${nodeId}`);
+                    return;
+                }
+                
+                // Remove all status classes
+                indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                
+                // Add new status class
+                indicator.classList.add(`status-${status}`);
+                progressBar.classList.add(status);
+                
+                console.log(`Added classes: status-${status} and ${status}`);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+                
+                console.log(`Set progress bar width to: ${progressBar.style.width}`);
+            } else {
+                console.error(`Could not find node with id: ${nodeId}`);
+            }
+        }
+        
+        function getNodeStatus(nodeId) {
+            if (typeof nodeProgress !== 'object' || nodeProgress === null) {
+                nodeProgress = {};
+            }
+            
+            // Check if we have the status in memory
+            if (nodeProgress[nodeId]) {
+                console.log(`Retrieved status for ${nodeId} from memory: ${nodeProgress[nodeId]}`);
+                return nodeProgress[nodeId];
+            }
+            
+            console.log(`No saved status found for ${nodeId}, defaulting to not-started`);
+            return 'not-started';
+        }
+        
+        function calculateSubpageProgress(nodeId) {
+            // For nodes with subpages (arithmetic, algebra)
+            if (nodeId === 'arithmetic' || nodeId === 'algebra') {
+                const subpageId = nodeId === 'arithmetic' ? 'arithmetic' : 'algebra';
+                const subpageProgress = localStorage.getItem(`${subpageId}Progress`);
+                
+                if (subpageProgress) {
+                    const progress = JSON.parse(subpageProgress);
+                    const totalNodes = Object.keys(progress).length;
+                    const completedNodes = Object.values(progress).filter(status => status === 'finished').length;
+                    
+                    return totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
+                }
+            }
+            return 0;
+        }
+        
+        function updateSubpageProgress(nodeId, progress) {
+            if (nodeId === 'arithmetic' || nodeId === 'algebra') {
+                localStorage.setItem(`${nodeId}Progress`, JSON.stringify(progress));
+                
+                // Update the main node's progress bar
+                const node = document.getElementById(nodeId);
+                if (node) {
+                    const progressBar = node.querySelector('.progress-bar');
+                    progressBar.style.width = `${progress}%`;
+                    
+                    // Update status based on progress
+                    if (progress === 0) {
+                        updateNodeStatus(nodeId, 'not-started');
+                    } else if (progress === 100) {
+                        updateNodeStatus(nodeId, 'finished');
+                    } else {
+                        updateNodeStatus(nodeId, 'in-progress');
+                    }
+                }
+            }
+        }
+
+        // Load progress when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize nodeProgress from localStorage
+            const savedProgress = localStorage.getItem('nodeProgress');
+            if (savedProgress) {
+                try {
+                    const parsed = JSON.parse(savedProgress);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        nodeProgress = parsed;
+                        console.log('Loaded progress from localStorage:', nodeProgress);
+                    } else {
+                        console.error('Invalid progress data in localStorage');
+                        nodeProgress = {};
+                    }
+                } catch (e) {
+                    console.error('Error parsing nodeProgress from localStorage:', e);
+                    nodeProgress = {};
+                }
+            } else {
+                console.log('No saved progress found in localStorage');
+                nodeProgress = {};
+            }
+            
+            loadProgress();
+        });
+
         const nodes = [
             // Tier 1: Foundations - Math Breakdown
             { id: "arithmetic", x: 100, y: 50, title: "Arithmetic", tooltip: "Basic number operations. Unlocks: Algebra, Geometry. Projects: All", prereqs: [], unlocks: ["algebra", "geometry"] },
@@ -602,6 +965,84 @@
             div.style.left = `${node.x}px`;
             div.style.top = `${node.y}px`;
             div.innerHTML = node.title;
+            
+            // Add status indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'status-indicator';
+            const status = getNodeStatus(node.id);
+            indicator.classList.add(`status-${status}`);
+            
+            // Add progress bar
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.classList.add(status);
+            
+            // Set progress bar width based on status
+            if (status === 'in-progress') {
+                progressBar.style.width = '50%';
+            } else if (status === 'finished') {
+                progressBar.style.width = '100%';
+            } else {
+                progressBar.style.width = '0%';
+            }
+            
+            // Add progress tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'progress-tooltip';
+            tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            // Add click handler for status indicator
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent node click event
+                
+                const currentStatus = getNodeStatus(node.id);
+                let newStatus;
+                
+                console.log(`Current status for ${node.id}:`, currentStatus);
+                console.log('Current nodeProgress:', nodeProgress);
+                
+                // Cycle through statuses: not-started -> in-progress -> finished -> not-started
+                if (currentStatus === 'not-started') {
+                    newStatus = 'in-progress';
+                } else if (currentStatus === 'in-progress') {
+                    newStatus = 'finished';
+                } else if (currentStatus === 'finished') {
+                    newStatus = 'not-started';
+                } else {
+                    newStatus = 'not-started';
+                }
+                
+                console.log(`Setting new status for ${node.id} to:`, newStatus);
+                
+                // Update the status
+                updateNodeStatus(node.id, newStatus);
+                
+                // Update tooltip
+                tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
+            });
+            
+            // Show tooltip on hover
+            indicator.addEventListener('mouseenter', (e) => {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+            });
+            
+            indicator.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+            });
+            
+            indicator.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            });
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
 
             // Add event listeners for highlighting connections
             div.addEventListener('mouseenter', () => {
@@ -639,6 +1080,15 @@
                 });
             }
 
+            // Add click handler for Algebra node
+            if (node.id === 'algebra') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                div.addEventListener('click', () => {
+                    window.location.href = 'algebra.html';
+                });
+            }
+
             canvas.appendChild(div);
         });
 
@@ -646,19 +1096,100 @@
         createTierSections();
         drawLines();
 
-        // Add background cycling functionality
-        const backgrounds = [
-            'wp3703442-iron-man-4k-wallpapers.png',
-            'wp3703432-iron-man-4k-wallpapers.jpg',
-            'wp3703427-iron-man-4k-wallpapers.jpg'
-        ];
-        let currentBgIndex = 0;
-
-        const cycleButton = document.getElementById('cycle-background');
-
-        cycleButton.addEventListener('click', () => {
-            currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
-            canvas.style.backgroundImage = `url('${backgrounds[currentBgIndex]}')`;
+        // Export progress data
+        document.getElementById('export-button').addEventListener('click', () => {
+            // Collect all progress data
+            const progressData = {
+                arithmeticProgress: localStorage.getItem('arithmeticProgress') || '0',
+                algebraProgress: localStorage.getItem('algebraProgress') || '0',
+                arithmeticNodes: {},
+                algebraNodes: {}
+            };
+            
+            // Get all arithmetic node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('arithmetic_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('arithmetic_', '').replace('_progress', '');
+                    progressData.arithmeticNodes[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Get all algebra node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('algebra_', '').replace('_progress', '');
+                    progressData.algebraNodes[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Create and download the file
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'tech-tree-progress.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Import progress data
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Clear existing progress data
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key.includes('Progress') || key.includes('_progress')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Restore progress data
+                    if (progressData.arithmeticProgress) {
+                        localStorage.setItem('arithmeticProgress', progressData.arithmeticProgress);
+                    }
+                    
+                    if (progressData.algebraProgress) {
+                        localStorage.setItem('algebraProgress', progressData.algebraProgress);
+                    }
+                    
+                    // Restore arithmetic node progress
+                    if (progressData.arithmeticNodes) {
+                        Object.entries(progressData.arithmeticNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`arithmetic_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Restore algebra node progress
+                    if (progressData.algebraNodes) {
+                        Object.entries(progressData.algebraNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`algebra_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Update the UI
+                    updateNodeProgress();
+                    
+                    // Show success message
+                    alert('Progress data imported successfully!');
+                } catch (error) {
+                    console.error('Error importing progress data:', error);
+                    alert('Error importing progress data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
         });
     </script>
 </body>
