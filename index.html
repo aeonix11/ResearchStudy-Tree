@@ -17,6 +17,7 @@
             display: flex;
             width: 100%;
             height: 100vh;
+            position: relative;
         }
         #info-panel {
             width: 300px;
@@ -25,6 +26,7 @@
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             z-index: 10;
             overflow-y: auto;
+            transition: transform 0.3s ease;
         }
         #info-title {
             font-size: 18px;
@@ -84,9 +86,43 @@
             height: 3px !important;
             z-index: 5;
         }
+        #toggle-info {
+            display: none;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        @media (max-width: 768px) {
+            #info-panel {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+            }
+            #info-panel.active {
+                transform: translateX(0);
+            }
+            #toggle-info {
+                display: block;
+            }
+            .container {
+                padding-top: 50px;
+            }
+        }
     </style>
 </head>
 <body>
+    <button id="toggle-info">Toggle Info Panel</button>
     <div class="container">
         <div id="info-panel">
             <div id="info-title">Tech Tree Information</div>
@@ -218,6 +254,23 @@
         const canvas = document.getElementById("canvas");
         const infoTitle = document.getElementById("info-title");
         const infoContent = document.getElementById("info-content");
+        const infoPanel = document.getElementById("info-panel");
+        const toggleButton = document.getElementById("toggle-info");
+
+        // Add toggle functionality
+        toggleButton.addEventListener('click', () => {
+            infoPanel.classList.toggle('active');
+        });
+
+        // Close panel when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && 
+                !infoPanel.contains(e.target) && 
+                !toggleButton.contains(e.target) && 
+                infoPanel.classList.contains('active')) {
+                infoPanel.classList.remove('active');
+            }
+        });
 
         // Function to increase spacing between nodes
         function increaseSpacing(horizontalFactor = 1.5, verticalFactor = 1.5) {
