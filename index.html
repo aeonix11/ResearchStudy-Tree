@@ -230,6 +230,18 @@
             background: linear-gradient(135deg, #FF6600, #FF4500);
             box-shadow: 0 0 15px rgba(255, 128, 0, 0.7);
         }
+        .node.clickable {
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+        .node.clickable:hover {
+            transform: scale(1.1);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+        }
     </style>
 </head>
 <body>
@@ -276,7 +288,7 @@
             { id: "second_order_de", x: 1140, y: 120, title: "Second-Order DE", tooltip: "Oscillations. Prereqs: First-Order DE. Unlocks: Differential Equations. Projects: All", prereqs: ["first_order_de"], unlocks: ["diff_equations"] },
 
             // Tier 1: Foundations - Physics Breakdown
-            { id: "mechanics", x: 100, y: 200, title: "Mechanics", tooltip: "Forces and motion. Prereqs: Geometry. Unlocks: Aerodynamics, Dynamics. Projects: Drone, Spiderbot", prereqs: ["geometry"], unlocks: ["aerodynamics", "dynamics"] },
+            { id: "mechanics", x: 100, y: 200, title: "Mechanics", tooltip: "Forces and motion. Prereqs: Geometry. Unlocks: Aerodynamics, Dynamics. Projects: Drone, Spiderbot", prereqs: ["geometry"], unlocks: ["aerodynamics"] },
             { id: "kinematics_physics", x: 20, y: 270, title: "Kinematics (Physics)", tooltip: "Motion without forces. Prereqs: Geometry. Unlocks: Mechanics. Projects: All", prereqs: ["geometry"], unlocks: ["mechanics"] },
             { id: "newtons_laws", x: 100, y: 270, title: "Newton's Laws", tooltip: "Force and acceleration. Prereqs: Kinematics (Physics). Unlocks: Mechanics. Projects: All", prereqs: ["kinematics_physics"], unlocks: ["mechanics"] },
             { id: "work_energy", x: 180, y: 270, title: "Work & Energy", tooltip: "Energy transfer. Prereqs: Newton's Laws. Unlocks: Mechanics. Projects: All", prereqs: ["newtons_laws"], unlocks: ["mechanics"] },
@@ -617,6 +629,15 @@
                 infoTitle.textContent = "Tech Tree Information";
                 infoContent.textContent = "Hover over a node to see detailed information about that technology.";
             });
+
+            // Add click handler for Arithmetic node
+            if (node.id === 'arithmetic') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                div.addEventListener('click', () => {
+                    window.location.href = 'arithmetic.html';
+                });
+            }
 
             canvas.appendChild(div);
         });
