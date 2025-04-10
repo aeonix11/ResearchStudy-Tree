@@ -310,6 +310,9 @@
 
         // Function to increase spacing between nodes
         function increaseSpacing(horizontalFactor = 1.5, verticalFactor = 1.5) {
+            // Add offset to move everything right of info panel
+            const infoPanelOffset = 400; // 300px width + 40px padding
+            
             // Find the minimum x and y to maintain relative positioning
             const minX = Math.min(...nodes.map(node => node.x));
             const minY = Math.min(...nodes.map(node => node.y));
@@ -320,8 +323,8 @@
                 const relativeX = node.x - minX;
                 const relativeY = node.y - minY;
                 
-                // Apply spacing factors and restore offset
-                node.x = minX + (relativeX * horizontalFactor);
+                // Apply spacing factors and restore offset with additional right shift
+                node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
                 node.y = minY + (relativeY * verticalFactor);
             });
 
