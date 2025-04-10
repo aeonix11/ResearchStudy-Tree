@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone & Robotics Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+        #info-panel {
+            width: 300px;
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow-y: auto;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+        }
+        #canvas {
+            flex: 1;
+            position: relative;
+            background: #fff;
+            overflow: auto;
+            height: 100%;
+        }
+        .node {
+            position: absolute;
+            width: 140px;
+            height: 40px;
+            background: #4CAF50;
+            color: white;
+            text-align: center;
+            line-height: 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .node.engineering {
+            background: #2196F3;
+        }
+        .node.advanced {
+            background: #F44336;
+        }
+        .node:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        .node.engineering:hover {
+            background: #1e88e5;
+        }
+        .node.advanced:hover {
+            background: #e53935;
+        }
+        .line {
+            position: absolute;
+            background: #666;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+        }
+        .line.highlight {
+            background: #ffeb3b;
+            height: 3px !important;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <script>
+        const nodes = [
+            // Tier 1: Foundations - Math Breakdown
+            { id: "arithmetic", x: 100, y: 50, title: "Arithmetic", tooltip: "Basic number operations. Unlocks: Algebra, Geometry. Projects: All", prereqs: [], unlocks: ["algebra", "geometry"] },
+            { id: "addition_subtraction", x: 20, y: 120, title: "Addition & Subtraction", tooltip: "Core arithmetic skills. Prereqs: None. Unlocks: Arithmetic. Projects: All", prereqs: [], unlocks: ["arithmetic"] },
+            { id: "multiplication_division", x: 100, y: 120, title: "Multiplication & Division", tooltip: "Scaling and partitioning numbers. Prereqs: Addition & Subtraction. Unlocks: Arithmetic. Projects: All", prereqs: ["addition_subtraction"], unlocks: ["arithmetic"] },
+            { id: "fractions_decimals", x: 180, y: 120, title: "Fractions & Decimals", tooltip: "Rational numbers. Prereqs: Multiplication & Division. Unlocks: Arithmetic. Projects: All", prereqs: ["multiplication_division"], unlocks: ["arithmetic"] },
+
+            { id: "algebra", x: 300, y: 50, title: "Algebra", tooltip: "Variables and equations. Prereqs: Arithmetic. Unlocks: Trigonometry, Calculus. Projects: All", prereqs: ["arithmetic"], unlocks: ["trigonometry", "calculus"] },
+            { id: "linear_equations", x: 220, y: 120, title: "Linear Equations", tooltip: "Solving ax + b = c. Prereqs: Arithmetic. Unlocks: Algebra. Projects: All", prereqs: ["arithmetic"], unlocks: ["algebra"] },
+            { id: "systems_of_equations", x: 300, y: 120, title: "Systems of Equations", tooltip: "Multiple variables. Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"] },
+            { id: "quadratics", x: 380, y: 120, title: "Quadratic Equations", tooltip: "x² terms. Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"] },
+
+            { id: "geometry", x: 500, y: 50, title: "Geometry", tooltip: "Shapes and space. Prereqs: Arithmetic. Unlocks: Trigonometry, Mechanics. Projects: Drone, Spiderbot", prereqs: ["arithmetic"], unlocks: ["trigonometry", "mechanics"] },
+            { id: "points_lines", x: 420, y: 120, title: "Points & Lines", tooltip: "Basic spatial concepts. Prereqs: Arithmetic. Unlocks: Geometry. Projects: All", prereqs: ["arithmetic"], unlocks: ["geometry"] },
+            { id: "angles_polygons", x: 500, y: 120, title: "Angles & Polygons", tooltip: "Shape properties. Prereqs: Points & Lines. Unlocks: Geometry. Projects: All", prereqs: ["points_lines"], unlocks: ["geometry"] },
+            { id: "circles", x: 580, y: 120, title: "Circles", tooltip: "Radius, circumference. Prereqs: Angles & Polygons. Unlocks: Geometry. Projects: All", prereqs: ["angles_polygons"], unlocks: ["geometry"] },
+
+            { id: "trigonometry", x: 700, y: 50, title: "Trigonometry", tooltip: "Angles and ratios. Prereqs: Algebra, Geometry. Unlocks: Calculus, Kinematics. Projects: Spiderbot, Artemis", prereqs: ["algebra", "geometry"], unlocks: ["calculus", "kinematics"] },
+            { id: "trig_functions", x: 620, y: 120, title: "Trig Functions", tooltip: "Sine, cosine, tangent. Prereqs: Geometry. Unlocks: Trigonometry. Projects: All", prereqs: ["geometry"], unlocks: ["trigonometry"] },
+            { id: "trig_identities", x: 700, y: 120, title: "Trig Identities", tooltip: "Simplifying expressions. Prereqs: Trig Functions. Unlocks: Trigonometry. Projects: All", prereqs: ["trig_functions"], unlocks: ["trigonometry"] },
+            { id: "unit_circle", x: 780, y: 120, title: "Unit Circle", tooltip: "Angle relationships. Prereqs: Trig Functions. Unlocks: Trigonometry. Projects: All", prereqs: ["trig_functions"], unlocks: ["trigonometry"] },
+
+            { id: "calculus", x: 900, y: 50, title: "Calculus", tooltip: "Rates of change. Prereqs: Algebra, Trigonometry. Unlocks: Differential Equations, Dynamics. Projects: Drone, Artemis", prereqs: ["algebra", "trigonometry"], unlocks: ["diff_equations", "dynamics"] },
+            { id: "limits", x: 820, y: 120, title: "Limits", tooltip: "Approaching values. Prereqs: Algebra. Unlocks: Calculus. Projects: All", prereqs: ["algebra"], unlocks: ["calculus"] },
+            { id: "derivatives", x: 900, y: 120, title: "Derivatives", tooltip: "Rate of change. Prereqs: Limits. Unlocks: Calculus. Projects: All", prereqs: ["limits"], unlocks: ["calculus"] },
+            { id: "integrals", x: 980, y: 120, title: "Integrals", tooltip: "Area under curves. Prereqs: Derivatives. Unlocks: Calculus. Projects: All", prereqs: ["derivatives"], unlocks: ["calculus"] },
+
+            { id: "diff_equations", x: 1100, y: 50, title: "Differential Equations", tooltip: "Modeling change. Prereqs: Calculus. Unlocks: Control Systems, Dynamics. Projects: Drone, Artemis", prereqs: ["calculus"], unlocks: ["control_systems_pid", "dynamics"] },
+            { id: "first_order_de", x: 1060, y: 120, title: "First-Order DE", tooltip: "Simple dynamics. Prereqs: Calculus. Unlocks: Differential Equations. Projects: All", prereqs: ["calculus"], unlocks: ["diff_equations"] },
+            { id: "second_order_de", x: 1140, y: 120, title: "Second-Order DE", tooltip: "Oscillations. Prereqs: First-Order DE. Unlocks: Differential Equations. Projects: All", prereqs: ["first_order_de"], unlocks: ["diff_equations"] },
+
+            // Tier 1: Foundations - Physics Breakdown
+            { id: "mechanics", x: 100, y: 200, title: "Mechanics", tooltip: "Forces and motion. Prereqs: Geometry. Unlocks: Aerodynamics, Dynamics. Projects: Drone, Spiderbot", prereqs: ["geometry"], unlocks: ["aerodynamics", "dynamics"] },
+            { id: "kinematics_physics", x: 20, y: 270, title: "Kinematics (Physics)", tooltip: "Motion without forces. Prereqs: Geometry. Unlocks: Mechanics. Projects: All", prereqs: ["geometry"], unlocks: ["mechanics"] },
+            { id: "newtons_laws", x: 100, y: 270, title: "Newton's Laws", tooltip: "Force and acceleration. Prereqs: Kinematics (Physics). Unlocks: Mechanics. Projects: All", prereqs: ["kinematics_physics"], unlocks: ["mechanics"] },
+            { id: "work_energy", x: 180, y: 270, title: "Work & Energy", tooltip: "Energy transfer. Prereqs: Newton's Laws. Unlocks: Mechanics. Projects: All", prereqs: ["newtons_laws"], unlocks: ["mechanics"] },
+
+            // Tier 1: Foundations - Programming Breakdown
+            { id: "programming_python", x: 400, y: 200, title: "Programming (Python)", tooltip: "Core coding skills. Unlocks: Simulations, AI, Embedded Prog. Projects: Drone, Artemis", prereqs: [], unlocks: ["simulation", "ai_ml", "embedded_programming"] },
+            { id: "variables_loops", x: 320, y: 270, title: "Variables & Loops", tooltip: "Basic syntax. Prereqs: None. Unlocks: Programming (Python). Projects: All", prereqs: [], unlocks: ["programming_python"] },
+            { id: "functions_python", x: 400, y: 270, title: "Functions (Python)", tooltip: "Modular code. Prereqs: Variables & Loops. Unlocks: Programming (Python). Projects: All", prereqs: ["variables_loops"], unlocks: ["programming_python"] },
+            { id: "numpy", x: 480, y: 270, title: "NumPy", tooltip: "Arrays and math. Prereqs: Functions (Python). Unlocks: Programming (Python). Projects: All", prereqs: ["functions_python"], unlocks: ["programming_python"] },
+
+            // Tier 1: Foundations - Electronics Breakdown
+            { id: "electronics", x: 700, y: 200, title: "Electronics", tooltip: "Circuits and components. Unlocks: Drone Eng, PCB Design, Power Systems. Projects: All", prereqs: [], unlocks: ["drone_engineering", "pcb_design", "power_systems"] },
+            { id: "ohms_law", x: 620, y: 270, title: "Ohm's Law", tooltip: "V=IR basics. Prereqs: None. Unlocks: Electronics. Projects: All", prereqs: [], unlocks: ["electronics"] },
+            { id: "breadboarding", x: 700, y: 270, title: "Breadboarding", tooltip: "Prototyping circuits. Prereqs: Ohm's Law. Unlocks: Electronics. Projects: All", prereqs: ["ohms_law"], unlocks: ["electronics"] },
+            { id: "components", x: 780, y: 270, title: "Components", tooltip: "Resistors, capacitors. Prereqs: Breadboarding. Unlocks: Electronics. Projects: All", prereqs: ["breadboarding"], unlocks: ["electronics"] },
+
+            // Tier 1: Foundations - Mechanical Design Breakdown
+            { id: "mechanical_design", x: 1000, y: 200, title: "Mechanical Design", tooltip: "3D modeling basics. Unlocks: Drone Eng, Robotics. Projects: All", prereqs: [], unlocks: ["drone_engineering", "robotics_ros"] },
+            { id: "sketching_fusion", x: 920, y: 270, title: "Sketching (Fusion 360)", tooltip: "2D outlines. Prereqs: None. Unlocks: Mechanical Design. Projects: All", prereqs: [], unlocks: ["mechanical_design"] },
+            { id: "extruding", x: 1000, y: 270, title: "Extruding", tooltip: "3D from 2D. Prereqs: Sketching (Fusion 360). Unlocks: Mechanical Design. Projects: All", prereqs: ["sketching_fusion"], unlocks: ["mechanical_design"] },
+            { id: "assemblies", x: 1080, y: 270, title: "Assemblies", tooltip: "Part integration. Prereqs: Extruding. Unlocks: Mechanical Design. Projects: All", prereqs: ["extruding"], unlocks: ["mechanical_design"] },
+
+            // Tier 2: Core Skills - Detailed Breakdown
+            { id: "aerodynamics", x: 100, y: 350, title: "Aerodynamics", tooltip: "Flight principles. Prereqs: Mechanics. Unlocks: Drone Eng. Projects: Drone", prereqs: ["mechanics"], unlocks: ["drone_engineering"], class: "engineering" },
+            { id: "lift_drag", x: 20, y: 420, title: "Lift & Drag", tooltip: "Air forces. Prereqs: Mechanics. Unlocks: Aerodynamics. Projects: Drone", prereqs: ["mechanics"], unlocks: ["aerodynamics"], class: "engineering" },
+            { id: "thrust", x: 100, y: 420, title: "Thrust", tooltip: "Propulsion. Prereqs: Lift & Drag. Unlocks: Aerodynamics. Projects: Drone", prereqs: ["lift_drag"], unlocks: ["aerodynamics"], class: "engineering" },
+            { id: "stability_flight", x: 180, y: 420, title: "Flight Stability", tooltip: "Balance in air. Prereqs: Thrust. Unlocks: Aerodynamics. Projects: Drone", prereqs: ["thrust"], unlocks: ["aerodynamics"], class: "engineering" },
+
+            { id: "kinematics", x: 300, y: 350, title: "Kinematics", tooltip: "Motion planning. Prereqs: Trigonometry. Unlocks: Robotics (ROS). Projects: Spiderbot, Artemis", prereqs: ["trigonometry"], unlocks: ["robotics_ros"], class: "engineering" },
+            { id: "forward_kinematics", x: 220, y: 420, title: "Forward Kinematics", tooltip: "Position from angles. Prereqs: Trigonometry. Unlocks: Kinematics. Projects: Spiderbot", prereqs: ["trigonometry"], unlocks: ["kinematics"], class: "engineering" },
+            { id: "inverse_kinematics", x: 300, y: 420, title: "Inverse Kinematics", tooltip: "Angles from position. Prereqs: Forward Kinematics. Unlocks: Kinematics. Projects: Spiderbot", prereqs: ["forward_kinematics"], unlocks: ["kinematics"], class: "engineering" },
+            { id: "gait_planning", x: 380, y: 420, title: "Gait Planning", tooltip: "Leg coordination. Prereqs: Inverse Kinematics. Unlocks: Kinematics. Projects: Spiderbot", prereqs: ["inverse_kinematics"], unlocks: ["kinematics"], class: "engineering" },
+
+            { id: "embedded_programming", x: 500, y: 350, title: "Embedded Prog (C/C++)", tooltip: "Low-level coding. Prereqs: Programming (Python). Unlocks: Drone Eng, Robotics. Projects: All", prereqs: ["programming_python"], unlocks: ["drone_engineering", "robotics_ros"], class: "engineering" },
+            { id: "microcontrollers", x: 420, y: 420, title: "Microcontrollers", tooltip: "Arduino basics. Prereqs: Programming (Python). Unlocks: Embedded Prog. Projects: All", prereqs: ["programming_python"], unlocks: ["embedded_programming"], class: "engineering" },
+            { id: "interrupts", x: 500, y: 420, title: "Interrupts", tooltip: "Event handling. Prereqs: Microcontrollers. Unlocks: Embedded Prog. Projects: All", prereqs: ["microcontrollers"], unlocks: ["embedded_programming"], class: "engineering" },
+            { id: "timers", x: 580, y: 420, title: "Timers", tooltip: "Timing control. Prereqs: Interrupts. Unlocks: Embedded Prog. Projects: All", prereqs: ["interrupts"], unlocks: ["embedded_programming"], class: "engineering" },
+
+            { id: "control_systems_pid", x: 700, y: 350, title: "Control Systems (PID)", tooltip: "Feedback control. Prereqs: Differential Equations. Unlocks: Drone Eng, Robotics. Projects: Drone, Spiderbot", prereqs: ["diff_equations"], unlocks: ["drone_engineering", "robotics_ros"], class: "engineering" },
+            { id: "pid_basics", x: 650, y: 420, title: "PID Basics", tooltip: "Proportional, Integral, Derivative. Prereqs: Differential Equations. Unlocks: Control Systems (PID). Projects: All", prereqs: ["diff_equations"], unlocks: ["control_systems_pid"], class: "engineering" },
+            { id: "tuning_pid", x: 750, y: 420, title: "PID Tuning", tooltip: "Adjusting gains. Prereqs: PID Basics. Unlocks: Control Systems (PID). Projects: All", prereqs: ["pid_basics"], unlocks: ["control_systems_pid"], class: "engineering" },
+
+            { id: "simulation", x: 900, y: 350, title: "Simulation (MATLAB)", tooltip: "Virtual testing. Prereqs: Programming (Python). Unlocks: Drone Eng, Robotics. Projects: All", prereqs: ["programming_python"], unlocks: ["drone_engineering", "robotics_ros"], class: "engineering" },
+            { id: "matlab_basics", x: 850, y: 420, title: "MATLAB Basics", tooltip: "Syntax and plotting. Prereqs: Programming (Python). Unlocks: Simulation. Projects: All", prereqs: ["programming_python"], unlocks: ["simulation"], class: "engineering" },
+            { id: "simulink", x: 950, y: 420, title: "Simulink", tooltip: "Dynamic systems. Prereqs: MATLAB Basics. Unlocks: Simulation. Projects: All", prereqs: ["matlab_basics"], unlocks: ["simulation"], class: "engineering" },
+
+            // Tier 3: Project Enablers - Detailed Breakdown
+            { id: "drone_engineering", x: 300, y: 650, title: "Drone Engineering", tooltip: "Building drones. Prereqs: Aerodynamics, Embedded Prog, Control Systems, Simulation, Electronics, Mech Design. Unlocks: Hybrid Systems, Military Tech. Milestone: Stable quadcopter", prereqs: ["aerodynamics", "embedded_programming", "control_systems_pid", "simulation", "electronics", "mechanical_design"], unlocks: ["hybrid_systems", "military_tech"], class: "engineering" },
+            { id: "flight_controllers", x: 200, y: 720, title: "Flight Controllers", tooltip: "Ardupilot setup. Prereqs: Embedded Prog. Unlocks: Drone Engineering. Projects: Drone", prereqs: ["embedded_programming"], unlocks: ["drone_engineering"], class: "engineering" },
+            { id: "esc_tuning", x: 300, y: 720, title: "ESC Tuning", tooltip: "Motor control. Prereqs: Electronics. Unlocks: Drone Engineering. Projects: Drone", prereqs: ["electronics"], unlocks: ["drone_engineering"], class: "engineering" },
+            { id: "autonomy_basics", x: 400, y: 720, title: "Autonomy Basics", tooltip: "Simple navigation. Prereqs: Control Systems. Unlocks: Drone Engineering. Projects: Drone", prereqs: ["control_systems_pid"], unlocks: ["drone_engineering"], class: "engineering" },
+
+            { id: "robotics_ros", x: 800, y: 650, title: "Robotics (ROS)", tooltip: "Robot control. Prereqs: Kinematics, Embedded Prog, Control Systems, Simulation, Mech Design. Unlocks: Hybrid Systems. Milestone: Spiderbot leg control", prereqs: ["kinematics", "embedded_programming", "control_systems_pid", "simulation", "mechanical_design"], unlocks: ["hybrid_systems"], class: "engineering" },
+            { id: "ros_nodes", x: 750, y: 720, title: "ROS Nodes", tooltip: "Modular control. Prereqs: Embedded Prog. Unlocks: Robotics (ROS). Projects: Spiderbot, Artemis", prereqs: ["embedded_programming"], unlocks: ["robotics_ros"], class: "engineering" },
+            { id: "sensor_fusion", x: 850, y: 720, title: "Sensor Fusion", tooltip: "Combining data. Prereqs: Control Systems. Unlocks: Robotics (ROS). Projects: Spiderbot, Artemis", prereqs: ["control_systems_pid"], unlocks: ["robotics_ros"], class: "engineering" },
+
+            { id: "pcb_design", x: 300, y: 500, title: "PCB Design", tooltip: "Custom circuits. Prereqs: Electronics. Unlocks: System Integration. Milestone: Motor driver PCB", prereqs: ["electronics"], unlocks: ["system_integration"], class: "engineering" },
+            { id: "kicad_basics", x: 250, y: 570, title: "KiCad Basics", tooltip: "Schematic design. Prereqs: Electronics. Unlocks: PCB Design. Projects: All", prereqs: ["electronics"], unlocks: ["pcb_design"], class: "engineering" },
+            { id: "power_circuits", x: 350, y: 570, title: "Power Circuits", tooltip: "Voltage regulation. Prereqs: KiCad Basics. Unlocks: PCB Design. Projects: All", prereqs: ["kicad_basics"], unlocks: ["pcb_design"], class: "engineering" },
+
+            { id: "rf_communication", x: 600, y: 500, title: "RF & Communication", tooltip: "Wireless links. Prereqs: Electronics, Programming (Python). Unlocks: Military Tech. Milestone: MAVLink data", prereqs: ["electronics", "programming_python"], unlocks: ["military_tech"], class: "engineering" },
+            { id: "mavlink", x: 550, y: 570, title: "MAVLink", tooltip: "Drone telemetry. Prereqs: Programming (Python). Unlocks: RF & Communication. Projects: Drone", prereqs: ["programming_python"], unlocks: ["rf_communication"], class: "engineering" },
+            { id: "lora", x: 650, y: 570, title: "LoRa", tooltip: "Long-range comms. Prereqs: Electronics. Unlocks: RF & Communication. Projects: Artemis", prereqs: ["electronics"], unlocks: ["rf_communication"], class: "engineering" },
+
+            { id: "power_systems", x: 900, y: 500, title: "Power Systems", tooltip: "Energy management. Prereqs: Electronics. Unlocks: Hybrid Systems, System Integration. Milestone: Solar circuit", prereqs: ["electronics"], unlocks: ["hybrid_systems", "system_integration"], class: "engineering" },
+            { id: "lipo_management", x: 850, y: 570, title: "LiPo Management", tooltip: "Battery care. Prereqs: Electronics. Unlocks: Power Systems. Projects: Drone, Artemis", prereqs: ["electronics"], unlocks: ["power_systems"], class: "engineering" },
+            { id: "solar_integration", x: 950, y: 570, title: "Solar Integration", tooltip: "Renewable power. Prereqs: LiPo Management. Unlocks: Power Systems. Projects: Artemis", prereqs: ["lipo_management"], unlocks: ["power_systems"], class: "engineering" },
+
+            // Tier 4: Advanced Mastery - Detailed Breakdown
+            { id: "ai_ml", x: 200, y: 800, title: "AI & Machine Learning", tooltip: "Smart systems. Prereqs: Programming (Python). Unlocks: System Integration, Military Tech. Milestone: Obstacle detection", prereqs: ["programming_python"], unlocks: ["system_integration", "military_tech"], class: "advanced" },
+            { id: "opencv", x: 120, y: 870, title: "OpenCV", tooltip: "Computer vision. Prereqs: Programming (Python). Unlocks: AI & ML. Projects: Artemis", prereqs: ["programming_python"], unlocks: ["ai_ml"], class: "advanced" },
+            { id: "tensorflow", x: 200, y: 870, title: "TensorFlow", tooltip: "ML models. Prereqs: OpenCV. Unlocks: AI & ML. Projects: Artemis", prereqs: ["opencv"], unlocks: ["ai_ml"], class: "advanced" },
+            { id: "edge_ai", x: 280, y: 870, title: "Edge AI", tooltip: "Jetson Nano. Prereqs: TensorFlow. Unlocks: AI & ML. Projects: Artemis", prereqs: ["tensorflow"], unlocks: ["ai_ml"], class: "advanced" },
+
+            { id: "hybrid_systems", x: 500, y: 800, title: "Hybrid Systems", tooltip: "Drone-robot combo. Prereqs: Drone Eng, Robotics, Power Systems. Unlocks: System Integration. Milestone: Artemis takeoff", prereqs: ["drone_engineering", "robotics_ros", "power_systems"], unlocks: ["system_integration"], class: "advanced" },
+            { id: "multi_mode_control", x: 500, y: 870, title: "Multi-Mode Control", tooltip: "Flight and walking. Prereqs: Robotics (ROS). Unlocks: Hybrid Systems. Projects: Artemis", prereqs: ["robotics_ros"], unlocks: ["hybrid_systems"], class: "advanced" },
+
+            { id: "military_tech", x: 800, y: 800, title: "Military Tech", tooltip: "Defense systems. Prereqs: Drone Eng, RF Comm, AI/ML. Unlocks: System Integration. Milestone: Drone swarm", prereqs: ["drone_engineering", "rf_communication", "ai_ml"], unlocks: ["system_integration"], class: "advanced" },
+            { id: "encryption", x: 750, y: 870, title: "Encryption", tooltip: "Secure comms. Prereqs: RF & Communication. Unlocks: Military Tech. Projects: Military", prereqs: ["rf_communication"], unlocks: ["military_tech"], class: "advanced" },
+            { id: "swarming", x: 850, y: 870, title: "Swarming", tooltip: "Group coordination. Prereqs: Drone Engineering. Unlocks: Military Tech. Projects: Military", prereqs: ["drone_engineering"], unlocks: ["military_tech"], class: "advanced" },
+
+            { id: "system_integration", x: 500, y: 950, title: "System Integration", tooltip: "Full Artemis. Prereqs: PCB Design, Power Systems, Hybrid Systems, AI/ML, Military Tech. Your Iron Man goal! Milestone: Boot Artemis", prereqs: ["pcb_design", "power_systems", "hybrid_systems", "ai_ml", "military_tech"], unlocks: [], class: "advanced" },
+            { id: "custom_os", x: 400, y: 1020, title: "Custom OS", tooltip: "Linux setup. Prereqs: Programming (Python). Unlocks: System Integration. Projects: Artemis", prereqs: ["programming_python"], unlocks: ["system_integration"], class: "advanced" },
+            { id: "middleware", x: 600, y: 1020, title: "Middleware", tooltip: "System glue. Prereqs: Custom OS. Unlocks: System Integration. Projects: Artemis", prereqs: ["custom_os"], unlocks: ["system_integration"], class: "advanced" }
+        ];
+
+        const canvas = document.getElementById("canvas");
+        const infoTitle = document.getElementById("info-title");
+        const infoContent = document.getElementById("info-content");
+
+        // Function to increase spacing between nodes
+        function increaseSpacing(horizontalFactor = 1.5, verticalFactor = 1.5) {
+            // Find the minimum x and y to maintain relative positioning
+            const minX = Math.min(...nodes.map(node => node.x));
+            const minY = Math.min(...nodes.map(node => node.y));
+            
+            // Apply spacing to each node
+            nodes.forEach(node => {
+                // Calculate new position relative to minimum values
+                const relativeX = node.x - minX;
+                const relativeY = node.y - minY;
+                
+                // Apply spacing factors and restore offset
+                node.x = minX + (relativeX * horizontalFactor);
+                node.y = minY + (relativeY * verticalFactor);
+            });
+        }
+
+        // Apply increased spacing
+        increaseSpacing(1.8, 1.5);
+
+        // Draw lines between nodes
+        function drawLines() {
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.height = "2px";
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+        }
+
+        // Create nodes
+        nodes.forEach(node => {
+            const div = document.createElement("div");
+            div.className = `node ${node.class || ''}`;
+            div.id = node.id;
+            div.style.left = `${node.x}px`;
+            div.style.top = `${node.y}px`;
+            div.innerHTML = node.title;
+
+            // Add event listeners for highlighting connections
+            div.addEventListener('mouseenter', () => {
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+            });
+
+            div.addEventListener('mouseleave', () => {
+                // Remove highlight from all lines
+                document.querySelectorAll('.line.highlight').forEach(line => {
+                    line.classList.remove('highlight');
+                });
+                
+                // Reset info panel
+                infoTitle.textContent = "Tech Tree Information";
+                infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+            });
+
+            canvas.appendChild(div);
+        });
+
+        drawLines();
+    </script>
+</body>
+</html>
