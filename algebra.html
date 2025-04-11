@@ -34,6 +34,8 @@
             top: 0;
             left: 0;
             height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         #info-title {
             font-size: 18px;
@@ -47,6 +49,61 @@
             line-height: 1.5;
             color: rgba(255, 255, 255, 0.9);
             text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #time-tracker {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        #time-tracker h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #time-tracker p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
         }
         #canvas {
             flex: 1;
@@ -301,8 +358,23 @@
     </div>
     <div class="container">
         <div id="info-panel">
-            <div id="info-title">Algebra Tech Tree</div>
-            <div id="info-content">Hover over a node to see detailed information about that concept.</div>
+            <div id="info-title">Algebra Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div style="flex-grow: 1;"></div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="canvas"></div>
     </div>
@@ -436,79 +508,108 @@
             
             // Update progress summary
             updateProgressSummary();
+
+            // Initialize time tracking
+            let totalTime = parseInt(localStorage.getItem('algebraTotalTime') || '0');
+            let sessionStartTime = Date.now();
+            let lastUpdateTime = sessionStartTime;
+
+            // Update time displays
+            function updateTimeDisplays() {
+                const currentTime = Date.now();
+                const sessionTime = Math.floor((currentTime - sessionStartTime) / 60000);
+                document.getElementById('total-time').textContent = totalTime;
+                document.getElementById('session-time').textContent = sessionTime;
+            }
+
+            // Update time every minute
+            setInterval(() => {
+                const currentTime = Date.now();
+                const minutesSinceLastUpdate = Math.floor((currentTime - lastUpdateTime) / 60000);
+                
+                if (minutesSinceLastUpdate > 0) {
+                    totalTime += minutesSinceLastUpdate;
+                    localStorage.setItem('algebraTotalTime', totalTime.toString());
+                    lastUpdateTime = currentTime;
+                    updateTimeDisplays();
+                }
+            }, 60000);
+
+            // Initial time display update
+            updateTimeDisplays();
         });
 
         const nodes = [
-            // Parent Node: Algebra
-            { id: "algebra", x: 650, y: 50, title: "Algebra", tooltip: "Core of abstract math: variables, equations, functions. Essential for robotics modeling (e.g., kinematics, control systems). Prereqs: Arithmetic. Unlocks: Trigonometry, Calculus. Projects: All. Tip: Focus on solving step-by-step!", prereqs: ["arithmetic"], unlocks: ["trigonometry", "calculus"] },
+    // Parent Node: Algebra
+    { id: "algebra", x: 650, y: 50, title: "Algebra", tooltip: "Core of abstract math: variables, equations, functions. Essential for robotics modeling (e.g., kinematics, control systems). Prereqs: Arithmetic. Unlocks: Trigonometry, Calculus. Projects: All. Tip: Focus on solving step-by-step!", prereqs: ["arithmetic"], unlocks: ["trigonometry", "calculus"], time: { estimated: "60-80 hrs", spent: "0 hrs" } },
 
-            // Subcategory 1: Expressions and Variables
-            { id: "expressions_variables", x: 550, y: 150, title: "Expressions & Variables", tooltip: "Using symbols for numbers. Foundation for robotics equations (e.g., motor speed = k × voltage). Prereqs: Arithmetic. Unlocks: Algebra. Projects: All. Example: 3x + 5", prereqs: ["arithmetic"], unlocks: ["algebra"] },
-            { id: "variables", x: 500, y: 250, title: "Variables", tooltip: "Symbols like x or y (e.g., x = speed). Represents unknowns in robotics. Prereqs: Arithmetic. Unlocks: Expressions & Variables. Projects: All. Tip: Think of x as a placeholder!", prereqs: ["arithmetic"], unlocks: ["expressions_variables"] },
-            { id: "algebraic_expressions", x: 550, y: 250, title: "Algebraic Expressions", tooltip: "Combining numbers and variables (e.g., 2x + 3). Models relationships in robotics. Prereqs: Variables. Unlocks: Expressions & Variables. Projects: All", prereqs: ["variables"], unlocks: ["expressions_variables"] },
-            { id: "simplifying_expressions", x: 600, y: 250, title: "Simplifying Expressions", tooltip: "Combine like terms (e.g., 2x + 3x = 5x). Optimizes robotics code. Prereqs: Algebraic Expressions. Unlocks: Expressions & Variables. Projects: All", prereqs: ["algebraic_expressions"], unlocks: ["expressions_variables"] },
-            { id: "evaluating_expressions", x: 650, y: 250, title: "Evaluating Expressions", tooltip: "Substitute values (e.g., 3x + 5 = 11 if x = 2). Tests robotics formulas. Prereqs: Simplifying Expressions. Unlocks: Expressions & Variables. Projects: All", prereqs: ["simplifying_expressions"], unlocks: ["expressions_variables"] },
+    // Subcategory 1: Expressions and Variables
+    { id: "expressions_variables", x: 550, y: 150, title: "Expressions & Variables", tooltip: "Using symbols for numbers. Foundation for robotics equations (e.g., motor speed = k × voltage). Prereqs: Arithmetic. Unlocks: Algebra. Projects: All. Example: 3x + 5", prereqs: ["arithmetic"], unlocks: ["algebra"], time: { estimated: "15-20 hrs", spent: "0 hrs" } },
+    { id: "variables", x: 500, y: 250, title: "Variables", tooltip: "Symbols like x or y (e.g., x = speed). Represents unknowns in robotics. Prereqs: Arithmetic. Unlocks: Expressions & Variables. Projects: All. Tip: Think of x as a placeholder!", prereqs: ["arithmetic"], unlocks: ["expressions_variables"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "algebraic_expressions", x: 550, y: 250, title: "Algebraic Expressions", tooltip: "Combining numbers and variables (e.g., 2x + 3). Models relationships in robotics. Prereqs: Variables. Unlocks: Expressions & Variables. Projects: All", prereqs: ["variables"], unlocks: ["expressions_variables"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "simplifying_expressions", x: 600, y: 250, title: "Simplifying Expressions", tooltip: "Combine like terms (e.g., 2x + 3x = 5x). Optimizes robotics code. Prereqs: Algebraic Expressions. Unlocks: Expressions & Variables. Projects: All", prereqs: ["algebraic_expressions"], unlocks: ["expressions_variables"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "evaluating_expressions", x: 650, y: 250, title: "Evaluating Expressions", tooltip: "Substitute values (e.g., 3x + 5 = 11 if x = 2). Tests robotics formulas. Prereqs: Simplifying Expressions. Unlocks: Expressions & Variables. Projects: All", prereqs: ["simplifying_expressions"], unlocks: ["expressions_variables"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
 
-            // Subcategory 2: Linear Equations
-            { id: "linear_equations", x: 750, y: 150, title: "Linear Equations", tooltip: "Equations like ax + b = c. Used in robotics for balance (e.g., force equations). Prereqs: Expressions & Variables. Unlocks: Algebra. Projects: All. Example: 2x + 3 = 7", prereqs: ["expressions_variables"], unlocks: ["algebra"] },
-            { id: "one_step_equations", x: 700, y: 250, title: "One-Step Equations", tooltip: "Simple solving (e.g., x + 5 = 10 → x = 5). Basic robotics adjustments. Prereqs: Expressions & Variables. Unlocks: Linear Equations. Projects: All. Tip: Isolate x!", prereqs: ["expressions_variables"], unlocks: ["linear_equations"] },
-            { id: "two_step_equations", x: 750, y: 250, title: "Two-Step Equations", tooltip: "Two operations (e.g., 2x + 3 = 7 → x = 2). Common in control systems. Prereqs: One-Step Equations. Unlocks: Linear Equations. Projects: All", prereqs: ["one_step_equations"], unlocks: ["linear_equations"] },
-            { id: "multi_step_equations", x: 800, y: 250, title: "Multi-Step Equations", tooltip: "Multiple steps (e.g., 3(x + 2) = 15 → x = 3). Solves complex robotics problems. Prereqs: Two-Step Equations. Unlocks: Linear Equations. Projects: All", prereqs: ["two_step_equations"], unlocks: ["linear_equations"] },
-            { id: "variables_both_sides", x: 850, y: 250, title: "Variables on Both Sides", tooltip: "Balance terms (e.g., 2x + 5 = x + 7 → x = 2). Key for equilibrium in robotics. Prereqs: Multi-Step Equations. Unlocks: Linear Equations. Projects: All", prereqs: ["multi_step_equations"], unlocks: ["linear_equations"] },
+    // Subcategory 2: Linear Equations
+    { id: "linear_equations", x: 750, y: 150, title: "Linear Equations", tooltip: "Equations like ax + b = c. Used in robotics for balance (e.g., force equations). Prereqs: Expressions & Variables. Unlocks: Algebra. Projects: All. Example: 2x + 3 = 7", prereqs: ["expressions_variables"], unlocks: ["algebra"], time: { estimated: "20-25 hrs", spent: "0 hrs" } },
+    { id: "one_step_equations", x: 700, y: 250, title: "One-Step Equations", tooltip: "Simple solving (e.g., x + 5 = 10 → x = 5). Basic robotics adjustments. Prereqs: Expressions & Variables. Unlocks: Linear Equations. Projects: All. Tip: Isolate x!", prereqs: ["expressions_variables"], unlocks: ["linear_equations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "two_step_equations", x: 750, y: 250, title: "Two-Step Equations", tooltip: "Two operations (e.g., 2x + 3 = 7 → x = 2). Common in control systems. Prereqs: One-Step Equations. Unlocks: Linear Equations. Projects: All", prereqs: ["one_step_equations"], unlocks: ["linear_equations"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "multi_step_equations", x: 800, y: 250, title: "Multi-Step Equations", tooltip: "Multiple steps (e.g., 3(x + 2) = 15 → x = 3). Solves complex robotics problems. Prereqs: Two-Step Equations. Unlocks: Linear Equations. Projects: All", prereqs: ["two_step_equations"], unlocks: ["linear_equations"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "variables_both_sides", x: 850, y: 250, title: "Variables on Both Sides", tooltip: "Balance terms (e.g., 2x + 5 = x + 7 → x = 2). Key for equilibrium in robotics. Prereqs: Multi-Step Equations. Unlocks: Linear Equations. Projects: All", prereqs: ["multi_step_equations"], unlocks: ["linear_equations"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
 
-            // Subcategory 3: Systems of Linear Equations
-            { id: "systems_equations", x: 650, y: 350, title: "Systems of Equations", tooltip: "Multiple equations (e.g., x + y = 5, x - y = 1). Solves robotics constraints (e.g., force balance). Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"] },
-            { id: "substitution_method", x: 600, y: 450, title: "Substitution Method", tooltip: "Substitute one equation into another (e.g., y = 2x into x + y = 3). Used in robotics multi-variable problems. Prereqs: Linear Equations. Unlocks: Systems of Equations. Projects: All", prereqs: ["linear_equations"], unlocks: ["systems_equations"] },
-            { id: "elimination_method", x: 650, y: 450, title: "Elimination Method", tooltip: "Add/subtract to eliminate variables (e.g., x + y = 5, x - y = 1 → 2x = 6). Efficient for robotics systems. Prereqs: Substitution Method. Unlocks: Systems of Equations. Projects: All", prereqs: ["substitution_method"], unlocks: ["systems_equations"] },
-            { id: "graphing_method", x: 700, y: 450, title: "Graphing Method", tooltip: "Find intersection (e.g., plot y = 2x and y = -x + 3). Visualizes robotics solutions. Prereqs: Elimination Method. Unlocks: Systems of Equations. Projects: All", prereqs: ["elimination_method"], unlocks: ["systems_equations"] },
+    // Subcategory 3: Systems of Linear Equations
+    { id: "systems_equations", x: 650, y: 350, title: "Systems of Equations", tooltip: "Multiple equations (e.g., x + y = 5, x - y = 1). Solves robotics constraints (e.g., force balance). Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"], time: { estimated: "20-25 hrs", spent: "0 hrs" } },
+    { id: "substitution_method", x: 600, y: 450, title: "Substitution Method", tooltip: "Substitute one equation into another (e.g., y = 2x into x + y = 3). Used in robotics multi-variable problems. Prereqs: Linear Equations. Unlocks: Systems of Equations. Projects: All", prereqs: ["linear_equations"], unlocks: ["systems_equations"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "elimination_method", x: 650, y: 450, title: "Elimination Method", tooltip: "Add/subtract to eliminate variables (e.g., x + y = 5, x - y = 1 → 2x = 6). Efficient for robotics systems. Prereqs: Substitution Method. Unlocks: Systems of Equations. Projects: All", prereqs: ["substitution_method"], unlocks: ["systems_equations"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "graphing_method", x: 700, y: 450, title: "Graphing Method", tooltip: "Find intersection (e.g., plot y = 2x and y = -x + 3). Visualizes robotics solutions. Prereqs: Elimination Method. Unlocks: Systems of Equations. Projects: All", prereqs: ["elimination_method"], unlocks: ["systems_equations"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
 
-            // Subcategory 4: Inequalities
-            { id: "inequalities", x: 750, y: 350, title: "Inequalities", tooltip: "Expressions with <, > (e.g., 2x < 6). Sets limits in robotics (e.g., motor power caps). Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"] },
-            { id: "linear_inequalities", x: 700, y: 450, title: "Linear Inequalities", tooltip: "Solve like equations (e.g., 2x + 3 < 7 → x < 2). Defines safe ranges in robotics. Prereqs: Linear Equations. Unlocks: Inequalities. Projects: All. Tip: Flip sign when dividing by negative!", prereqs: ["linear_equations"], unlocks: ["inequalities"] },
-            { id: "graphing_inequalities", x: 750, y: 450, title: "Graphing Inequalities", tooltip: "Shade regions (e.g., y < 2x). Visualizes constraints in design. Prereqs: Linear Inequalities. Unlocks: Inequalities. Projects: All", prereqs: ["linear_inequalities"], unlocks: ["inequalities"] },
-            { id: "systems_inequalities", x: 800, y: 450, title: "Systems of Inequalities", tooltip: "Multiple conditions (e.g., y < x, y > -2). Maps feasible regions in robotics. Prereqs: Graphing Inequalities. Unlocks: Inequalities. Projects: All", prereqs: ["graphing_inequalities"], unlocks: ["inequalities"] },
+    // Subcategory 4: Inequalities
+    { id: "inequalities", x: 750, y: 350, title: "Inequalities", tooltip: "Expressions with <, > (e.g., 2x < 6). Sets limits in robotics (e.g., motor power caps). Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"], time: { estimated: "15-20 hrs", spent: "0 hrs" } },
+    { id: "linear_inequalities", x: 700, y: 450, title: "Linear Inequalities", tooltip: "Solve like equations (e.g., 2x + 3 < 7 → x < 2). Defines safe ranges in robotics. Prereqs: Linear Equations. Unlocks: Inequalities. Projects: All. Tip: Flip sign when dividing by negative!", prereqs: ["linear_equations"], unlocks: ["inequalities"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "graphing_inequalities", x: 750, y: 450, title: "Graphing Inequalities", tooltip: "Shade regions (e.g., y < 2x). Visualizes constraints in design. Prereqs: Linear Inequalities. Unlocks: Inequalities. Projects: All", prereqs: ["linear_inequalities"], unlocks: ["inequalities"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "systems_inequalities", x: 800, y: 450, title: "Systems of Inequalities", tooltip: "Multiple conditions (e.g., y < x, y > -2). Maps feasible regions in robotics. Prereqs: Graphing Inequalities. Unlocks: Inequalities. Projects: All", prereqs: ["graphing_inequalities"], unlocks: ["inequalities"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
 
-            // Subcategory 5: Polynomials
-            { id: "polynomials", x: 550, y: 550, title: "Polynomials", tooltip: "Multi-term expressions (e.g., 3x² + 2x + 1). Models motion curves in robotics. Prereqs: Expressions & Variables. Unlocks: Algebra. Projects: All", prereqs: ["expressions_variables"], unlocks: ["algebra"] },
-            { id: "adding_subtracting_polynomials", x: 500, y: 650, title: "Add/Subtract Polynomials", tooltip: "Combine terms (e.g., (x² + 2x) + (3x² + 1) = 4x² + 2x + 1). Used in robotics dynamics. Prereqs: Expressions & Variables. Unlocks: Polynomials. Projects: All", prereqs: ["expressions_variables"], unlocks: ["polynomials"] },
-            { id: "multiplying_polynomials", x: 550, y: 650, title: "Multiplying Polynomials", tooltip: "Distribute (e.g., (x + 2)(x + 3) = x² + 5x + 6). Expands robotics equations. Prereqs: Adding/Subtracting Polynomials. Unlocks: Polynomials. Projects: All", prereqs: ["adding_subtracting_polynomials"], unlocks: ["polynomials"] },
-            { id: "factoring_polynomials", x: 600, y: 650, title: "Factoring Polynomials", tooltip: "Break down (e.g., x² + 5x + 6 = (x + 2)(x + 3)). Simplifies control systems. Prereqs: Multiplying Polynomials. Unlocks: Polynomials. Projects: All", prereqs: ["multiplying_polynomials"], unlocks: ["polynomials"] },
-            { id: "dividing_polynomials", x: 650, y: 650, title: "Dividing Polynomials", tooltip: "Long division (e.g., (x² + 3x + 2) ÷ (x + 1)). Used in signal processing. Prereqs: Factoring Polynomials. Unlocks: Polynomials. Projects: All", prereqs: ["factoring_polynomials"], unlocks: ["polynomials"] },
+    // Subcategory 5: Polynomials
+    { id: "polynomials", x: 550, y: 550, title: "Polynomials", tooltip: "Multi-term expressions (e.g., 3x² + 2x + 1). Models motion curves in robotics. Prereqs: Expressions & Variables. Unlocks: Algebra. Projects: All", prereqs: ["expressions_variables"], unlocks: ["algebra"], time: { estimated: "20-25 hrs", spent: "0 hrs" } },
+    { id: "adding_subtracting_polynomials", x: 500, y: 650, title: "Add/Subtract Polynomials", tooltip: "Combine terms (e.g., (x² + 2x) + (3x² + 1) = 4x² + 2x + 1). Used in robotics dynamics. Prereqs: Expressions & Variables. Unlocks: Polynomials. Projects: All", prereqs: ["expressions_variables"], unlocks: ["polynomials"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "multiplying_polynomials", x: 550, y: 650, title: "Multiplying Polynomials", tooltip: "Distribute (e.g., (x + 2)(x + 3) = x² + 5x + 6). Expands robotics equations. Prereqs: Adding/Subtracting Polynomials. Unlocks: Polynomials. Projects: All", prereqs: ["adding_subtracting_polynomials"], unlocks: ["polynomials"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "factoring_polynomials", x: 600, y: 650, title: "Factoring Polynomials", tooltip: "Break down (e.g., x² + 5x + 6 = (x + 2)(x + 3)). Simplifies control systems. Prereqs: Multiplying Polynomials. Unlocks: Polynomials. Projects: All", prereqs: ["multiplying_polynomials"], unlocks: ["polynomials"], time: { estimated: "10-15 hrs", spent: "0 hrs" } },
+    { id: "dividing_polynomials", x: 650, y: 650, title: "Dividing Polynomials", tooltip: "Long division (e.g., (x² + 3x + 2) ÷ (x + 1)). Used in signal processing. Prereqs: Factoring Polynomials. Unlocks: Polynomials. Projects: All", prereqs: ["factoring_polynomials"], unlocks: ["polynomials"], time: { estimated: "10-15 hrs", spent: "0 hrs" } },
 
-            // Subcategory 6: Quadratic Equations
-            { id: "quadratics", x: 750, y: 550, title: "Quadratic Equations", tooltip: "Equations like ax² + bx + c = 0. Models parabolic motion (e.g., drone trajectories). Prereqs: Polynomials. Unlocks: Algebra. Projects: All", prereqs: ["polynomials"], unlocks: ["algebra"] },
-            { id: "factoring_quadratics", x: 700, y: 650, title: "Factoring Quadratics", tooltip: "Solve by factoring (e.g., x² - 5x + 6 = 0 → (x - 2)(x - 3) = 0). Simplifies robotics math. Prereqs: Polynomials. Unlocks: Quadratics. Projects: All", prereqs: ["polynomials"], unlocks: ["quadratics"] },
-            { id: "quadratic_formula", x: 750, y: 650, title: "Quadratic Formula", tooltip: "x = (-b ± √(b² - 4ac)) / 2a (e.g., x² + 2x - 3 = 0). Solves any quadratic in robotics. Prereqs: Factoring Quadratics. Unlocks: Quadratics. Projects: All", prereqs: ["factoring_quadratics"], unlocks: ["quadratics"] },
-            { id: "completing_square", x: 800, y: 650, title: "Completing the Square", tooltip: "Rewrite as square (e.g., x² + 4x + 4 = (x + 2)²). Alternative solving method. Prereqs: Quadratic Formula. Unlocks: Quadratics. Projects: All", prereqs: ["quadratic_formula"], unlocks: ["quadratics"] },
-            { id: "graphing_quadratics", x: 850, y: 650, title: "Graphing Quadratics", tooltip: "Plot parabolas (e.g., y = x²). Visualizes motion paths in robotics. Prereqs: Completing the Square. Unlocks: Quadratics. Projects: All", prereqs: ["completing_square"], unlocks: ["quadratics"] },
+    // Subcategory 6: Quadratic Equations
+    { id: "quadratics", x: 750, y: 550, title: "Quadratic Equations", tooltip: "Equations like ax² + bx + c = 0. Models parabolic motion (e.g., drone trajectories). Prereqs: Polynomials. Unlocks: Algebra. Projects: All", prereqs: ["polynomials"], unlocks: ["algebra"], time: { estimated: "20-25 hrs", spent: "0 hrs" } },
+    { id: "factoring_quadratics", x: 700, y: 650, title: "Factoring Quadratics", tooltip: "Solve by factoring (e.g., x² - 5x + 6 = 0 → (x - 2)(x - 3) = 0). Simplifies robotics math. Prereqs: Polynomials. Unlocks: Quadratics. Projects: All", prereqs: ["polynomials"], unlocks: ["quadratics"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "quadratic_formula", x: 750, y: 650, title: "Quadratic Formula", tooltip: "x = (-b ± √(b² - 4ac)) / 2a (e.g., x² + 2x - 3 = 0). Solves any quadratic in robotics. Prereqs: Factoring Quadratics. Unlocks: Quadratics. Projects: All", prereqs: ["factoring_quadratics"], unlocks: ["quadratics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "completing_square", x: 800, y: 650, title: "Completing the Square", tooltip: "Rewrite as square (e.g., x² + 4x + 4 = (x + 2)²). Alternative solving method. Prereqs: Quadratic Formula. Unlocks: Quadratics. Projects: All", prereqs: ["quadratic_formula"], unlocks: ["quadratics"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "graphing_quadratics", x: 850, y: 650, title: "Graphing Quadratics", tooltip: "Plot parabolas (e.g., y = x²). Visualizes motion paths in robotics. Prereqs: Completing the Square. Unlocks: Quadratics. Projects: All", prereqs: ["completing_square"], unlocks: ["quadratics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
 
-            // Subcategory 7: Functions
-            { id: "functions", x: 650, y: 750, title: "Functions", tooltip: "Input-output mappings (e.g., f(x) = x²). Models system behavior in robotics (e.g., speed vs. voltage). Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"] },
-            { id: "function_notation", x: 600, y: 850, title: "Function Notation", tooltip: "Understand f(x) (e.g., f(x) = x + 3, f(2) = 5). Represents robotics processes. Prereqs: Linear Equations. Unlocks: Functions. Projects: All", prereqs: ["linear_equations"], unlocks: ["functions"] },
-            { id: "linear_functions", x: 650, y: 850, title: "Linear Functions", tooltip: "y = mx + b (e.g., y = 2x + 1). Models steady rates in robotics. Prereqs: Function Notation. Unlocks: Functions. Projects: All", prereqs: ["function_notation"], unlocks: ["functions"] },
-            { id: "quadratic_functions", x: 700, y: 850, title: "Quadratic Functions", tooltip: "Parabolas (e.g., f(x) = x²). Models curved paths in robotics. Prereqs: Linear Functions. Unlocks: Functions. Projects: All", prereqs: ["linear_functions"], unlocks: ["functions"] },
-            { id: "domain_range", x: 750, y: 850, title: "Domain & Range", tooltip: "Valid inputs/outputs (e.g., f(x) = 1/x, x ≠ 0). Defines robotics limits. Prereqs: Quadratic Functions. Unlocks: Functions. Projects: All", prereqs: ["quadratic_functions"], unlocks: ["functions"] },
+    // Subcategory 7: Functions
+    { id: "functions", x: 650, y: 750, title: "Functions", tooltip: "Input-output mappings (e.g., f(x) = x²). Models system behavior in robotics (e.g., speed vs. voltage). Prereqs: Linear Equations. Unlocks: Algebra. Projects: All", prereqs: ["linear_equations"], unlocks: ["algebra"], time: { estimated: "20-25 hrs", spent: "0 hrs" } },
+    { id: "function_notation", x: 600, y: 850, title: "Function Notation", tooltip: "Understand f(x) (e.g., f(x) = x + 3, f(2) = 5). Represents robotics processes. Prereqs: Linear Equations. Unlocks: Functions. Projects: All", prereqs: ["linear_equations"], unlocks: ["functions"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "linear_functions", x: 650, y: 850, title: "Linear Functions", tooltip: "y = mx + b (e.g., y = 2x + 1). Models steady rates in robotics. Prereqs: Function Notation. Unlocks: Functions. Projects: All", prereqs: ["function_notation"], unlocks: ["functions"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "quadratic_functions", x: 700, y: 850, title: "Quadratic Functions", tooltip: "Parabolas (e.g., f(x) = x²). Models curved paths in robotics. Prereqs: Linear Functions. Unlocks: Functions. Projects: All", prereqs: ["linear_functions"], unlocks: ["functions"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "domain_range", x: 750, y: 850, title: "Domain & Range", tooltip: "Valid inputs/outputs (e.g., f(x) = 1/x, x ≠ 0). Defines robotics limits. Prereqs: Quadratic Functions. Unlocks: Functions. Projects: All", prereqs: ["quadratic_functions"], unlocks: ["functions"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
 
-            // Subcategory 8: Exponents and Radicals
-            { id: "exponents_radicals", x: 550, y: 750, title: "Exponents & Radicals", tooltip: "Powers and roots (e.g., x², √x). Used in control laws and distance calcs in robotics. Prereqs: Polynomials. Unlocks: Algebra. Projects: All", prereqs: ["polynomials"], unlocks: ["algebra"] },
-            { id: "laws_exponents", x: 500, y: 850, title: "Laws of Exponents", tooltip: "Rules like x^m × x^n = x^(m+n). Simplifies robotics equations. Prereqs: Polynomials. Unlocks: Exponents & Radicals. Projects: All. Example: 2² × 2³ = 2⁵", prereqs: ["polynomials"], unlocks: ["exponents_radicals"] },
-            { id: "negative_fractional_exponents", x: 550, y: 850, title: "Neg/Frac Exponents", tooltip: "e.g., x^(-1) = 1/x, x^(1/2) = √x. Models decay in robotics. Prereqs: Laws of Exponents. Unlocks: Exponents & Radicals. Projects: All", prereqs: ["laws_exponents"], unlocks: ["exponents_radicals"] },
-            { id: "simplifying_radicals", x: 600, y: 850, title: "Simplifying Radicals", tooltip: "e.g., √18 = 3√2. Used in kinematics distances. Prereqs: Negative/Fractional Exponents. Unlocks: Exponents & Radicals. Projects: All", prereqs: ["negative_fractional_exponents"], unlocks: ["exponents_radicals"] },
-            { id: "rationalizing_denominators", x: 650, y: 850, title: "Rationalizing Denom", tooltip: "Remove radicals below (e.g., 1/√2 = √2/2). Cleans up robotics math. Prereqs: Simplifying Radicals. Unlocks: Exponents & Radicals. Projects: All", prereqs: ["simplifying_radicals"], unlocks: ["exponents_radicals"] },
+    // Subcategory 8: Exponents and Radicals
+    { id: "exponents_radicals", x: 550, y: 750, title: "Exponents & Radicals", tooltip: "Powers and roots (e.g., x², √x). Used in control laws and distance calcs in robotics. Prereqs: Polynomials. Unlocks: Algebra. Projects: All", prereqs: ["polynomials"], unlocks: ["algebra"], time: { estimated: "20-25 hrs", spent: "0 hrs" } },
+    { id: "laws_exponents", x: 500, y: 850, title: "Laws of Exponents", tooltip: "Rules like x^m × x^n = x^(m+n). Simplifies robotics equations. Prereqs: Polynomials. Unlocks: Exponents & Radicals. Projects: All. Example: 2² × 2³ = 2⁵", prereqs: ["polynomials"], unlocks: ["exponents_radicals"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "negative_fractional_exponents", x: 550, y: 850, title: "Neg/Frac Exponents", tooltip: "e.g., x^(-1) = 1/x, x^(1/2) = √x. Models decay in robotics. Prereqs: Laws of Exponents. Unlocks: Exponents & Radicals. Projects: All", prereqs: ["laws_exponents"], unlocks: ["exponents_radicals"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "simplifying_radicals", x: 600, y: 850, title: "Simplifying Radicals", tooltip: "e.g., √18 = 3√2. Used in kinematics distances. Prereqs: Negative/Fractional Exponents. Unlocks: Exponents & Radicals. Projects: All", prereqs: ["negative_fractional_exponents"], unlocks: ["exponents_radicals"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "rationalizing_denominators", x: 650, y: 850, title: "Rationalizing Denom", tooltip: "Remove radicals below (e.g., 1/√2 = √2/2). Cleans up robotics math. Prereqs: Simplifying Radicals. Unlocks: Exponents & Radicals. Projects: All", prereqs: ["simplifying_radicals"], unlocks: ["exponents_radicals"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
 
-            // Subcategory 9: Rational Expressions
-            { id: "rational_expressions", x: 750, y: 750, title: "Rational Expressions", tooltip: "Polynomial fractions (e.g., (x + 1)/(x - 2)). Used in transfer functions for control. Prereqs: Polynomials. Unlocks: Algebra. Projects: All", prereqs: ["polynomials"], unlocks: ["algebra"] },
-            { id: "simplifying_rational_expressions", x: 700, y: 850, title: "Simplify Rational Exp", tooltip: "Cancel factors (e.g., (x² - 1)/(x - 1) = x + 1). Simplifies robotics models. Prereqs: Polynomials. Unlocks: Rational Expressions. Projects: All", prereqs: ["polynomials"], unlocks: ["rational_expressions"] },
-            { id: "adding_subtracting_rational", x: 750, y: 850, title: "Add/Subtract Rational", tooltip: "Common denominators (e.g., 1/x + 2/x = 3/x). Combines robotics terms. Prereqs: Simplifying Rational Exp. Unlocks: Rational Expressions. Projects: All", prereqs: ["simplifying_rational_expressions"], unlocks: ["rational_expressions"] },
-            { id: "multiplying_dividing_rational", x: 800, y: 850, title: "Mult/Div Rational", tooltip: "Cross-cancel (e.g., (x/2) × (4/x) = 2). Used in signal processing. Prereqs: Adding/Subtracting Rational. Unlocks: Rational Expressions. Projects: All", prereqs: ["adding_subtracting_rational"], unlocks: ["rational_expressions"] },
-            { id: "solving_rational_equations", x: 850, y: 850, title: "Solve Rational Eq", tooltip: "Clear denominators (e.g., 1/x + 2 = 3 → x = 1). Solves robotics constraints. Prereqs: Multiplying/Dividing Rational. Unlocks: Rational Expressions. Projects: All", prereqs: ["multiplying_dividing_rational"], unlocks: ["rational_expressions"] },
+    // Subcategory 9: Rational Expressions
+    { id: "rational_expressions", x: 750, y: 750, title: "Rational Expressions", tooltip: "Polynomial fractions (e.g., (x + 1)/(x - 2)). Used in transfer functions for control. Prereqs: Polynomials. Unlocks: Algebra. Projects: All", prereqs: ["polynomials"], unlocks: ["algebra"], time: { estimated: "20-25 hrs", spent: "0 hrs" } },
+    { id: "simplifying_rational_expressions", x: 700, y: 850, title: "Simplify Rational Exp", tooltip: "Cancel factors (e.g., (x² - 1)/(x - 1) = x + 1). Simplifies robotics models. Prereqs: Polynomials. Unlocks: Rational Expressions. Projects: All", prereqs: ["polynomials"], unlocks: ["rational_expressions"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "adding_subtracting_rational", x: 750, y: 850, title: "Add/Subtract Rational", tooltip: "Common denominators (e.g., 1/x + 2/x = 3/x). Combines robotics terms. Prereqs: Simplifying Rational Exp. Unlocks: Rational Expressions. Projects: All", prereqs: ["simplifying_rational_expressions"], unlocks: ["rational_expressions"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "multiplying_dividing_rational", x: 800, y: 850, title: "Mult/Div Rational", tooltip: "Cross-cancel (e.g., (x/2) × (4/x) = 2). Used in signal processing. Prereqs: Adding/Subtracting Rational. Unlocks: Rational Expressions. Projects: All", prereqs: ["adding_subtracting_rational"], unlocks: ["rational_expressions"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
+    { id: "solving_rational_equations", x: 850, y: 850, title: "Solve Rational Eq", tooltip: "Clear denominators (e.g., 1/x + 2 = 3 → x = 1). Solves robotics constraints. Prereqs: Multiplying/Dividing Rational. Unlocks: Rational Expressions. Projects: All", prereqs: ["multiplying_dividing_rational"], unlocks: ["rational_expressions"], time: { estimated: "10-15 hrs", spent: "0 hrs" } },
 
-            // Subcategory 10: Sequences and Series
-            { id: "sequences_series", x: 650, y: 950, title: "Sequences & Series", tooltip: "Patterns of numbers (e.g., 2, 4, 6, …). Models iterative processes in robotics (e.g., sensor sampling). Prereqs: Functions. Unlocks: Algebra. Projects: All", prereqs: ["functions"], unlocks: ["algebra"] },
-            { id: "arithmetic_sequences", x: 600, y: 1050, title: "Arithmetic Sequences", tooltip: "Constant difference (e.g., 2, 5, 8, …). Used in linear robotics steps. Prereqs: Functions. Unlocks: Sequences & Series. Projects: All. Example: +3 each term", prereqs: ["functions"], unlocks: ["sequences_series"] },
-            { id: "geometric_sequences", x: 650, y: 1050, title: "Geometric Sequences", tooltip: "Constant ratio (e.g., 2, 4, 8, …). Models exponential growth in robotics. Prereqs: Arithmetic Sequences. Unlocks: Sequences & Series. Projects: All", prereqs: ["arithmetic_sequences"], unlocks: ["sequences_series"] },
-            { id: "summation", x: 700, y: 1050, title: "Summation", tooltip: "Add terms (e.g., 1 + 2 + 3 = 6). Totals iterative data in robotics. Prereqs: Geometric Sequences. Unlocks: Sequences & Series. Projects: All", prereqs: ["geometric_sequences"], unlocks: ["sequences_series"] }
-        ];
+    // Subcategory 10: Sequences and Series
+    { id: "sequences_series", x: 650, y: 950, title: "Sequences & Series", tooltip: "Patterns of numbers (e.g., 2, 4, 6, …). Models iterative processes in robotics (e.g., sensor sampling). Prereqs: Functions. Unlocks: Algebra. Projects: All", prereqs: ["functions"], unlocks: ["algebra"], time: { estimated: "15-20 hrs", spent: "0 hrs" } },
+    { id: "arithmetic_sequences", x: 600, y: 1050, title: "Arithmetic Sequences", tooltip: "Constant difference (e.g., 2, 5, 8, …). Used in linear robotics steps. Prereqs: Functions. Unlocks: Sequences & Series. Projects: All. Example: +3 each term", prereqs: ["functions"], unlocks: ["sequences_series"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "geometric_sequences", x: 650, y: 1050, title: "Geometric Sequences", tooltip: "Constant ratio (e.g., 2, 4, 8, …). Models exponential growth in robotics. Prereqs: Arithmetic Sequences. Unlocks: Sequences & Series. Projects: All", prereqs: ["arithmetic_sequences"], unlocks: ["sequences_series"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "summation", x: 700, y: 1050, title: "Summation", tooltip: "Add terms (e.g., 1 + 2 + 3 = 6). Totals iterative data in robotics. Prereqs: Geometric Sequences. Unlocks: Sequences & Series. Projects: All", prereqs: ["geometric_sequences"], unlocks: ["sequences_series"], time: { estimated: "5-8 hrs", spent: "0 hrs" } }
+];
 
         const canvas = document.getElementById("canvas");
         const infoTitle = document.getElementById("info-title");
@@ -704,6 +805,12 @@
 
             // Add event listeners for highlighting connections
             div.addEventListener('mouseenter', () => {
+                // Set selected node
+                selectedNodeId = node.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
                 // Highlight outgoing connections
                 document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
                     line.classList.add('highlight');
@@ -716,17 +823,28 @@
                 // Update info panel
                 infoTitle.textContent = node.title;
                 infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
             });
 
             div.addEventListener('mouseleave', () => {
+                // Clear selected node
+                selectedNodeId = null;
+                
                 // Remove highlight from all lines
                 document.querySelectorAll('.line.highlight').forEach(line => {
                     line.classList.remove('highlight');
                 });
                 
                 // Reset info panel
-                infoTitle.textContent = "Algebra Tech Tree";
-                infoContent.textContent = "Hover over a node to see detailed information about that concept.";
+                infoTitle.textContent = "Algebra Tech Tree Information";
+                infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+                
+                // Reset time info
+                document.getElementById('estimated-time').textContent = "-";
+                document.getElementById('time-spent').textContent = "0 hrs";
             });
 
             canvas.appendChild(div);
@@ -870,6 +988,140 @@
             };
             reader.readAsText(file);
         });
+
+        // Time tracking variables
+        let totalTimeSpent = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let selectedNodeId = null;  // Track currently selected node
+
+        // Format time for display
+        function formatTime(hours) {
+            if (hours === 0) return '0 hrs';
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            if (minutes === 0) return `${wholeHours} hrs`;
+            return `${wholeHours} hrs ${minutes} mins`;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            if (selectedNodeId) {
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            }
+        }
+
+        // Add time manually
+        function addTime(hours) {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent += hours;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Reset time tracking
+        function resetTime() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent = 0;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Start/Stop timer
+        function toggleTimer() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            
+            const timerButton = document.getElementById('start-timer');
+            const activeTimer = document.getElementById('active-timer');
+            
+            if (!startTime) {
+                // Start timer
+                startTime = new Date();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                timerButton.textContent = 'Stop Timer';
+                activeTimer.style.display = 'block';
+            } else {
+                // Stop timer
+                const endTime = new Date();
+                const elapsedHours = (endTime - startTime) / (1000 * 60 * 60);
+                totalTimeSpent += elapsedHours;
+                
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                
+                timerButton.textContent = 'Start Timer';
+                activeTimer.style.display = 'none';
+                document.getElementById('timer-display').textContent = '00:00:00';
+                
+                updateTimeDisplay();
+                saveTime();
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            if (!startTime) return;
+            
+            const currentTime = new Date();
+            const elapsedMs = currentTime - startTime;
+            const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsedMs % (1000 * 60)) / 1000);
+            
+            document.getElementById('timer-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Save time to localStorage
+        function saveTime() {
+            if (selectedNodeId) {
+                localStorage.setItem(`algebra_${selectedNodeId}_total_time`, totalTimeSpent.toString());
+            }
+        }
+
+        // Load time from localStorage
+        function loadTime() {
+            if (selectedNodeId) {
+                const savedTime = localStorage.getItem(`algebra_${selectedNodeId}_total_time`);
+                if (savedTime) {
+                    totalTimeSpent = parseFloat(savedTime);
+                } else {
+                    totalTimeSpent = 0;
+                }
+                updateTimeDisplay();
+            }
+        }
+
+        // Event listeners for time tracking
+        document.getElementById('add-time').addEventListener('click', () => {
+            const timeInput = document.getElementById('hours-input');
+            const hours = parseFloat(timeInput.value);
+            if (!isNaN(hours) && hours > 0) {
+                addTime(hours);
+                timeInput.value = '';
+            }
+        });
+
+        document.getElementById('reset-time').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the time tracking?')) {
+                resetTime();
+            }
+        });
+
+        document.getElementById('start-timer').addEventListener('click', toggleTimer);
+
+        // Initialize time tracking
+        loadTime();
     </script>
 </body>
 </html> 
