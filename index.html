@@ -732,6 +732,9 @@
             let sessionStartTime = Date.now();
             let lastUpdateTime = sessionStartTime;
 
+            // Load saved progress
+            loadProgress();
+
             // Add event listeners for time controls
             document.getElementById('add-time').addEventListener('click', () => {
                 const hoursInput = document.getElementById('hours-input');
