@@ -955,7 +955,7 @@
     { id: "simulink", x: 950, y: 600, title: "Simulink", tooltip: "Dynamic systems. Prereqs: MATLAB Basics. Unlocks: Simulation. Projects: All", prereqs: ["matlab_basics"], unlocks: ["simulation"], class: "engineering", time: { estimated: "8-12 hrs", spent: "0 hrs" } },
 
     // Tier 3: Project Enablers - Detailed Breakdown
-    { id: "drone_engineering", x: 300, y: 700, title: "Drone Engineering", tooltip: "Building drones. Prereqs: Aerodynamics, Embedded Prog, Control Systems, Simulation, Electronics, Mech Design. Unlocks: Hybrid Systems, Military Tech. Milestone: Stable quadcopter", prereqs: ["aerodynamics", "embedded_programming", "control_systems_pid", "simulation", "electronics", "mechanical_design"], unlocks: ["hybrid_systems", "military_tech"], class: "engineering", time: { estimated: "30-50 hrs", spent: "0 hrs" } },
+    { id: "drone_engineering", x: 300, y: 700, title: "Drone Engineering", tooltip: "Building drones. Prereqs: Aerodynamics, Embedded Prog, Control Systems, Simulation, Electronics, Mech Design. Unlocks: Hybrid Systems, Military Tech. Milestone: Stable quadcopter", prereqs: ["aerodynamics", "embedded_programming", "control_systems_pid", "simulation", "electronics", "mechanical_design"], unlocks: ["hybrid_systems", "military_tech"], class: "engineering clickable", time: { estimated: "30-50 hrs", spent: "0 hrs" } },
     { id: "flight_controllers", x: 200, y: 800, title: "Flight Controllers", tooltip: "Ardupilot setup. Prereqs: Embedded Prog. Unlocks: Drone Engineering. Projects: Drone", prereqs: ["embedded_programming"], unlocks: ["drone_engineering"], class: "engineering", time: { estimated: "8-12 hrs", spent: "0 hrs" } },
     { id: "esc_tuning", x: 300, y: 800, title: "ESC Tuning", tooltip: "Motor control. Prereqs: Electronics. Unlocks: Drone Engineering. Projects: Drone", prereqs: ["electronics"], unlocks: ["drone_engineering"], class: "engineering", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
     { id: "autonomy_basics", x: 400, y: 800, title: "Autonomy Basics", tooltip: "Simple navigation. Prereqs: Control Systems. Unlocks: Drone Engineering. Projects: Drone", prereqs: ["control_systems_pid"], unlocks: ["drone_engineering"], class: "engineering", time: { estimated: "10-15 hrs", spent: "0 hrs" } },
@@ -1474,10 +1474,6 @@
                     // Update time info with specific node data
                     document.getElementById('estimated-time').textContent = node.time.estimated;
                     document.getElementById('time-spent').textContent = node.time.spent;
-                    
-                    // Add visual feedback for hover state
-                    div.style.transform = 'scale(1.05)';
-                    div.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
                 }
             });
 
@@ -2396,6 +2392,54 @@
                 
                 div.addEventListener('click', (e) => {
                     // Clear selected class from all nodes
+                    document.querySelectorAll('.node').forEach(node => {
+                        node.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node ID
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="simulation"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="simulation"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = "Simulation (MATLAB)";
+                    infoContent.textContent = "Master simulation using MATLAB to test and optimize robotics systems virtually. Covers MATLAB basics, Simulink for dynamic systems, and practical robotics simulations for drones, spiderbots, and hybrid designs.";
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = "15-25 hrs";
+                    document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+                    
+                    // Store current node ID for time tracking
+                    document.getElementById('current-node-id').value = 'simulation';
+                    
+                    // Handle double click
+                    if (e.detail === 2) {
+                        window.location.href = 'simulation.html';
+                    }
+                });
+            }
+
+            // Add click handler for Drone Engineering node
+            if (node.id === 'drone_engineering') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
                     document.querySelectorAll('.node.selected').forEach(selectedNode => {
                         selectedNode.classList.remove('selected');
                     });
@@ -2413,6 +2457,7 @@
                     document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
                         line.classList.add('highlight');
                     });
+                    
                     // Highlight incoming connections
                     document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
                         line.classList.add('highlight');
@@ -2424,7 +2469,7 @@
                     
                     // Update time info
                     document.getElementById('estimated-time').textContent = node.time.estimated;
-                    document.getElementById('time-spent').textContent = node.time.spent;
+                    document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
                     
                     // Store the current node ID for time tracking
                     document.getElementById('add-time').setAttribute('data-node-id', node.id);
@@ -2433,16 +2478,8 @@
                     // Store the current node ID for timer
                     document.getElementById('start-timer').setAttribute('data-node-id', node.id);
 
-                    if (clickTimer) {
-                        clearTimeout(clickTimer);
-                        clickTimer = null;
-                        // Double click - follow link
-                        window.location.href = 'simulation.html';
-                    } else {
-                        // Single click - just select the node
-                        clickTimer = setTimeout(() => {
-                            clickTimer = null;
-                        }, 300);
+                    if (e.detail === 2) {
+                        window.location.href = 'droneengineering.html';
                     }
                 });
             }
@@ -2845,6 +2882,58 @@
                 // Handle double click
                 if (e.detail === 2) {
                     window.location.href = 'simulation.html';
+                }
+            });
+        }
+
+        // Drone Engineering node click handler
+        const droneEngineeringNode = document.getElementById('drone_engineering');
+        if (droneEngineeringNode) {
+            droneEngineeringNode.style.cursor = 'pointer';
+            droneEngineeringNode.classList.add('clickable');
+            
+            droneEngineeringNode.addEventListener('click', (e) => {
+                // Clear selected class from all nodes
+                document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                    selectedNode.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked node
+                droneEngineeringNode.classList.add('selected');
+                
+                // Set selected node
+                selectedNodeId = droneEngineeringNode.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${droneEngineeringNode.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${droneEngineeringNode.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = "Drone Engineering";
+                infoContent.textContent = "Master the art of drone engineering! Design, build, and fly drones with skills in flight mechanics, assembly, and autonomy. Prerequisites: Aerodynamics, Control Systems (PID), Simulation (MATLAB), Data Processing. Unlocks: Military Tech, Hybrid Systems.";
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = "30-40 hrs";
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+                
+                // Store the current node ID for time tracking
+                document.getElementById('add-time').setAttribute('data-node-id', droneEngineeringNode.id);
+                document.getElementById('reset-time').setAttribute('data-node-id', droneEngineeringNode.id);
+                
+                // Store the current node ID for timer
+                document.getElementById('start-timer').setAttribute('data-node-id', droneEngineeringNode.id);
+
+                if (e.detail === 2) {
+                    window.location.href = 'droneengineering.html';
                 }
             });
         }
