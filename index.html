@@ -889,7 +889,7 @@
     { id: "sensor_design", x: 300, y: 250, title: "Sensor Design", tooltip: "Design advanced sensors for robotics using physics principles. Prereqs: Physics (Electromagnetism, Waves and Optics). Unlocks: None.", prereqs: ["physics"], unlocks: [], subnodes: [], class: "tier-1", time: { estimated: "20-30 hrs", spent: "0 hrs" } },
 
     // Tier 1: Foundations - Programming Breakdown
-    { id: "programming", x: 400, y: 250, title: "Programming", tooltip: "Master coding for robotics with Fundamentals, Robotics Programming, and Embedded Systems. This section equips you to write drone flight control, spiderbot sensor logic, and Artemis' navigation code. Prereqs: Algebra (from Mathematics). Unlocks: AI & Machine Learning, Control Systems (PID). Suggested resource: 'CS50 Introduction to Computer Science' on edX.", prereqs: ["algebra"], unlocks: ["ai_ml", "control_systems_pid"], subnodes: ["fundamentals", "robotics_programming", "embedded_systems"], class: "tier-1", time: { estimated: "40-50 hrs", spent: "0 hrs" } },
+    { id: "programming", x: 400, y: 250, title: "Programming", tooltip: "Master coding for robotics with Fundamentals, Robotics Programming, and Embedded Systems. This section equips you to write drone flight control, spiderbot gait algorithms, and Artemis' vision processing. Prereqs: None. Unlocks: Data Processing, Drone Engineering, Robotics (ROS). Projects: All. Suggested resource: 'Python for Robotics' on Coursera.", prereqs: [], unlocks: ["data_processing_analysis", "drone_engineering", "robotics_ros"], class: "tier-1", time: { estimated: "40-50 hrs", spent: "0 hrs" } },
 
     // Subnode: Fundamentals
     { id: "fundamentals", x: 350, y: 350, title: "Fundamentals", tooltip: "Learn the basics of programming to start coding for robotics. Covers syntax, control structures, and more. Prereqs: Programming (root node). Unlocks: Object-Oriented Programming (from detailed Programming tree). Projects: Drone (speed calculator), Spiderbot (basic logic).", prereqs: ["programming"], unlocks: ["object_oriented_programming"], class: "tier-1", time: { estimated: "15-20 hrs", spent: "0 hrs" } },
@@ -934,10 +934,17 @@
     { id: "inverse_kinematics", x: 300, y: 600, title: "Inverse Kinematics", tooltip: "Angles from position. Prereqs: Forward Kinematics. Unlocks: Kinematics. Projects: Spiderbot", prereqs: ["forward_kinematics"], unlocks: ["kinematics"], class: "engineering", time: { estimated: "8-12 hrs", spent: "0 hrs" } },
     { id: "gait_planning", x: 380, y: 600, title: "Gait Planning", tooltip: "Leg coordination. Prereqs: Inverse Kinematics. Unlocks: Kinematics. Projects: Spiderbot", prereqs: ["inverse_kinematics"], unlocks: ["kinematics"], class: "engineering", time: { estimated: "8-12 hrs", spent: "0 hrs" } },
 
-    { id: "embedded_programming", x: 500, y: 500, title: "Embedded Prog (C/C++)", tooltip: "Low-level coding. Prereqs: Programming (Python). Unlocks: Drone Eng, Robotics. Projects: All", prereqs: ["programming_python"], unlocks: ["drone_engineering", "robotics_ros"], class: "engineering", time: { estimated: "20-30 hrs", spent: "0 hrs" } },
-    { id: "microcontrollers", x: 420, y: 600, title: "Microcontrollers", tooltip: "Arduino basics. Prereqs: Programming (Python). Unlocks: Embedded Prog. Projects: All", prereqs: ["programming_python"], unlocks: ["embedded_programming"], class: "engineering", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-    { id: "interrupts", x: 500, y: 600, title: "Interrupts", tooltip: "Event handling. Prereqs: Microcontrollers. Unlocks: Embedded Prog. Projects: All", prereqs: ["microcontrollers"], unlocks: ["embedded_programming"], class: "engineering", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-    { id: "timers", x: 580, y: 600, title: "Timers", tooltip: "Timing control. Prereqs: Interrupts. Unlocks: Embedded Prog. Projects: All", prereqs: ["interrupts"], unlocks: ["embedded_programming"], class: "engineering", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    // Tier 2: Core Skills - Replace Embedded Programming with Data Processing and Analysis
+    { id: "data_processing_analysis", x: 500, y: 500, title: "Data Processing and Analysis (Python)", tooltip: "Process and analyze robotics data for smarter systems. Learn to handle sensor data, telemetry, and more using Python. Prereqs: Programming. Unlocks: Drone Engineering, Robotics (ROS). Projects: Drone (telemetry analysis), Spiderbot (sensor data processing), Artemis (vision data prep). Suggested resource: 'Python for Data Science' on Coursera.", prereqs: ["programming_python"], unlocks: ["drone_engineering", "robotics_ros"], class: "engineering", time: { estimated: "20-30 hrs", spent: "0 hrs" } },
+
+    // Subnode: Python Libraries for Data (NumPy/Pandas)
+    { id: "python_libraries_data", x: 420, y: 600, title: "Python Libraries for Data (NumPy/Pandas)", tooltip: "Learn to manipulate and analyze robotics data using NumPy (arrays) and Pandas (dataframes). Prereqs: Programming (Python). Unlocks: Data Processing and Analysis. Projects: Drone (telemetry data), Spiderbot (sensor logs). Example: Calculate average sensor reading with Pandas.", prereqs: ["programming_python"], unlocks: ["data_processing_analysis"], class: "engineering", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+
+    // Subnode: Data Visualization (Matplotlib)
+    { id: "data_visualization", x: 500, y: 600, title: "Data Visualization (Matplotlib)", tooltip: "Visualize robotics data with Matplotlib (e.g., plot drone flight path, spiderbot sensor trends). Prereqs: Python Libraries for Data. Unlocks: Data Processing and Analysis. Projects: Drone (flight path plot), Artemis (vision data graphs). Example: Plot x-y trajectory of a drone.", prereqs: ["python_libraries_data"], unlocks: ["data_processing_analysis"], class: "engineering", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+
+    // Subnode: Data Processing for Robotics
+    { id: "data_processing_robotics", x: 580, y: 600, title: "Data Processing for Robotics", tooltip: "Apply data processing to robotics tasks (e.g., filter sensor noise, analyze telemetry for performance). Prereqs: Data Visualization. Unlocks: Data Processing and Analysis. Projects: Spiderbot (noise filtering), Artemis (vision data prep for AI). Example: Filter noisy sensor data with a moving average.", prereqs: ["data_visualization"], unlocks: ["data_processing_analysis"], class: "engineering", time: { estimated: "8-12 hrs", spent: "0 hrs" } },
 
     { id: "control_systems_pid", x: 700, y: 500, title: "Control Systems (PID)", tooltip: "Feedback control. Prereqs: Differential Equations. Unlocks: Drone Eng, Robotics. Projects: Drone, Spiderbot", prereqs: ["diff_equations"], unlocks: ["drone_engineering", "robotics_ros"], class: "engineering", time: { estimated: "15-25 hrs", spent: "0 hrs" } },
     { id: "pid_basics", x: 650, y: 600, title: "PID Basics", tooltip: "Proportional, Integral, Derivative. Prereqs: Differential Equations. Unlocks: Control Systems (PID). Projects: All", prereqs: ["diff_equations"], unlocks: ["control_systems_pid"], class: "engineering", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
@@ -987,8 +994,8 @@
     { id: "middleware", x: 600, y: 1150, title: "Middleware", tooltip: "System glue. Prereqs: Custom OS. Unlocks: System Integration. Projects: Artemis", prereqs: ["custom_os"], unlocks: ["system_integration"], class: "advanced", time: { estimated: "10-15 hrs", spent: "0 hrs" } },
     
     // Statistics Node
-    { id: "statistics", x: 1300, y: 50, title: "Statistics", tooltip: "Data analysis and visualization. Track your progress and analyze your learning journey. Prereqs: Arithmetic, Algebra, Programming (Python). Unlocks: None. Projects: All. Tip: Use this to monitor your progress!", prereqs: ["arithmetic", "algebra", "programming_python"], unlocks: [], class: "tier-1", time: { estimated: "5-10 hrs", spent: "0 hrs" } }
-];
+    { id: "statistics", x: 1300, y: 50, title: "Statistics", tooltip: "Data analysis and visualization. Track your progress and analyze your learning journey. Prereqs: Arithmetic, Algebra, Programming (Python). Unlocks: None. Projects: All. Tip: Use this to monitor your progress!", prereqs: ["arithmetic", "algebra", "programming_python"], unlocks: [], class: "tier-1", time: { estimated: "5-10 hrs", spent: "0 hrs" } },
+    ];
 
         const canvas = document.getElementById("canvas");
         const infoTitle = document.getElementById("info-title");
@@ -2145,6 +2152,301 @@
                 });
             }
 
+            // Add click handler for Data Processing and Analysis node
+            if (node.id === 'data_processing_analysis') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'dataprocessinganalysis.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
+            // Add click handler for Aerodynamics node
+            if (node.id === 'aerodynamics') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'aerodynamics.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
+            // Add click handler for Kinematics node
+            if (node.id === 'kinematics') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'kinematics.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
+            // Add click handler for Control Systems (PID) node
+            if (node.id === 'control_systems_pid') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'controlsystempid.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
+            // Add click handler for Simulation (MATLAB) node
+            if (node.id === 'simulation') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'simulation.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
             canvas.appendChild(div);
 
             // Add click handler for node selection
@@ -2497,6 +2799,55 @@
                 window.location.href = 'MechanicalDesign.html';
             }
         });
+
+        // Add click handler for the Simulation (MATLAB) node
+        const simulationNode = document.getElementById('simulation');
+        if (simulationNode) {
+            simulationNode.style.cursor = 'pointer';
+            simulationNode.classList.add('clickable');
+            
+            simulationNode.addEventListener('click', (e) => {
+                // Clear selected class from all nodes
+                document.querySelectorAll('.node').forEach(node => {
+                    node.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked node
+                simulationNode.classList.add('selected');
+                
+                // Set selected node ID
+                selectedNodeId = 'simulation';
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="simulation"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="simulation"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = "Simulation (MATLAB)";
+                infoContent.textContent = "Master simulation using MATLAB to test and optimize robotics systems virtually. Covers MATLAB basics, Simulink for dynamic systems, and practical robotics simulations for drones, spiderbots, and hybrid designs.";
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = "15-25 hrs";
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+                
+                // Store current node ID for time tracking
+                document.getElementById('current-node-id').value = 'simulation';
+                
+                // Handle double click
+                if (e.detail === 2) {
+                    window.location.href = 'simulation.html';
+                }
+            });
+        }
     </script>
 </body>
 </html>
