@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algebra Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #info-panel {
+            width: 300px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #time-tracker {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        #time-tracker h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #time-tracker p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        #canvas {
+            flex: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line {
+            position: relative;
+            z-index: 2;
+        }
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #A29BFE, #81ECEC);
+            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+        }
+        .node.tier-5 {
+            background: linear-gradient(135deg, #55EFC4, #00B894);
+            box-shadow: 0 4px 15px rgba(85, 239, 196, 0.4);
+        }
+        .node.tier-6 {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            box-shadow: 0 4px 15px rgba(255, 234, 167, 0.4);
+        }
+        .node.tier-7 {
+            background: linear-gradient(135deg, #FAB1A0, #E17055);
+            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
+        }
+        .node.tier-8 {
+            background: linear-gradient(135deg, #FF7675, #D63031);
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
+        }
+        .node.tier-9 {
+            background: linear-gradient(135deg, #81ECEC, #00CEC9);
+            box-shadow: 0 4px 15px rgba(129, 236, 236, 0.4);
+        }
+        .node.tier-10 {
+            background: linear-gradient(135deg, #A8E6CF, #1DE9B6);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+        .node.tier-11 {
+            background: linear-gradient(135deg, #B39DDB, #9575CD);
+            box-shadow: 0 4px 15px rgba(179, 157, 219, 0.4);
+        }
+        .node.tier-12 {
+            background: linear-gradient(135deg, #90CAF9, #42A5F5);
+            box-shadow: 0 4px 15px rgba(144, 202, 249, 0.4);
+        }
+        .node::before {
+            content: attr(data-progress) '%';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .node[data-progress]:not([data-progress="0"])::before {
+            opacity: 1;
+        }
+        .node.tier-1:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7676);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        .node.tier-2:hover {
+            background: linear-gradient(135deg, #3DBEB6, #34A8A0);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        .node.tier-3:hover {
+            background: linear-gradient(135deg, #34A8A0, #2B938B);
+            box-shadow: 0 6px 20px rgba(69, 183, 175, 0.6);
+        }
+        .node.tier-4:hover {
+            background: linear-gradient(135deg, #2B938B, #227E77);
+            box-shadow: 0 6px 20px rgba(60, 162, 154, 0.6);
+        }
+        .node.clickable {
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+        .node.clickable:hover {
+            transform: scale(1.1);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+        }
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        #back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        #back-button:hover {
+            background: #45a049;
+        }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s;
+        }
+        .status-not-started {
+            background-color: #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 2s infinite;
+        }
+        .status-completed {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        }
+        .status-finished {
+            background-color: #9C27B0;
+            box-shadow: 0 0 5px rgba(156, 39, 176, 0.7);
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+            50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 0 0 5px 5px;
+        }
+        .progress-bar.in-progress {
+            background: linear-gradient(90deg, #FFC107, #FF9800);
+        }
+        .progress-bar.completed {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+        .progress-bar.not-started {
+            width: 0 !important;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+        .progress-summary {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="back-button" onclick="window.location.href='index.html'">← Back to Main Tree</button>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Algebra Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div style="flex-grow: 1;"></div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <script>
+        // Load saved progress from localStorage
+        let nodeProgress = {};
+        
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('algebraProgress');
+            if (savedProgress) {
+                nodeProgress = JSON.parse(savedProgress);
+            }
+        }
+        
+        function saveProgress() {
+            localStorage.setItem('algebraProgress', JSON.stringify(nodeProgress));
+            
+            // Calculate and save progress for the main page
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const progressPercentage = (finishedNodes / totalNodes) * 100;
+            
+            // Save progress to localStorage for the main page
+            localStorage.setItem('algebraMainProgress', progressPercentage.toString());
+        }
+        
+        function updateNodeStatus(nodeId, status) {
+            // Save to nodeProgress object
+            nodeProgress[nodeId] = status;
+            
+            // Save to localStorage with the correct key format
+            localStorage.setItem(`algebra_${nodeId}_progress`, status);
+            
+            // Update visual indicators
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const indicator = node.querySelector('.status-indicator');
+                const progressBar = node.querySelector('.progress-bar');
+                const tooltip = node.querySelector('.progress-tooltip');
+                
+                // Remove all status classes
+                indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                
+                // Add new status class
+                indicator.classList.add(`status-${status}`);
+                progressBar.classList.add(status);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+
+                // Update tooltip if it exists
+                if (tooltip) {
+                    tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+                }
+            }
+            
+            // Check if any algebra nodes are in progress or finished
+            const algebraNodes = Object.keys(localStorage)
+                .filter(key => key.startsWith('algebra_') && key.endsWith('_progress'))
+                .map(key => localStorage.getItem(key));
+            
+            const hasProgress = algebraNodes.some(nodeStatus => 
+                nodeStatus === 'in-progress' || nodeStatus === 'finished'
+            );
+            
+            // Update the parent node status in the main page
+            if (hasProgress) {
+                localStorage.setItem('algebra_progress', 'in-progress');
+            } else {
+                localStorage.setItem('algebra_progress', 'not-started');
+            }
+            
+            // Save overall progress
+            saveProgress();
+        }
+        
+        function getNodeStatus(nodeId) {
+            // First check if we have a saved status in localStorage
+            const savedStatus = localStorage.getItem(`algebra_${nodeId}_progress`);
+            if (savedStatus) {
+                return savedStatus;
+            }
+            
+            // If no saved status, check if the node has prerequisites
+            const node = nodes.find(n => n.id === nodeId);
+            if (node && node.prerequisites && node.prerequisites.length > 0) {
+                // If it has prerequisites, it starts as not-started
+                return 'not-started';
+            }
+            
+            // Default to not-started
+            return 'not-started';
+        }
+        
+        function updateProgressSummary() {
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const notStartedNodes = Object.values(nodeProgress).filter(status => status === 'not-started').length;
+            
+            const progressSummary = document.getElementById('progress-summary');
+            if (progressSummary) {
+                progressSummary.innerHTML = `
+                    <div>Total Nodes: ${totalNodes}</div>
+                    <div>Finished: ${finishedNodes}</div>
+                    <div>In Progress: ${inProgressNodes}</div>
+                    <div>Not Started: ${notStartedNodes}</div>
+                    <div>Overall Progress: ${Math.round((finishedNodes / totalNodes) * 100)}%</div>
+                `;
+            }
+        }
+        
+        // Load progress when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            
+            // Create progress summary element
+            const progressSummary = document.createElement('div');
+            progressSummary.id = 'progress-summary';
+            progressSummary.className = 'progress-summary';
+            document.body.appendChild(progressSummary);
+            
+            // Update progress summary
+            updateProgressSummary();
+
+            // Initialize time tracking
+            let totalTime = parseInt(localStorage.getItem('algebraTotalTime') || '0');
+            let sessionStartTime = Date.now();
+            let lastUpdateTime = sessionStartTime;
+
+            // Update time displays
+            function updateTimeDisplays() {
+                const currentTime = Date.now();
+                const sessionTime = Math.floor((currentTime - sessionStartTime) / 60000);
+                document.getElementById('total-time').textContent = totalTime;
+                document.getElementById('session-time').textContent = sessionTime;
+            }
+
+            // Update time every minute
+            setInterval(() => {
+                const currentTime = Date.now();
+                const minutesSinceLastUpdate = Math.floor((currentTime - lastUpdateTime) / 60000);
+                
+                if (minutesSinceLastUpdate > 0) {
+                    totalTime += minutesSinceLastUpdate;
+                    localStorage.setItem('algebraTotalTime', totalTime.toString());
+                    lastUpdateTime = currentTime;
+                    updateTimeDisplays();
+                }
+            }, 60000);
+
+            // Initial time display update
+            updateTimeDisplays();
+        });
+
+        const nodes = [
+            // Parent Node: Calculus (Tier 1 - Root)
+            { id: "calculus", x: 500, y: 50, title: "Calculus", tooltip: "Calculus is the mathematics of change, crucial for modeling motion, optimization, and dynamics in robotics. This tree equips you to optimize drone flight paths, analyze spiderbot leg motion, and design Artemis' control systems. You'll progress from limits to multivariable calculus and differential equations. Prereqs: Algebra (equation solving), Trigonometry (trig functions). Unlocks: Limits and Continuity, Derivatives, Integrals. Projects: Drone (flight optimization), Spiderbot (motion dynamics), Artemis (control systems).", prereqs: ["algebra", "trigonometry"], unlocks: ["limits_continuity", "derivatives", "integrals"], time: { estimated: "60-80 hrs", spent: "0 hrs" }, class: "tier-1" },
+
+            // Main Branches (Tier 2)
+            { id: "limits_continuity", x: 400, y: 150, title: "Limits and Continuity", tooltip: "Explore the concept of limits, the foundation of calculus, which helps you understand how functions behave as inputs approach certain values. You'll use limits to analyze drone speed changes or spiderbot leg motion smoothness. This node introduces continuity, setting the stage for derivatives and integrals. Prereqs: Calculus (root node). Unlocks: Evaluating Limits, Continuity in Robotics. Projects: Drone (speed analysis), Spiderbot (motion smoothness).", prereqs: ["calculus"], unlocks: ["evaluating_limits", "continuity_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            { id: "derivatives", x: 500, y: 150, title: "Derivatives", tooltip: "Learn about derivatives, which measure rates of change, essential for modeling velocity, acceleration, and optimization in robotics. You'll calculate the rate of change of a drone's altitude or the speed of a spiderbot leg's motion. This node introduces differentiation rules, preparing you for advanced applications. Prereqs: Calculus (root node). Unlocks: Differentiation Rules, Applications of Derivatives. Projects: Drone (altitude rate), Spiderbot (leg speed).", prereqs: ["calculus"], unlocks: ["differentiation_rules", "applications_derivatives"], time: { estimated: "10-15 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            { id: "integrals", x: 600, y: 150, title: "Integrals", tooltip: "Master integrals, which compute areas, accumulated quantities, and solutions to dynamic systems. You'll use integrals to calculate the total distance traveled by a drone or the work done by a spiderbot leg over a cycle. This node introduces antiderivatives and definite integrals, key for robotics dynamics. Prereqs: Calculus (root node). Unlocks: Antiderivatives, Definite Integrals. Projects: Drone (distance traveled), Spiderbot (work calculation).", prereqs: ["calculus"], unlocks: ["antiderivatives", "definite_integrals"], time: { estimated: "10-15 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            // Limits and Continuity Branch (Tier 3)
+            { id: "evaluating_limits", x: 350, y: 250, title: "Evaluating Limits", tooltip: "Learn techniques to evaluate limits, such as factoring, rationalizing, and L'Hôpital's rule. You'll use limits to analyze the stability of a drone's control system as it approaches a critical speed or the smoothness of Artemis' sensor data transitions. This node builds your ability to handle asymptotic behavior in robotics. Prereqs: Limits and Continuity (limit basics). Unlocks: Limits in Optimization. Projects: Drone (control stability), Artemis (sensor transitions).", prereqs: ["limits_continuity"], unlocks: ["limits_optimization"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "continuity_robotics", x: 450, y: 250, title: "Continuity in Robotics", tooltip: "Understand continuity and its role in ensuring smooth robotic systems. You'll apply continuity to ensure a spiderbot's leg motion is seamless or a drone's flight path avoids abrupt changes. This node connects limits to real-world robotics applications, preparing you for derivative concepts. Prereqs: Limits and Continuity (limit basics). Unlocks: None. Projects: Spiderbot (motion continuity), Drone (flight path smoothness).", prereqs: ["limits_continuity"], unlocks: [], time: { estimated: "2-4 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // Derivatives Branch (Tier 3)
+            { id: "differentiation_rules", x: 500, y: 250, title: "Differentiation Rules", tooltip: "Master differentiation rules like the power rule, product rule, quotient rule, and chain rule. You'll use these to compute the velocity of a drone during ascent or the acceleration of a spiderbot leg in motion. This node provides the tools to differentiate complex functions in robotics. Prereqs: Derivatives (derivative basics). Unlocks: Implicit Differentiation, Higher-Order Derivatives. Projects: Drone (velocity), Spiderbot (acceleration).", prereqs: ["derivatives"], unlocks: ["implicit_differentiation", "higher_order_derivatives"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "applications_derivatives", x: 550, y: 250, title: "Applications of Derivatives", tooltip: "Apply derivatives to solve real-world robotics problems, such as optimization and motion analysis. You'll optimize a drone's flight path for minimum energy use or analyze the rate of change in Artemis' sensor data. This node bridges derivatives to practical applications in your projects. Prereqs: Derivatives (derivative basics). Unlocks: Optimization with Derivatives, Motion Analysis with Derivatives. Projects: Drone (path optimization), Artemis (sensor analysis).", prereqs: ["derivatives"], unlocks: ["optimization_derivatives", "motion_analysis_derivatives"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // Integrals Branch (Tier 3)
+            { id: "antiderivatives", x: 600, y: 250, title: "Antiderivatives", tooltip: "Learn about antiderivatives, the reverse of differentiation, to find functions from their rates of change. You'll use antiderivatives to determine a drone's position from its velocity or a spiderbot's displacement from its speed. This node introduces integration techniques, setting the stage for definite integrals. Prereqs: Integrals (integral basics). Unlocks: Techniques of Integration. Projects: Drone (position tracking), Spiderbot (displacement).", prereqs: ["integrals"], unlocks: ["techniques_integration"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "definite_integrals", x: 650, y: 250, title: "Definite Integrals", tooltip: "Master definite integrals to compute accumulated quantities, such as the total energy used by Artemis over a mission or the distance a drone travels in a given time. This node introduces the Fundamental Theorem of Calculus, connecting derivatives and integrals. Prereqs: Integrals (integral basics). Unlocks: Applications of Integration. Projects: Artemis (energy usage), Drone (distance traveled).", prereqs: ["integrals"], unlocks: ["applications_integration"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // Limits and Continuity Branch (Tier 4)
+            { id: "limits_optimization", x: 350, y: 350, title: "Limits in Optimization", tooltip: "Use limits to analyze optimization problems in robotics, such as finding the maximum range of a drone's flight under constraints. You'll apply limits to understand asymptotic behavior in optimization scenarios, preparing you for derivative-based optimization techniques. Prereqs: Evaluating Limits (limit techniques). Unlocks: None. Projects: Drone (flight range optimization).", prereqs: ["evaluating_limits"], unlocks: [], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // Derivatives Branch (Tier 4)
+            { id: "implicit_differentiation", x: 450, y: 350, title: "Implicit Differentiation", tooltip: "Learn implicit differentiation to handle equations where variables are not explicitly solved for, such as in robotic constraints. You'll use this to analyze the relationship between a spiderbot's leg angles and its height or a drone's thrust and altitude. This node enhances your differentiation skills for complex systems. Prereqs: Differentiation Rules (differentiation basics). Unlocks: Related Rates. Projects: Spiderbot (leg angle analysis), Drone (thrust dynamics).", prereqs: ["differentiation_rules"], unlocks: ["related_rates"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "higher_order_derivatives", x: 500, y: 350, title: "Higher-Order Derivatives", tooltip: "Explore higher-order derivatives to analyze acceleration and jerk in robotics systems. You'll calculate the jerk (third derivative) of a spiderbot leg to ensure smooth motion or the acceleration (second derivative) of a drone during takeoff. This node is key for understanding complex motion dynamics. Prereqs: Differentiation Rules (differentiation basics). Unlocks: Taylor Series. Projects: Spiderbot (motion smoothness), Drone (takeoff dynamics).", prereqs: ["differentiation_rules"], unlocks: ["taylor_series"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "optimization_derivatives", x: 550, y: 350, title: "Optimization with Derivatives", tooltip: "Apply derivatives to optimize robotics systems, such as minimizing energy consumption in a drone's flight path or maximizing the stability of Artemis' chassis. You'll use critical points and the first derivative test to find optimal solutions. Prereqs: Applications of Derivatives (derivative applications). Unlocks: Multivariable Optimization. Projects: Drone (energy optimization), Artemis (chassis stability).", prereqs: ["applications_derivatives"], unlocks: ["multivariable_optimization"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "motion_analysis_derivatives", x: 600, y: 350, title: "Motion Analysis with Derivatives", tooltip: "Use derivatives to analyze motion in robotics, such as calculating the velocity and acceleration of a spiderbot leg during a step or a drone's trajectory during a turn. This node connects derivatives to kinematics, preparing you for dynamic system modeling. Prereqs: Applications of Derivatives (derivative applications). Unlocks: Dynamics with Calculus. Projects: Spiderbot (leg motion), Drone (trajectory analysis).", prereqs: ["applications_derivatives"], unlocks: ["dynamics_calculus"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // Integrals Branch (Tier 4)
+            { id: "techniques_integration", x: 650, y: 350, title: "Techniques of Integration", tooltip: "Learn advanced integration techniques like substitution, integration by parts, and partial fractions. You'll use these to compute complex integrals, such as the total work done by Artemis' motors over a mission or the accumulated charge in a drone's battery. This node expands your integration toolkit. Prereqs: Antiderivatives (integration basics). Unlocks: Improper Integrals. Projects: Artemis (work calculation), Drone (battery charge).", prereqs: ["antiderivatives"], unlocks: ["improper_integrals"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "applications_integration", x: 700, y: 350, title: "Applications of Integration", tooltip: "Apply integrals to solve robotics problems, such as calculating the center of mass of a spiderbot for balance or the total energy consumption of a drone during flight. This node covers areas, volumes, and work, bridging integration to practical applications. Prereqs: Definite Integrals (integral basics). Unlocks: Work and Energy with Integrals, Numerical Integration. Projects: Spiderbot (center of mass), Drone (energy consumption).", prereqs: ["definite_integrals"], unlocks: ["work_energy_integrals", "numerical_integration"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // Derivatives Branch (Tier 5)
+            { id: "related_rates", x: 450, y: 450, title: "Related Rates", tooltip: "Use related rates to solve problems where multiple quantities change together, such as the rate at which a drone's shadow moves as it ascends or the rate of change of a spiderbot's leg angle as its body tilts. This node applies derivatives to dynamic robotics scenarios. Prereqs: Implicit Differentiation (implicit techniques). Unlocks: None. Projects: Drone (shadow motion), Spiderbot (leg angle dynamics).", prereqs: ["implicit_differentiation"], unlocks: [], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "taylor_series", x: 500, y: 450, title: "Taylor Series", tooltip: "Learn Taylor series to approximate functions, a technique used in robotics for simplifying complex motion models. You'll approximate the motion of a drone's propeller or Artemis' sensor data for efficient computation. This node connects calculus to numerical methods in robotics. Prereqs: Higher-Order Derivatives (derivative orders). Unlocks: Numerical Methods in Robotics. Projects: Drone (propeller motion), Artemis (sensor approximation).", prereqs: ["higher_order_derivatives"], unlocks: ["numerical_methods_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "multivariable_optimization", x: 550, y: 450, title: "Multivariable Optimization", tooltip: "Extend optimization to multivariable functions using partial derivatives, crucial for optimizing complex robotics systems. You'll optimize a drone's flight path considering both speed and altitude or Artemis' energy usage across multiple components. This node introduces multivariable calculus concepts. Prereqs: Optimization with Derivatives (optimization basics). Unlocks: Multivariable Calculus. Projects: Drone (flight path optimization), Artemis (energy optimization).", prereqs: ["optimization_derivatives"], unlocks: ["multivariable_calculus"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "dynamics_calculus", x: 600, y: 450, title: "Dynamics with Calculus", tooltip: "Apply derivatives to model dynamic systems, such as the acceleration of a spiderbot leg or the rate of change of a drone's altitude in turbulent conditions. This node connects calculus to dynamics, preparing you for differential equations in robotics. Prereqs: Motion Analysis with Derivatives (motion basics). Unlocks: Differential Equations Intro. Projects: Spiderbot (leg dynamics), Drone (altitude dynamics).", prereqs: ["motion_analysis_derivatives"], unlocks: ["differential_equations_intro"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            // Integrals Branch (Tier 5)
+            { id: "improper_integrals", x: 650, y: 450, title: "Improper Integrals", tooltip: "Learn to handle improper integrals, which involve infinite limits or discontinuities, useful for modeling long-term behavior in robotics. You'll compute the total energy consumption of Artemis over an extended mission or the cumulative effect of a drone's drag over time. This node expands your integration skills for advanced scenarios. Prereqs: Techniques of Integration (integration techniques). Unlocks: None. Projects: Artemis (long-term energy), Drone (cumulative drag).", prereqs: ["techniques_integration"], unlocks: [], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "work_energy_integrals", x: 700, y: 450, title: "Work and Energy with Integrals", tooltip: "Use integrals to calculate work and energy in robotics systems, such as the work done by a spiderbot leg over a cycle or the energy stored in a drone's battery during flight. This node connects integration to physics, enhancing your ability to model energy dynamics. Prereqs: Applications of Integration (integration applications). Unlocks: Energy Systems Analysis. Projects: Spiderbot (work per cycle), Drone (battery energy).", prereqs: ["applications_integration"], unlocks: ["energy_systems_analysis"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "numerical_integration", x: 750, y: 450, title: "Numerical Integration", tooltip: "Apply numerical integration techniques like the trapezoidal rule and Simpson's rule to approximate integrals when analytical solutions are difficult. You'll use this to estimate the total distance traveled by a drone with noisy velocity data or the energy consumption of Artemis' motors. This node introduces computational methods for robotics. Prereqs: Applications of Integration (integration applications). Unlocks: Numerical Methods in Robotics. Projects: Drone (distance estimation), Artemis (energy estimation).", prereqs: ["applications_integration"], unlocks: ["numerical_methods_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            // Derivatives Branch (Tier 6)
+            { id: "multivariable_calculus", x: 550, y: 550, title: "Multivariable Calculus", tooltip: "Dive into multivariable calculus, including partial derivatives and multiple integrals, to model complex robotics systems. You'll analyze how a drone's speed and altitude affect energy use or how Artemis' motor power and sensor angle impact performance. This node prepares you for advanced control and optimization. Prereqs: Multivariable Optimization (optimization basics). Unlocks: Vector Calculus, Gradient Descent in Robotics. Projects: Drone (speed-altitude tradeoffs), Artemis (motor-sensor optimization).", prereqs: ["multivariable_optimization"], unlocks: ["vector_calculus", "gradient_descent_robotics"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            { id: "differential_equations_intro", x: 600, y: 550, title: "Differential Equations Intro", tooltip: "Get introduced to differential equations, which model dynamic systems in robotics, such as the oscillatory motion of a spiderbot leg or a drone's response to wind. You'll solve basic first-order equations, preparing you for advanced dynamics and control systems. Prereqs: Dynamics with Calculus (dynamics basics). Unlocks: First-Order Differential Equations. Projects: Spiderbot (oscillatory motion), Drone (wind response).", prereqs: ["dynamics_calculus"], unlocks: ["first_order_differential_equations"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            // Integrals Branch (Tier 6)
+            { id: "energy_systems_analysis", x: 700, y: 550, title: "Energy Systems Analysis", tooltip: "Analyze energy systems in robotics using integrals, such as optimizing the power distribution in Artemis' hybrid systems or calculating the efficiency of a drone's battery usage. This node applies integration to energy management, a critical aspect of robotics design. Prereqs: Work and Energy with Integrals (energy basics). Unlocks: None. Projects: Artemis (power distribution), Drone (battery efficiency).", prereqs: ["work_energy_integrals"], unlocks: [], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            { id: "numerical_methods_robotics", x: 750, y: 550, title: "Numerical Methods in Robotics", tooltip: "Apply numerical methods like Taylor series and numerical integration to solve robotics problems computationally. You'll approximate the motion of a spiderbot leg or simulate Artemis' sensor data for real-time control. This node bridges calculus with computational techniques. Suggested resource: 'Numerical Methods' course on Coursera. Prereqs: Taylor Series, Numerical Integration (numerical basics). Unlocks: Simulation with Calculus. Projects: Spiderbot (motion approximation), Artemis (sensor simulation).", prereqs: ["taylor_series", "numerical_integration"], unlocks: ["simulation_calculus"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            // Derivatives Branch (Tier 7)
+            { id: "vector_calculus", x: 500, y: 650, title: "Vector Calculus", tooltip: "Explore vector calculus, including gradients, divergences, and curls, to model fields and forces in robotics. You'll use vector calculus to analyze the airflow around a drone for aerodynamic design or the magnetic field around Artemis' motors for efficiency. This node is key for advanced robotics applications. Prereqs: Multivariable Calculus (multivariable basics). Unlocks: None. Projects: Drone (airflow analysis), Artemis (motor efficiency).", prereqs: ["multivariable_calculus"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            { id: "gradient_descent_robotics", x: 550, y: 650, title: "Gradient Descent in Robotics", tooltip: "Apply gradient descent, a multivariable optimization technique, to optimize robotics systems. You'll use it to fine-tune a drone's flight parameters for efficiency or optimize Artemis' control system for stability. This node connects calculus to machine learning and control. Prereqs: Multivariable Calculus (multivariable basics). Unlocks: None. Projects: Drone (flight parameter tuning), Artemis (control optimization).", prereqs: ["multivariable_calculus"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            { id: "first_order_differential_equations", x: 600, y: 650, title: "First-Order Differential Equations", tooltip: "Solve first-order differential equations to model simple dynamic systems, such as the exponential decay of a drone's battery voltage or the cooling of Artemis' motors. This node introduces techniques like separation of variables, preparing you for more complex equations. Suggested resource: 'Differential Equations' course on Khan Academy. Prereqs: Differential Equations Intro (DE basics). Unlocks: Second-Order Differential Equations. Projects: Drone (battery decay), Artemis (motor cooling).", prereqs: ["differential_equations_intro"], unlocks: ["second_order_differential_equations"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            // Integrals Branch (Tier 7)
+            { id: "simulation_calculus", x: 750, y: 650, title: "Simulation with Calculus", tooltip: "Use calculus in simulations to model and test robotics systems, such as simulating a drone's flight path under varying wind conditions or Artemis' energy consumption during a mission. You'll apply numerical methods to create accurate simulations. Prereqs: Numerical Methods in Robotics (numerical basics). Unlocks: None. Projects: Drone (flight simulation), Artemis (energy simulation).", prereqs: ["numerical_methods_robotics"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            // Differential Equations Branch (Tier 8)
+            { id: "second_order_differential_equations", x: 600, y: 750, title: "Second-Order Differential Equations", tooltip: "Solve second-order differential equations to model oscillatory systems, such as the vibrations of a spiderbot leg or a drone's response to turbulence. This node introduces techniques for solving linear second-order equations, crucial for control systems and dynamics. Prereqs: First-Order Differential Equations (first-order DEs). Unlocks: Partial Differential Equations. Projects: Spiderbot (leg vibrations), Drone (turbulence response).", prereqs: ["first_order_differential_equations"], unlocks: ["partial_differential_equations"], time: { estimated: "8-10 hrs", spent: "0 hrs" }, class: "tier-8" },
+
+            // Differential Equations Branch (Tier 9)
+            { id: "partial_differential_equations", x: 600, y: 850, title: "Partial Differential Equations", tooltip: "Explore partial differential equations (PDEs) to model complex systems, such as heat distribution in Artemis' motors or airflow over a drone's wings. This advanced node introduces PDEs for robotics applications, completing your calculus journey. Suggested resource: 'Partial Differential Equations' course on edX. Prereqs: Second-Order Differential Equations (second-order DEs). Unlocks: None. Projects: Artemis (heat distribution), Drone (airflow modeling).", prereqs: ["second_order_differential_equations"], unlocks: [], time: { estimated: "10-12 hrs", spent: "0 hrs" }, class: "tier-9" }
+        ];
+
+        const canvas = document.getElementById("canvas");
+        const infoTitle = document.getElementById("info-title");
+        const infoContent = document.getElementById("info-content");
+        const infoPanel = document.getElementById("info-panel");
+
+        // Add collision detection and resolution
+        function checkCollision(node1, node2) {
+            const padding = 20; // Minimum space between nodes
+            return !(node1.x + 140 + padding < node2.x || 
+                    node1.x > node2.x + 140 + padding || 
+                    node1.y + 40 + padding < node2.y || 
+                    node1.y > node2.y + 40 + padding);
+        }
+
+        function resolveCollisions() {
+            let hasCollision = true;
+            let iterations = 0;
+            const maxIterations = 100; // Prevent infinite loops
+            
+            while (hasCollision && iterations < maxIterations) {
+                hasCollision = false;
+                iterations++;
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (checkCollision(nodes[i], nodes[j])) {
+                            hasCollision = true;
+                            
+                            // Calculate the direction to move nodes apart
+                            const dx = nodes[j].x - nodes[i].x;
+                            const dy = nodes[j].y - nodes[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance === 0) {
+                                // If nodes are exactly on top of each other, move them apart randomly
+                                nodes[i].x -= 50;
+                                nodes[j].x += 50;
+                            } else {
+                                // Move nodes apart along their center line
+                                const moveX = (dx / distance) * 25;
+                                const moveY = (dy / distance) * 25;
+                                
+                                nodes[i].x -= moveX;
+                                nodes[i].y -= moveY;
+                                nodes[j].x += moveX;
+                                nodes[j].y += moveY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Function to increase spacing between nodes
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
+            // Add offset to move everything right of info panel
+            const infoPanelOffset = 450; // Increased from 400 to 450 for more space
+            
+            // Find the minimum x and y to maintain relative positioning
+            const minX = Math.min(...nodes.map(node => node.x));
+            const minY = Math.min(...nodes.map(node => node.y));
+            
+            // Apply spacing to each node
+            nodes.forEach(node => {
+                // Calculate new position relative to minimum values
+                const relativeX = node.x - minX;
+                const relativeY = node.y - minY;
+                
+                // Apply spacing factors and restore offset with additional right shift
+                node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
+                node.y = minY + (relativeY * verticalFactor);
+                
+                // Ensure no node is positioned behind the sidebar
+                if (node.x < 350) { // 300px sidebar width + 50px buffer
+                    node.x = 350;
+                }
+            });
+
+            // Resolve any collisions after spacing
+            resolveCollisions();
+        }
+
+        // Apply increased spacing and resolve collisions
+        increaseSpacing(2.2, 2.0);
+
+        // Draw lines between nodes
+        function drawLines() {
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+        }
+
+        // Create nodes
+        nodes.forEach(node => {
+            const div = document.createElement('div');
+            div.className = 'node';
+            div.id = node.id;
+            div.style.left = `${node.x}px`;
+            div.style.top = `${node.y}px`;
+            div.innerHTML = node.title;
+            
+            // Add tier class based on y position
+            const tier = Math.floor((node.y - 50) / 200) + 1;
+            div.classList.add(`tier-${tier}`);
+            
+            // Add status indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'status-indicator';
+            const status = getNodeStatus(node.id);
+            indicator.classList.add(`status-${status}`);
+            
+            // Add progress bar
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.classList.add(status);
+            
+            // Set progress bar width based on status
+            if (status === 'in-progress') {
+                progressBar.style.width = '50%';
+            } else if (status === 'finished') {
+                progressBar.style.width = '100%';
+            } else {
+                progressBar.style.width = '0%';
+            }
+            
+            // Add progress tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'progress-tooltip';
+            tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            // Add click handler for status indicator
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent node click event
+                
+                const currentStatus = getNodeStatus(node.id);
+                let newStatus;
+                
+                // Cycle through statuses
+                if (currentStatus === 'not-started') {
+                    newStatus = 'in-progress';
+                } else if (currentStatus === 'in-progress') {
+                    newStatus = 'finished';
+                } else if (currentStatus === 'finished') {
+                    newStatus = 'not-started';
+                }
+                
+                updateNodeStatus(node.id, newStatus);
+                
+                // Update tooltip
+                tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
+            });
+            
+            // Show tooltip on hover
+            indicator.addEventListener('mouseenter', (e) => {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+            });
+            
+            indicator.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+            });
+            
+            indicator.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            });
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
+
+            // Add event listeners for highlighting connections
+            div.addEventListener('mouseenter', () => {
+                // Set selected node
+                selectedNodeId = node.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            });
+
+            div.addEventListener('mouseleave', () => {
+                // Clear selected node
+                selectedNodeId = null;
+                
+                // Remove highlight from all lines
+                document.querySelectorAll('.line.highlight').forEach(line => {
+                    line.classList.remove('highlight');
+                });
+                
+                // Reset info panel
+                infoTitle.textContent = "Algebra Tech Tree Information";
+                infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+                
+                // Reset time info
+                document.getElementById('estimated-time').textContent = "-";
+                document.getElementById('time-spent').textContent = "0 hrs";
+            });
+
+            canvas.appendChild(div);
+        });
+
+        // Draw lines after creating nodes
+        drawLines();
+
+        function updateNodeProgress() {
+            // Get progress for each node from nodeProgress object
+            nodes.forEach(node => {
+                const status = getNodeStatus(node.id);
+                const nodeElement = document.getElementById(node.id);
+                if (nodeElement) {
+                    const indicator = nodeElement.querySelector('.status-indicator');
+                    const progressBar = nodeElement.querySelector('.progress-bar');
+                    
+                    if (indicator && progressBar) {
+                        // Remove all status classes
+                        indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                        progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                        
+                        // Add current status class
+                        indicator.classList.add(`status-${status}`);
+                        progressBar.classList.add(status);
+                        
+                        // Set progress bar width based on status
+                        if (status === 'in-progress') {
+                            progressBar.style.width = '50%';
+                        } else if (status === 'finished') {
+                            progressBar.style.width = '100%';
+                        } else {
+                            progressBar.style.width = '0%';
+                        }
+                    }
+                }
+            });
+            
+            // Update progress summary
+            updateProgressSummary();
+        }
+
+        // Add click handler for nodes to update progress
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            nodes.forEach(node => {
+                if (Math.abs(node.x - x) < 30 && Math.abs(node.y - y) < 30) {
+                    const currentStatus = getNodeStatus(node.id);
+                    let newStatus;
+                    
+                    // Cycle through statuses
+                    if (currentStatus === 'not-started') {
+                        newStatus = 'in-progress';
+                    } else if (currentStatus === 'in-progress') {
+                        newStatus = 'finished';
+                    } else if (currentStatus === 'finished') {
+                        newStatus = 'not-started';
+                    }
+                    
+                    updateNodeStatus(node.id, newStatus);
+                }
+            });
+        });
+
+        // Call updateNodeProgress when the page loads
+        window.addEventListener('load', updateNodeProgress);
+        
+        // Export progress data
+        document.getElementById('export-button').addEventListener('click', () => {
+            // Collect all progress data
+            const progressData = {
+                algebraProgress: localStorage.getItem('algebraProgress') || '0',
+                algebraNodes: {}
+            };
+            
+            // Get all algebra node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('algebra_', '').replace('_progress', '');
+                    progressData.algebraNodes[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Create and download the file
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'algebra-progress.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Import progress data
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Clear existing algebra progress data
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Restore algebra progress data
+                    if (progressData.algebraProgress) {
+                        localStorage.setItem('algebraProgress', progressData.algebraProgress);
+                    }
+                    
+                    // Restore algebra node progress
+                    if (progressData.algebraNodes) {
+                        Object.entries(progressData.algebraNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`algebra_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Update the UI
+                    updateNodeProgress();
+                    
+                    // Show success message
+                    alert('Algebra progress data imported successfully!');
+                } catch (error) {
+                    console.error('Error importing progress data:', error);
+                    alert('Error importing progress data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Time tracking variables
+        let totalTimeSpent = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let selectedNodeId = null;  // Track currently selected node
+
+        // Format time for display
+        function formatTime(hours) {
+            if (hours === 0) return '0 hrs';
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            if (minutes === 0) return `${wholeHours} hrs`;
+            return `${wholeHours} hrs ${minutes} mins`;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            if (selectedNodeId) {
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            }
+        }
+
+        // Add time manually
+        function addTime(hours) {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent += hours;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Reset time tracking
+        function resetTime() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent = 0;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Start/Stop timer
+        function toggleTimer() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            
+            const timerButton = document.getElementById('start-timer');
+            const activeTimer = document.getElementById('active-timer');
+            
+            if (!startTime) {
+                // Start timer
+                startTime = new Date();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                timerButton.textContent = 'Stop Timer';
+                activeTimer.style.display = 'block';
+            } else {
+                // Stop timer
+                const endTime = new Date();
+                const elapsedHours = (endTime - startTime) / (1000 * 60 * 60);
+                totalTimeSpent += elapsedHours;
+                
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                
+                timerButton.textContent = 'Start Timer';
+                activeTimer.style.display = 'none';
+                document.getElementById('timer-display').textContent = '00:00:00';
+                
+                updateTimeDisplay();
+                saveTime();
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            if (!startTime) return;
+            
+            const currentTime = new Date();
+            const elapsedMs = currentTime - startTime;
+            const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsedMs % (1000 * 60)) / 1000);
+            
+            document.getElementById('timer-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Save time to localStorage
+        function saveTime() {
+            if (selectedNodeId) {
+                localStorage.setItem(`algebra_${selectedNodeId}_total_time`, totalTimeSpent.toString());
+            }
+        }
+
+        // Load time from localStorage
+        function loadTime() {
+            if (selectedNodeId) {
+                const savedTime = localStorage.getItem(`algebra_${selectedNodeId}_total_time`);
+                if (savedTime) {
+                    totalTimeSpent = parseFloat(savedTime);
+                } else {
+                    totalTimeSpent = 0;
+                }
+                updateTimeDisplay();
+            }
+        }
+
+        // Event listeners for time tracking
+        document.getElementById('add-time').addEventListener('click', () => {
+            const timeInput = document.getElementById('hours-input');
+            const hours = parseFloat(timeInput.value);
+            if (!isNaN(hours) && hours > 0) {
+                addTime(hours);
+                timeInput.value = '';
+            }
+        });
+
+        document.getElementById('reset-time').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the time tracking?')) {
+                resetTime();
+            }
+        });
+
+        document.getElementById('start-timer').addEventListener('click', toggleTimer);
+
+        // Initialize time tracking
+        loadTime();
+    </script>
+</body>
+</html> 
