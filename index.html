@@ -874,10 +874,19 @@
     { id: "second_order_de", x: 1140, y: 150, title: "Second-Order DE", tooltip: "Oscillations. Prereqs: First-Order DE. Unlocks: Differential Equations. Projects: All", prereqs: ["first_order_de"], unlocks: ["diff_equations"], time: { estimated: "10-15 hrs", spent: "0 hrs" } },
 
     // Tier 1: Foundations - Physics Breakdown
-    { id: "mechanics", x: 100, y: 250, title: "Mechanics", tooltip: "Forces and motion. Prereqs: Geometry. Unlocks: Aerodynamics, Dynamics. Projects: Drone, Spiderbot", prereqs: ["geometry"], unlocks: ["aerodynamics"], time: { estimated: "15-25 hrs", spent: "0 hrs" } },
-    { id: "kinematics_physics", x: 20, y: 350, title: "Kinematics (Physics)", tooltip: "Motion without forces. Prereqs: Geometry. Unlocks: Mechanics. Projects: All", prereqs: ["geometry"], unlocks: ["mechanics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-    { id: "newtons_laws", x: 100, y: 350, title: "Newton's Laws", tooltip: "Force and acceleration. Prereqs: Kinematics (Physics). Unlocks: Mechanics. Projects: All", prereqs: ["kinematics_physics"], unlocks: ["mechanics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-    { id: "work_energy", x: 180, y: 350, title: "Work & Energy", tooltip: "Energy transfer. Prereqs: Newton's Laws. Unlocks: Mechanics. Projects: All", prereqs: ["newtons_laws"], unlocks: ["mechanics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "physics", x: 200, y: 250, title: "Physics", tooltip: "Master Physics to model motion, forces, and energy in robotics. Prereqs: Algebra, Calculus. Unlocks: Control Systems PID, Sensor Design.", prereqs: ["algebra", "calculus"], unlocks: ["control_systems_pid", "sensor_design"], class: "tier-1", time: { estimated: "60-80 hrs", spent: "0 hrs" } },
+
+    // Subnode: Mechanics (replacing the old standalone Mechanics node)
+    { id: "mechanics", x: 150, y: 350, title: "Mechanics", tooltip: "Dive into Mechanics to model motion and forces in robotics. Covers Kinematics, Dynamics, and more. Prereqs: Physics (root node). Unlocks: Dynamics in Robotics (from detailed Physics tree).", prereqs: ["physics"], unlocks: ["dynamics_robotics"], class: "tier-1", time: { estimated: "15-25 hrs", spent: "0 hrs" } },
+
+    // Subnode: Electromagnetism
+    { id: "electromagnetism", x: 200, y: 350, title: "Electromagnetism", tooltip: "Explore Electromagnetism to design motors, circuits, and wireless systems for robotics. Prereqs: Physics (root node). Unlocks: Electromagnetic Fields in Robotics (from detailed Physics tree).", prereqs: ["physics"], unlocks: ["electromagnetic_fields_robotics"], class: "tier-1", time: { estimated: "15-25 hrs", spent: "0 hrs" } },
+
+    // Subnode: Energy and Waves
+    { id: "energy_waves", x: 250, y: 350, title: "Energy and Waves", tooltip: "Learn about Energy (Thermodynamics) and Waves (Optics) to manage heat and enhance sensors in robotics. Prereqs: Physics (root node). Unlocks: Thermodynamics in Robotics, Advanced Optics in Robotics (from detailed Physics tree).", prereqs: ["physics"], unlocks: ["thermodynamics_robotics", "advanced_optics_robotics"], class: "tier-1", time: { estimated: "15-25 hrs", spent: "0 hrs" } },
+
+    // New Suggested Node: Sensor Design (unlocked by Physics)
+    { id: "sensor_design", x: 1100, y: 100, title: "Sensor Design", tooltip: "Design advanced sensors for robotics using physics principles. Prereqs: Physics (Electromagnetism, Waves and Optics). Unlocks: None.", prereqs: ["physics"], unlocks: [], subnodes: [], class: "tier-1", time: { estimated: "20-30 hrs", spent: "0 hrs" } },
 
     // Tier 1: Foundations - Programming Breakdown
     { id: "programming_python", x: 400, y: 250, title: "Programming (Python)", tooltip: "Core coding skills. Unlocks: Simulations, AI, Embedded Prog. Projects: Drone, Artemis", prereqs: [], unlocks: ["simulation", "ai_ml", "embedded_programming"], time: { estimated: "20-30 hrs", spent: "0 hrs" } },
@@ -1874,6 +1883,65 @@
                         clickTimer = null;
                         // Double click - follow link
                         window.location.href = 'statistics.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
+            // Add click handler for Physics node
+            if (node.id === 'physics') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'Physics.html';
                     } else {
                         // Single click - just select the node
                         clickTimer = setTimeout(() => {

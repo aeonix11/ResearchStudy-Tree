@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algebra Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #info-panel {
+            width: 300px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #time-tracker {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        #time-tracker h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #time-tracker p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        #canvas {
+            flex: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line {
+            position: relative;
+            z-index: 2;
+        }
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #A29BFE, #81ECEC);
+            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+        }
+        .node.tier-5 {
+            background: linear-gradient(135deg, #55EFC4, #00B894);
+            box-shadow: 0 4px 15px rgba(85, 239, 196, 0.4);
+        }
+        .node.tier-6 {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            box-shadow: 0 4px 15px rgba(255, 234, 167, 0.4);
+        }
+        .node.tier-7 {
+            background: linear-gradient(135deg, #FAB1A0, #E17055);
+            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
+        }
+        .node.tier-8 {
+            background: linear-gradient(135deg, #FF7675, #D63031);
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
+        }
+        .node.tier-9 {
+            background: linear-gradient(135deg, #81ECEC, #00CEC9);
+            box-shadow: 0 4px 15px rgba(129, 236, 236, 0.4);
+        }
+        .node.tier-10 {
+            background: linear-gradient(135deg, #A8E6CF, #1DE9B6);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+        .node.tier-11 {
+            background: linear-gradient(135deg, #B39DDB, #9575CD);
+            box-shadow: 0 4px 15px rgba(179, 157, 219, 0.4);
+        }
+        .node.tier-12 {
+            background: linear-gradient(135deg, #90CAF9, #42A5F5);
+            box-shadow: 0 4px 15px rgba(144, 202, 249, 0.4);
+        }
+        .node::before {
+            content: attr(data-progress) '%';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .node[data-progress]:not([data-progress="0"])::before {
+            opacity: 1;
+        }
+        .node.tier-1:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7676);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        .node.tier-2:hover {
+            background: linear-gradient(135deg, #3DBEB6, #34A8A0);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        .node.tier-3:hover {
+            background: linear-gradient(135deg, #34A8A0, #2B938B);
+            box-shadow: 0 6px 20px rgba(69, 183, 175, 0.6);
+        }
+        .node.tier-4:hover {
+            background: linear-gradient(135deg, #2B938B, #227E77);
+            box-shadow: 0 6px 20px rgba(60, 162, 154, 0.6);
+        }
+        .node.clickable {
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+        .node.clickable:hover {
+            transform: scale(1.1);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+        }
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        #back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        #back-button:hover {
+            background: #45a049;
+        }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s;
+        }
+        .status-not-started {
+            background-color: #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 2s infinite;
+        }
+        .status-completed {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        }
+        .status-finished {
+            background-color: #9C27B0;
+            box-shadow: 0 0 5px rgba(156, 39, 176, 0.7);
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+            50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 0 0 5px 5px;
+        }
+        .progress-bar.in-progress {
+            background: linear-gradient(90deg, #FFC107, #FF9800);
+        }
+        .progress-bar.completed {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+        .progress-bar.not-started {
+            width: 0 !important;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+        .progress-summary {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="back-button" onclick="window.location.href='index.html'">← Back to Main Tree</button>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Algebra Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div style="flex-grow: 1;"></div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <script>
+        // Load saved progress from localStorage
+        let nodeProgress = {};
+        
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('algebraProgress');
+            if (savedProgress) {
+                nodeProgress = JSON.parse(savedProgress);
+            }
+        }
+        
+        function saveProgress() {
+            localStorage.setItem('algebraProgress', JSON.stringify(nodeProgress));
+            
+            // Calculate and save progress for the main page
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const progressPercentage = (finishedNodes / totalNodes) * 100;
+            
+            // Save progress to localStorage for the main page
+            localStorage.setItem('algebraMainProgress', progressPercentage.toString());
+        }
+        
+        function updateNodeStatus(nodeId, status) {
+            // Save to nodeProgress object
+            nodeProgress[nodeId] = status;
+            
+            // Save to localStorage with the correct key format
+            localStorage.setItem(`algebra_${nodeId}_progress`, status);
+            
+            // Update visual indicators
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const indicator = node.querySelector('.status-indicator');
+                const progressBar = node.querySelector('.progress-bar');
+                const tooltip = node.querySelector('.progress-tooltip');
+                
+                // Remove all status classes
+                indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                
+                // Add new status class
+                indicator.classList.add(`status-${status}`);
+                progressBar.classList.add(status);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+
+                // Update tooltip if it exists
+                if (tooltip) {
+                    tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+                }
+            }
+            
+            // Check if any algebra nodes are in progress or finished
+            const algebraNodes = Object.keys(localStorage)
+                .filter(key => key.startsWith('algebra_') && key.endsWith('_progress'))
+                .map(key => localStorage.getItem(key));
+            
+            const hasProgress = algebraNodes.some(nodeStatus => 
+                nodeStatus === 'in-progress' || nodeStatus === 'finished'
+            );
+            
+            // Update the parent node status in the main page
+            if (hasProgress) {
+                localStorage.setItem('algebra_progress', 'in-progress');
+            } else {
+                localStorage.setItem('algebra_progress', 'not-started');
+            }
+            
+            // Save overall progress
+            saveProgress();
+        }
+        
+        function getNodeStatus(nodeId) {
+            // First check if we have a saved status in localStorage
+            const savedStatus = localStorage.getItem(`algebra_${nodeId}_progress`);
+            if (savedStatus) {
+                return savedStatus;
+            }
+            
+            // If no saved status, check if the node has prerequisites
+            const node = nodes.find(n => n.id === nodeId);
+            if (node && node.prerequisites && node.prerequisites.length > 0) {
+                // If it has prerequisites, it starts as not-started
+                return 'not-started';
+            }
+            
+            // Default to not-started
+            return 'not-started';
+        }
+        
+        function updateProgressSummary() {
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const notStartedNodes = Object.values(nodeProgress).filter(status => status === 'not-started').length;
+            
+            const progressSummary = document.getElementById('progress-summary');
+            if (progressSummary) {
+                progressSummary.innerHTML = `
+                    <div>Total Nodes: ${totalNodes}</div>
+                    <div>Finished: ${finishedNodes}</div>
+                    <div>In Progress: ${inProgressNodes}</div>
+                    <div>Not Started: ${notStartedNodes}</div>
+                    <div>Overall Progress: ${Math.round((finishedNodes / totalNodes) * 100)}%</div>
+                `;
+            }
+        }
+        
+        // Load progress when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            
+            // Create progress summary element
+            const progressSummary = document.createElement('div');
+            progressSummary.id = 'progress-summary';
+            progressSummary.className = 'progress-summary';
+            document.body.appendChild(progressSummary);
+            
+            // Update progress summary
+            updateProgressSummary();
+
+            // Initialize time tracking
+            let totalTime = parseInt(localStorage.getItem('algebraTotalTime') || '0');
+            let sessionStartTime = Date.now();
+            let lastUpdateTime = sessionStartTime;
+
+            // Update time displays
+            function updateTimeDisplays() {
+                const currentTime = Date.now();
+                const sessionTime = Math.floor((currentTime - sessionStartTime) / 60000);
+                document.getElementById('total-time').textContent = totalTime;
+                document.getElementById('session-time').textContent = sessionTime;
+            }
+
+            // Update time every minute
+            setInterval(() => {
+                const currentTime = Date.now();
+                const minutesSinceLastUpdate = Math.floor((currentTime - lastUpdateTime) / 60000);
+                
+                if (minutesSinceLastUpdate > 0) {
+                    totalTime += minutesSinceLastUpdate;
+                    localStorage.setItem('algebraTotalTime', totalTime.toString());
+                    lastUpdateTime = currentTime;
+                    updateTimeDisplays();
+                }
+            }, 60000);
+
+            // Initial time display update
+            updateTimeDisplays();
+        });
+
+        const nodes = [
+    // Parent Node: Physics (Tier 1 - Root)
+    { id: "physics", x: 500, y: 50, title: "Physics", tooltip: "Embark on a journey through Physics, the science of nature that powers robotics! This tree equips you to design drone motors, manage Artemis’ heat, and enhance spiderbot sensors by mastering mechanics, electromagnetism, and more. You’ll progress from high school physics to advanced concepts. Prereqs: Algebra (basic math), Calculus (derivatives, integrals). Unlocks: Mechanics Basics, Electromagnetism Basics, Thermodynamics Basics, Waves and Optics, Modern Physics. Projects: Drone (motor design), Artemis (heat management), Spiderbot (sensor accuracy). Suggested resource: ‘Physics I’ course on Khan Academy.", prereqs: ["algebra", "calculus"], unlocks: ["mechanics_basics", "electromagnetism_basics", "thermodynamics_basics", "waves_optics", "modern_physics"], time: { estimated: "60-80 hrs", spent: "0 hrs" }, class: "tier-1", badge: "Physics Novice (Complete this node to unlock!)" },
+
+    // Main Branches (Tier 2)
+    { id: "mechanics_basics", x: 350, y: 150, title: "Mechanics Basics", tooltip: "Master the fundamentals of mechanics to model motion in robotics! Apply Newton’s laws to analyze a spiderbot’s leg motion (e.g., F = ma to calculate force) or a drone’s acceleration during takeoff. This node covers high school-level mechanics, building on your existing knowledge. Prereqs: Physics (root node). Unlocks: Forces and Motion, Energy and Work. Projects: Spiderbot (leg motion), Drone (acceleration). Suggested resource: ‘Mechanics’ on Khan Academy.", prereqs: ["physics"], unlocks: ["forces_motion", "energy_work"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "electromagnetism_basics", x: 450, y: 150, title: "Electromagnetism Basics", tooltip: "Unlock the power of electromagnetism to design robotics systems! Learn about electric circuits (e.g., Ohm’s Law: V = IR) to power a drone’s motors or analyze Artemis’ battery performance. This node introduces high school-level electromagnetism concepts. Prereqs: Physics (root node). Unlocks: Electric Circuits, Magnetic Fields. Projects: Drone (motor power), Artemis (battery performance). Suggested resource: ‘Electricity and Magnetism’ on Khan Academy.", prereqs: ["physics"], unlocks: ["electric_circuits", "magnetic_fields"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "thermodynamics_basics", x: 550, y: 150, title: "Thermodynamics Basics", tooltip: "Explore thermodynamics to manage heat in robotics systems! Use the First Law (ΔU = Q - W) to analyze heat generated by Artemis’ motors or a drone’s battery during flight. This node covers high school-level thermodynamics. Prereqs: Physics (root node). Unlocks: Laws of Thermodynamics, Heat Transfer. Projects: Artemis (motor heat), Drone (battery heat). Suggested resource: ‘Thermodynamics’ on Khan Academy.", prereqs: ["physics"], unlocks: ["laws_thermodynamics", "heat_transfer"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "waves_optics", x: 650, y: 150, title: "Waves and Optics", tooltip: "Harness waves and optics to enhance robotics sensors! Study wave properties to improve spiderbot acoustic sensors or use optics to design a drone’s camera system. This node introduces wave mechanics and basic optics. Prereqs: Physics (root node). Unlocks: Wave Properties, Geometric Optics. Projects: Spiderbot (acoustic sensors), Drone (camera system). Suggested resource: ‘Waves and Optics’ on Khan Academy.", prereqs: ["physics"], unlocks: ["wave_properties", "geometric_optics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "modern_physics", x: 750, y: 150, title: "Modern Physics", tooltip: "Dive into modern physics to explore advanced robotics applications! Learn about relativity and quantum mechanics to understand GPS accuracy in drones or sensor technology in Artemis. This node introduces 20th-century physics concepts. Prereqs: Physics (root node). Unlocks: Relativity Basics, Quantum Mechanics Basics. Projects: Drone (GPS accuracy), Artemis (sensor tech). Suggested resource: ‘Modern Physics’ on Khan Academy.", prereqs: ["physics"], unlocks: ["relativity_basics", "quantum_mechanics_basics"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    // Mechanics Basics Branch (Tier 3)
+    { id: "forces_motion", x: 300, y: 250, title: "Forces and Motion", tooltip: "Analyze forces and motion to optimize robotics movement! Use Newton’s Second Law (e.g., F = 2 kg * 3 m/s² = 6 N) to calculate the force on a spiderbot leg or drone thrust during takeoff. This node deepens your mechanics skills. Prereqs: Mechanics Basics (mechanics fundamentals). Unlocks: Rotational Motion. Projects: Spiderbot (leg force), Drone (thrust).", prereqs: ["mechanics_basics"], unlocks: ["rotational_motion"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "energy_work", x: 400, y: 250, title: "Energy and Work", tooltip: "Master energy and work to improve robotics efficiency! Calculate the work done by a drone’s motors (e.g., W = F * d = 5 N * 10 m = 50 J) or the potential energy in a spiderbot’s raised leg. This node covers energy conservation and work. Prereqs: Mechanics Basics (mechanics fundamentals). Unlocks: Momentum and Collisions. Projects: Drone (motor work), Spiderbot (leg energy).", prereqs: ["mechanics_basics"], unlocks: ["momentum_collisions"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Electromagnetism Basics Branch (Tier 3)
+    { id: "electric_circuits", x: 450, y: 250, title: "Electric Circuits", tooltip: "Design electric circuits to power your robotics systems! Apply Kirchhoff’s laws to analyze a drone’s motor circuit (e.g., V = 12 V, R = 4 Ω, I = 3 A) or Artemis’ battery management system. This node covers series and parallel circuits. Prereqs: Electromagnetism Basics (EM fundamentals). Unlocks: Electromagnetic Induction. Projects: Drone (motor circuit), Artemis (battery system).", prereqs: ["electromagnetism_basics"], unlocks: ["electromagnetic_induction"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "magnetic_fields", x: 500, y: 250, title: "Magnetic Fields", tooltip: "Understand magnetic fields to enhance robotics motors! Use the Lorentz force (F = qvB) to analyze the motion of charged particles in a drone’s motor or Artemis’ magnetic sensors. This node introduces magnetic field concepts. Prereqs: Electromagnetism Basics (EM fundamentals). Unlocks: Electromagnetic Induction. Projects: Drone (motor motion), Artemis (magnetic sensors).", prereqs: ["electromagnetism_basics"], unlocks: ["electromagnetic_induction"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Thermodynamics Basics Branch (Tier 3)
+    { id: "laws_thermodynamics", x: 550, y: 250, title: "Laws of Thermodynamics", tooltip: "Apply the laws of thermodynamics to manage energy in robotics! Use the Second Law to analyze entropy in Artemis’ motors (e.g., entropy increase in a heat engine) or a drone’s cooling system. This node covers the zeroth to third laws. Prereqs: Thermodynamics Basics (thermo fundamentals). Unlocks: Thermodynamic Processes. Projects: Artemis (motor entropy), Drone (cooling system).", prereqs: ["thermodynamics_basics"], unlocks: ["thermodynamic_processes"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "heat_transfer", x: 600, y: 250, title: "Heat Transfer", tooltip: "Optimize heat transfer in robotics systems! Calculate heat conduction in Artemis’ chassis (e.g., Q = kAΔT/L) or convection in a drone’s cooling system. This node covers conduction, convection, and radiation. Prereqs: Thermodynamics Basics (thermo fundamentals). Unlocks: Thermodynamic Processes. Projects: Artemis (chassis heat), Drone (cooling).", prereqs: ["thermodynamics_basics"], unlocks: ["thermodynamic_processes"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Waves and Optics Branch (Tier 3)
+    { id: "wave_properties", x: 650, y: 250, title: "Wave Properties", tooltip: "Master wave properties to improve robotics sensors! Use wave speed (v = fλ) to design spiderbot acoustic sensors or analyze drone communication signals. This node covers wave characteristics like frequency and wavelength. Prereqs: Waves and Optics (waves basics). Unlocks: Wave Applications in Robotics. Projects: Spiderbot (acoustic sensors), Drone (communication signals).", prereqs: ["waves_optics"], unlocks: ["wave_applications_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "geometric_optics", x: 700, y: 250, title: "Geometric Optics", tooltip: "Use geometric optics to enhance robotics vision systems! Apply the lens formula (1/f = 1/u + 1/v) to design a drone’s camera lens or Artemis’ optical sensors. This node covers reflection, refraction, and lenses. Prereqs: Waves and Optics (waves basics). Unlocks: Optical Sensors in Robotics. Projects: Drone (camera lens), Artemis (optical sensors).", prereqs: ["waves_optics"], unlocks: ["optical_sensors_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Modern Physics Branch (Tier 3)
+    { id: "relativity_basics", x: 750, y: 250, title: "Relativity Basics", tooltip: "Explore relativity to improve robotics navigation! Apply time dilation (Δt’ = Δt/√(1-v²/c²)) to correct GPS errors in drones at high speeds. This node introduces special relativity concepts. Prereqs: Modern Physics (modern basics). Unlocks: Relativistic Effects in Robotics. Projects: Drone (GPS correction).", prereqs: ["modern_physics"], unlocks: ["relativistic_effects_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "quantum_mechanics_basics", x: 800, y: 250, title: "Quantum Mechanics Basics", tooltip: "Dive into quantum mechanics to understand advanced robotics sensors! Use the uncertainty principle (ΔxΔp ≥ ħ/2) to analyze precision in Artemis’ quantum sensors. This node introduces quantum concepts like wave-particle duality. Prereqs: Modern Physics (modern basics). Unlocks: Quantum Applications in Robotics. Projects: Artemis (quantum sensors). Suggested resource: ‘Quantum Mechanics for Engineers’ on edX.", prereqs: ["modern_physics"], unlocks: ["quantum_applications_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Mechanics Basics Branch (Tier 4)
+    { id: "rotational_motion", x: 300, y: 350, title: "Rotational Motion", tooltip: "Master rotational motion to model complex robotics movements! Calculate the angular acceleration of a drone’s propellers (e.g., α = τ/I) or a spiderbot’s joint rotation. This node covers torque, angular momentum, and rotational kinematics. Prereqs: Forces and Motion (motion basics). Unlocks: Dynamics in Robotics. Projects: Drone (propeller motion), Spiderbot (joint rotation).", prereqs: ["forces_motion"], unlocks: ["dynamics_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "momentum_collisions", x: 400, y: 350, title: "Momentum and Collisions", tooltip: "Analyze momentum and collisions to ensure robotics safety! Use conservation of momentum (m₁v₁ + m₂v₂ = m₁v₁’ + m₂v₂’) to study a drone’s collision with an obstacle or spiderbot leg impacts. This node covers elastic and inelastic collisions. Prereqs: Energy and Work (energy basics). Unlocks: Dynamics in Robotics. Projects: Drone (collision analysis), Spiderbot (leg impacts).", prereqs: ["energy_work"], unlocks: ["dynamics_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Electromagnetism Basics Branch (Tier 4)
+    { id: "electromagnetic_induction", x: 475, y: 350, title: "Electromagnetic Induction", tooltip: "Harness electromagnetic induction to power robotics systems! Apply Faraday’s Law (ε = -dΦ/dt) to design a drone’s wireless charging system or Artemis’ energy harvesting. This node covers induction and its applications. Prereqs: Electric Circuits, Magnetic Fields (circuit and magnetic basics). Unlocks: Electromagnetic Fields in Robotics. Projects: Drone (wireless charging), Artemis (energy harvesting).", prereqs: ["electric_circuits", "magnetic_fields"], unlocks: ["electromagnetic_fields_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Thermodynamics Basics Branch (Tier 4)
+    { id: "thermodynamic_processes", x: 575, y: 350, title: "Thermodynamic Processes", tooltip: "Analyze thermodynamic processes to optimize robotics efficiency! Use PV diagrams to study a drone’s battery cooling cycle (e.g., isothermal process: PV = constant) or Artemis’ motor heat dissipation. This node covers processes like isothermal and adiabatic. Prereqs: Laws of Thermodynamics, Heat Transfer (thermo basics). Unlocks: Thermodynamics in Robotics. Projects: Drone (cooling cycle), Artemis (heat dissipation).", prereqs: ["laws_thermodynamics", "heat_transfer"], unlocks: ["thermodynamics_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Waves and Optics Branch (Tier 4)
+    { id: "wave_applications_robotics", x: 650, y: 350, title: "Wave Applications in Robotics", tooltip: "Apply wave properties to enhance robotics communication! Use the Doppler effect to improve drone radar systems (e.g., f’ = f(v+v₀)/(v-vₛ)) or spiderbot ultrasonic sensors. This node connects waves to robotics applications. Prereqs: Wave Properties (wave basics). Unlocks: Advanced Optics in Robotics. Projects: Drone (radar systems), Spiderbot (ultrasonic sensors).", prereqs: ["wave_properties"], unlocks: ["advanced_optics_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "optical_sensors_robotics", x: 700, y: 350, title: "Optical Sensors in Robotics", tooltip: "Design optical sensors to improve robotics vision! Use Snell’s Law (n₁sinθ₁ = n₂sinθ₂) to optimize a drone’s laser sensor or Artemis’ vision system for navigation. This node applies optics to sensor design. Prereqs: Geometric Optics (optics basics). Unlocks: Advanced Optics in Robotics. Projects: Drone (laser sensor), Artemis (vision system).", prereqs: ["geometric_optics"], unlocks: ["advanced_optics_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Modern Physics Branch (Tier 4)
+    { id: "relativistic_effects_robotics", x: 750, y: 350, title: "Relativistic Effects in Robotics", tooltip: "Apply relativistic effects to ensure navigation accuracy! Correct for time dilation in a drone’s GPS (e.g., Δt’ = Δt/√(1-v²/c²)) for high-speed military applications. This node connects relativity to robotics. Prereqs: Relativity Basics (relativity fundamentals). Unlocks: None. Projects: Drone (GPS accuracy).", prereqs: ["relativity_basics"], unlocks: [], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "quantum_applications_robotics", x: 800, y: 350, title: "Quantum Applications in Robotics", tooltip: "Use quantum mechanics to develop cutting-edge robotics sensors! Apply quantum tunneling to design ultra-sensitive sensors for Artemis or military tech applications. This node connects quantum principles to robotics. Prereqs: Quantum Mechanics Basics (quantum fundamentals). Unlocks: None. Projects: Artemis (quantum sensors).", prereqs: ["quantum_mechanics_basics"], unlocks: [], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Mechanics Basics Branch (Tier 5)
+    { id: "dynamics_robotics", x: 350, y: 450, title: "Dynamics in Robotics", tooltip: "Apply dynamics to model complex robotics systems! Use Lagrangian mechanics to analyze a spiderbot’s multi-leg motion or a drone’s flight trajectory. This node bridges mechanics to advanced robotics dynamics. Prereqs: Rotational Motion, Momentum and Collisions (advanced mechanics). Unlocks: None. Projects: Spiderbot (multi-leg motion), Drone (flight trajectory). Suggested resource: ‘Classical Mechanics’ course on edX.", prereqs: ["rotational_motion", "momentum_collisions"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-5", badge: "Mechanics Master (Complete the Mechanics Basics branch to unlock!)" },
+
+    // Electromagnetism Basics Branch (Tier 5)
+    { id: "electromagnetic_fields_robotics", x: 475, y: 450, title: "Electromagnetic Fields in Robotics", tooltip: "Master electromagnetic fields to optimize robotics systems! Use Maxwell’s equations (e.g., ∇·E = ρ/ε₀) to design a drone’s antenna for communication or Artemis’ wireless charging system. This node applies EM fields to robotics. Prereqs: Electromagnetic Induction (induction basics). Unlocks: None. Projects: Drone (antenna design), Artemis (wireless charging). Suggested resource: ‘Electromagnetism’ course on Coursera.", prereqs: ["electromagnetic_induction"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-5", badge: "Electromagnetism Expert (Complete the Electromagnetism Basics branch to unlock!)" },
+
+    // Thermodynamics Basics Branch (Tier 5)
+    { id: "thermodynamics_robotics", x: 575, y: 450, title: "Thermodynamics in Robotics", tooltip: "Optimize energy efficiency in robotics with thermodynamics! Analyze the efficiency of a drone’s heat engine (e.g., η = 1 - T_cold/T_hot) or Artemis’ cooling system for thermal management. This node applies thermodynamics to robotics design. Prereqs: Thermodynamic Processes (process basics). Unlocks: None. Projects: Drone (heat engine efficiency), Artemis (cooling system).", prereqs: ["thermodynamic_processes"], unlocks: [], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5", badge: "Thermodynamics Specialist (Complete the Thermodynamics Basics branch to unlock!)" },
+
+    // Waves and Optics Branch (Tier 5)
+    { id: "advanced_optics_robotics", x: 675, y: 450, title: "Advanced Optics in Robotics", tooltip: "Enhance robotics vision with advanced optics! Use wave optics (e.g., diffraction patterns) to improve drone LIDAR systems or Artemis’ infrared sensors for military tech applications. This node covers interference and diffraction. Prereqs: Wave Applications in Robotics, Optical Sensors in Robotics (wave and optics basics). Unlocks: None. Projects: Drone (LIDAR systems), Artemis (infrared sensors). Suggested resource: ‘Optics’ course on edX.", prereqs: ["wave_applications_robotics", "optical_sensors_robotics"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-5", badge: "Optics Engineer (Complete the Waves and Optics branch to unlock!)" }
+];
+
+        const canvas = document.getElementById("canvas");
+        const infoTitle = document.getElementById("info-title");
+        const infoContent = document.getElementById("info-content");
+        const infoPanel = document.getElementById("info-panel");
+
+        // Add collision detection and resolution
+        function checkCollision(node1, node2) {
+            const padding = 20; // Minimum space between nodes
+            return !(node1.x + 140 + padding < node2.x || 
+                    node1.x > node2.x + 140 + padding || 
+                    node1.y + 40 + padding < node2.y || 
+                    node1.y > node2.y + 40 + padding);
+        }
+
+        function resolveCollisions() {
+            let hasCollision = true;
+            let iterations = 0;
+            const maxIterations = 100; // Prevent infinite loops
+            
+            while (hasCollision && iterations < maxIterations) {
+                hasCollision = false;
+                iterations++;
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (checkCollision(nodes[i], nodes[j])) {
+                            hasCollision = true;
+                            
+                            // Calculate the direction to move nodes apart
+                            const dx = nodes[j].x - nodes[i].x;
+                            const dy = nodes[j].y - nodes[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance === 0) {
+                                // If nodes are exactly on top of each other, move them apart randomly
+                                nodes[i].x -= 50;
+                                nodes[j].x += 50;
+                            } else {
+                                // Move nodes apart along their center line
+                                const moveX = (dx / distance) * 25;
+                                const moveY = (dy / distance) * 25;
+                                
+                                nodes[i].x -= moveX;
+                                nodes[i].y -= moveY;
+                                nodes[j].x += moveX;
+                                nodes[j].y += moveY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Function to increase spacing between nodes
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
+            // Add offset to move everything right of info panel
+            const infoPanelOffset = 450; // Increased from 400 to 450 for more space
+            
+            // Find the minimum x and y to maintain relative positioning
+            const minX = Math.min(...nodes.map(node => node.x));
+            const minY = Math.min(...nodes.map(node => node.y));
+            
+            // Apply spacing to each node
+            nodes.forEach(node => {
+                // Calculate new position relative to minimum values
+                const relativeX = node.x - minX;
+                const relativeY = node.y - minY;
+                
+                // Apply spacing factors and restore offset with additional right shift
+                node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
+                node.y = minY + (relativeY * verticalFactor);
+                
+                // Ensure no node is positioned behind the sidebar
+                if (node.x < 350) { // 300px sidebar width + 50px buffer
+                    node.x = 350;
+                }
+            });
+
+            // Resolve any collisions after spacing
+            resolveCollisions();
+        }
+
+        // Apply increased spacing and resolve collisions
+        increaseSpacing(2.2, 2.0);
+
+        // Draw lines between nodes
+        function drawLines() {
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+        }
+
+        // Create nodes
+        nodes.forEach(node => {
+            const div = document.createElement('div');
+            div.className = 'node';
+            div.id = node.id;
+            div.style.left = `${node.x}px`;
+            div.style.top = `${node.y}px`;
+            div.innerHTML = node.title;
+            
+            // Add tier class based on y position
+            const tier = Math.floor((node.y - 50) / 200) + 1;
+            div.classList.add(`tier-${tier}`);
+            
+            // Add status indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'status-indicator';
+            const status = getNodeStatus(node.id);
+            indicator.classList.add(`status-${status}`);
+            
+            // Add progress bar
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.classList.add(status);
+            
+            // Set progress bar width based on status
+            if (status === 'in-progress') {
+                progressBar.style.width = '50%';
+            } else if (status === 'finished') {
+                progressBar.style.width = '100%';
+            } else {
+                progressBar.style.width = '0%';
+            }
+            
+            // Add progress tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'progress-tooltip';
+            tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            // Add click handler for status indicator
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent node click event
+                
+                const currentStatus = getNodeStatus(node.id);
+                let newStatus;
+                
+                // Cycle through statuses
+                if (currentStatus === 'not-started') {
+                    newStatus = 'in-progress';
+                } else if (currentStatus === 'in-progress') {
+                    newStatus = 'finished';
+                } else if (currentStatus === 'finished') {
+                    newStatus = 'not-started';
+                }
+                
+                updateNodeStatus(node.id, newStatus);
+                
+                // Update tooltip
+                tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
+            });
+            
+            // Show tooltip on hover
+            indicator.addEventListener('mouseenter', (e) => {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+            });
+            
+            indicator.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+            });
+            
+            indicator.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            });
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
+
+            // Add event listeners for highlighting connections
+            div.addEventListener('mouseenter', () => {
+                // Set selected node
+                selectedNodeId = node.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            });
+
+            div.addEventListener('mouseleave', () => {
+                // Clear selected node
+                selectedNodeId = null;
+                
+                // Remove highlight from all lines
+                document.querySelectorAll('.line.highlight').forEach(line => {
+                    line.classList.remove('highlight');
+                });
+                
+                // Reset info panel
+                infoTitle.textContent = "Algebra Tech Tree Information";
+                infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+                
+                // Reset time info
+                document.getElementById('estimated-time').textContent = "-";
+                document.getElementById('time-spent').textContent = "0 hrs";
+            });
+
+            canvas.appendChild(div);
+        });
+
+        // Draw lines after creating nodes
+        drawLines();
+
+        function updateNodeProgress() {
+            // Get progress for each node from nodeProgress object
+            nodes.forEach(node => {
+                const status = getNodeStatus(node.id);
+                const nodeElement = document.getElementById(node.id);
+                if (nodeElement) {
+                    const indicator = nodeElement.querySelector('.status-indicator');
+                    const progressBar = nodeElement.querySelector('.progress-bar');
+                    
+                    if (indicator && progressBar) {
+                        // Remove all status classes
+                        indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                        progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                        
+                        // Add current status class
+                        indicator.classList.add(`status-${status}`);
+                        progressBar.classList.add(status);
+                        
+                        // Set progress bar width based on status
+                        if (status === 'in-progress') {
+                            progressBar.style.width = '50%';
+                        } else if (status === 'finished') {
+                            progressBar.style.width = '100%';
+                        } else {
+                            progressBar.style.width = '0%';
+                        }
+                    }
+                }
+            });
+            
+            // Update progress summary
+            updateProgressSummary();
+        }
+
+        // Add click handler for nodes to update progress
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            nodes.forEach(node => {
+                if (Math.abs(node.x - x) < 30 && Math.abs(node.y - y) < 30) {
+                    const currentStatus = getNodeStatus(node.id);
+                    let newStatus;
+                    
+                    // Cycle through statuses
+                    if (currentStatus === 'not-started') {
+                        newStatus = 'in-progress';
+                    } else if (currentStatus === 'in-progress') {
+                        newStatus = 'finished';
+                    } else if (currentStatus === 'finished') {
+                        newStatus = 'not-started';
+                    }
+                    
+                    updateNodeStatus(node.id, newStatus);
+                }
+            });
+        });
+
+        // Call updateNodeProgress when the page loads
+        window.addEventListener('load', updateNodeProgress);
+        
+        // Export progress data
+        document.getElementById('export-button').addEventListener('click', () => {
+            // Collect all progress data
+            const progressData = {
+                algebraProgress: localStorage.getItem('algebraProgress') || '0',
+                algebraNodes: {}
+            };
+            
+            // Get all algebra node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('algebra_', '').replace('_progress', '');
+                    progressData.algebraNodes[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Create and download the file
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'algebra-progress.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Import progress data
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Clear existing algebra progress data
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Restore algebra progress data
+                    if (progressData.algebraProgress) {
+                        localStorage.setItem('algebraProgress', progressData.algebraProgress);
+                    }
+                    
+                    // Restore algebra node progress
+                    if (progressData.algebraNodes) {
+                        Object.entries(progressData.algebraNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`algebra_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Update the UI
+                    updateNodeProgress();
+                    
+                    // Show success message
+                    alert('Algebra progress data imported successfully!');
+                } catch (error) {
+                    console.error('Error importing progress data:', error);
+                    alert('Error importing progress data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Time tracking variables
+        let totalTimeSpent = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let selectedNodeId = null;  // Track currently selected node
+
+        // Format time for display
+        function formatTime(hours) {
+            if (hours === 0) return '0 hrs';
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            if (minutes === 0) return `${wholeHours} hrs`;
+            return `${wholeHours} hrs ${minutes} mins`;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            if (selectedNodeId) {
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            }
+        }
+
+        // Add time manually
+        function addTime(hours) {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent += hours;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Reset time tracking
+        function resetTime() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent = 0;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Start/Stop timer
+        function toggleTimer() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            
+            const timerButton = document.getElementById('start-timer');
+            const activeTimer = document.getElementById('active-timer');
+            
+            if (!startTime) {
+                // Start timer
+                startTime = new Date();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                timerButton.textContent = 'Stop Timer';
+                activeTimer.style.display = 'block';
+            } else {
+                // Stop timer
+                const endTime = new Date();
+                const elapsedHours = (endTime - startTime) / (1000 * 60 * 60);
+                totalTimeSpent += elapsedHours;
+                
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                
+                timerButton.textContent = 'Start Timer';
+                activeTimer.style.display = 'none';
+                document.getElementById('timer-display').textContent = '00:00:00';
+                
+                updateTimeDisplay();
+                saveTime();
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            if (!startTime) return;
+            
+            const currentTime = new Date();
+            const elapsedMs = currentTime - startTime;
+            const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsedMs % (1000 * 60)) / 1000);
+            
+            document.getElementById('timer-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Save time to localStorage
+        function saveTime() {
+            if (selectedNodeId) {
+                localStorage.setItem(`algebra_${selectedNodeId}_total_time`, totalTimeSpent.toString());
+            }
+        }
+
+        // Load time from localStorage
+        function loadTime() {
+            if (selectedNodeId) {
+                const savedTime = localStorage.getItem(`algebra_${selectedNodeId}_total_time`);
+                if (savedTime) {
+                    totalTimeSpent = parseFloat(savedTime);
+                } else {
+                    totalTimeSpent = 0;
+                }
+                updateTimeDisplay();
+            }
+        }
+
+        // Event listeners for time tracking
+        document.getElementById('add-time').addEventListener('click', () => {
+            const timeInput = document.getElementById('hours-input');
+            const hours = parseFloat(timeInput.value);
+            if (!isNaN(hours) && hours > 0) {
+                addTime(hours);
+                timeInput.value = '';
+            }
+        });
+
+        document.getElementById('reset-time').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the time tracking?')) {
+                resetTime();
+            }
+        });
+
+        document.getElementById('start-timer').addEventListener('click', toggleTimer);
+
+        // Initialize time tracking
+        loadTime();
+    </script>
+</body>
+</html> 
