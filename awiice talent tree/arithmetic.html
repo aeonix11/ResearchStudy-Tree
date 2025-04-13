@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arithmetic Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #info-panel {
+            width: 300px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #instructions {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #instructions h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        #instructions ul {
+            padding-left: 20px;
+        }
+        #instructions li {
+            margin-bottom: 8px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #canvas {
+            flex: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line {
+            position: relative;
+            z-index: 2;
+        }
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #45B7AF, #3CA29A);
+            box-shadow: 0 4px 15px rgba(69, 183, 175, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #3CA29A, #338D86);
+            box-shadow: 0 4px 15px rgba(60, 162, 154, 0.4);
+        }
+        .node::before {
+            content: attr(data-progress) '%';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .node[data-progress]:not([data-progress="0"])::before {
+            opacity: 1;
+        }
+        .node.tier-1:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7676);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        .node.tier-2:hover {
+            background: linear-gradient(135deg, #3DBEB6, #34A8A0);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        .node.tier-3:hover {
+            background: linear-gradient(135deg, #34A8A0, #2B938B);
+            box-shadow: 0 6px 20px rgba(69, 183, 175, 0.6);
+        }
+        .node.tier-4:hover {
+            background: linear-gradient(135deg, #2B938B, #227E77);
+            box-shadow: 0 6px 20px rgba(60, 162, 154, 0.6);
+        }
+        .node.clickable {
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+        .node.clickable:hover {
+            transform: scale(1.1);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+        }
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        #back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        #back-button:hover {
+            background: #45a049;
+        }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s;
+        }
+        .status-not-started {
+            background-color: #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 2s infinite;
+        }
+        .status-completed {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        }
+        .status-finished {
+            background-color: #9C27B0;
+            box-shadow: 0 0 5px rgba(156, 39, 176, 0.7);
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+            50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 0 0 5px 5px;
+        }
+        .progress-bar.in-progress {
+            background: linear-gradient(90deg, #FFC107, #FF9800);
+        }
+        .progress-bar.completed {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+        .progress-bar.not-started {
+            width: 0 !important;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+        .progress-summary {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
+        .node.selected {
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <button id="back-button" onclick="window.location.href='index.html'">← Back to Main Tree</button>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Arithmetic Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div id="instructions">
+                <h3>Instructions</h3>
+                <ul>
+                    <li><strong>Hover</strong> over a node to see its information</li>
+                    <li><strong>Click once</strong> on a node to keep its information displayed</li>
+                    <li><strong>Click twice</strong> on a node to follow its links</li>
+                    <li><strong>Click</strong> on the status indicator to change node status</li>
+                    <li>Use the time controls to track your progress</li>
+                </ul>
+            </div>
+            <div style="flex-grow: 1;"></div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <script>
+        // Load saved progress from localStorage
+        let nodeProgress = {};
+        let nodeTimeSpent = {};
+        
+        function loadProgress() {
+            // Load the overall progress object
+            const savedProgress = localStorage.getItem('arithmeticProgress');
+            if (savedProgress) {
+                nodeProgress = JSON.parse(savedProgress);
+            }
+            
+            // Load individual node statuses
+            nodes.forEach(node => {
+                const savedStatus = localStorage.getItem(`arithmetic_${node.id}_progress`);
+                if (savedStatus) {
+                    nodeProgress[node.id] = savedStatus;
+                }
+                
+                // Load time spent for each node
+                const savedTime = localStorage.getItem(`arithmetic_${node.id}_time`);
+                if (savedTime) {
+                    nodeTimeSpent[node.id] = savedTime;
+                } else {
+                    nodeTimeSpent[node.id] = "0 hrs";
+                }
+            });
+        }
+        
+        function saveProgress() {
+            // Save the overall progress object
+            localStorage.setItem('arithmeticProgress', JSON.stringify(nodeProgress));
+            
+            // Calculate and save progress for the main page
+            const totalNodes = nodes.length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const progressPercentage = totalNodes > 0 ? (finishedNodes / totalNodes) * 100 : 0;
+            
+            // Save progress to localStorage for the main page
+            localStorage.setItem('arithmeticMainProgress', progressPercentage.toString());
+        }
+        
+        function updateNodeStatus(nodeId, status) {
+            // Update the nodeProgress object
+            nodeProgress[nodeId] = status;
+            
+            // Save to localStorage with the correct key format
+            localStorage.setItem(`arithmetic_${nodeId}_progress`, status);
+            
+            // Save the overall progress
+            saveProgress();
+            
+            // Update visual indicators
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const indicator = node.querySelector('.status-indicator');
+                const progressBar = node.querySelector('.progress-bar');
+                const tooltip = node.querySelector('.progress-tooltip');
+                
+                // Remove all status classes
+                indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                
+                // Add new status class
+                indicator.classList.add(`status-${status}`);
+                progressBar.classList.add(status);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+
+                // Update tooltip if it exists
+                if (tooltip) {
+                    tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+                }
+            }
+        }
+        
+        function updateNodeTime(nodeId, hoursToAdd) {
+            // Get current time spent
+            let currentTime = nodeTimeSpent[nodeId] || "0 hrs";
+            let currentHours = parseFloat(currentTime);
+            
+            // Add new hours
+            currentHours += hoursToAdd;
+            
+            // Update the nodeTimeSpent object
+            nodeTimeSpent[nodeId] = `${currentHours} hrs`;
+            
+            // Save to localStorage
+            localStorage.setItem(`arithmetic_${nodeId}_time`, nodeTimeSpent[nodeId]);
+            
+            // Update the time display if this is the currently selected node
+            const selectedNode = document.querySelector('.node.selected');
+            if (selectedNode && selectedNode.id === nodeId) {
+                document.getElementById('time-spent').textContent = nodeTimeSpent[nodeId];
+            }
+        }
+        
+        function resetNodeTime(nodeId) {
+            // Reset time spent to 0
+            nodeTimeSpent[nodeId] = "0 hrs";
+            
+            // Save to localStorage
+            localStorage.setItem(`arithmetic_${nodeId}_time`, nodeTimeSpent[nodeId]);
+            
+            // Update the time display if this is the currently selected node
+            const selectedNode = document.querySelector('.node.selected');
+            if (selectedNode && selectedNode.id === nodeId) {
+                document.getElementById('time-spent').textContent = "0 hrs";
+            }
+        }
+        
+        function getNodeStatus(nodeId) {
+            // First check if we have a saved status in localStorage
+            const savedStatus = localStorage.getItem(`arithmetic_${nodeId}_progress`);
+            if (savedStatus) {
+                return savedStatus;
+            }
+            
+            // If no saved status, check if the node has prerequisites
+            const node = nodes.find(n => n.id === nodeId);
+            if (node && node.prerequisites && node.prerequisites.length > 0) {
+                // If it has prerequisites, it starts as not-started
+                return 'not-started';
+            }
+            
+            // Default to not-started
+            return 'not-started';
+        }
+        
+        function updateProgressSummary() {
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const notStartedNodes = Object.values(nodeProgress).filter(status => status === 'not-started').length;
+            
+            const progressSummary = document.getElementById('progress-summary');
+            if (progressSummary) {
+                progressSummary.innerHTML = `
+                    <div>Total Nodes: ${totalNodes}</div>
+                    <div>Finished: ${finishedNodes}</div>
+                    <div>In Progress: ${inProgressNodes}</div>
+                    <div>Not Started: ${notStartedNodes}</div>
+                    <div>Overall Progress: ${Math.round((finishedNodes / totalNodes) * 100)}%</div>
+                `;
+            }
+        }
+        
+        // Load progress when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            
+            // Create progress summary element
+            const progressSummary = document.createElement('div');
+            progressSummary.id = 'progress-summary';
+            progressSummary.className = 'progress-summary';
+            document.body.appendChild(progressSummary);
+            
+            // Update progress summary
+            updateProgressSummary();
+        });
+
+        const nodes = [
+    // Parent Node: Arithmetic
+    { id: "arithmetic", x: 650, y: 50, title: "Arithmetic", tooltip: "Foundation of all math: number operations and properties. Crucial for mechatronics (e.g., motor power, sensor data, unit conversions). Unlocks: Algebra, Geometry. Projects: All. Tip: Master this for quick mental math in design!", prereqs: [], unlocks: ["algebra", "geometry"], time: { estimated: "60-90 hrs", spent: "0 hrs" } },
+
+    // Subcategory 1: Number Systems
+    { id: "number_systems", x: 550, y: 150, title: "Number Systems", tooltip: "Understanding number types (integers, rationals, binary). Key for mechatronics data (e.g., integer counters, decimal precision, hex registers). Prereqs: None. Unlocks: Arithmetic. Projects: All. Example: -5, 0, 3.2, 0xFF", prereqs: [], unlocks: ["arithmetic"], time: { estimated: "18-28 hrs", spent: "0 hrs" } },
+    { id: "natural_numbers", x: 450, y: 250, title: "Natural Numbers", tooltip: "Counting numbers (1, 2, 3, …). Used in mechatronics for iteration (e.g., loop counts in code). Prereqs: None. Unlocks: Number Systems. Projects: All. Tip: Practice counting sequences!", prereqs: [], unlocks: ["number_systems"], time: { estimated: "2-3 hrs", spent: "0 hrs" } },
+    { id: "whole_numbers", x: 500, y: 250, title: "Whole Numbers", tooltip: "Natural numbers plus zero (0, 1, 2, …). Baseline for null states (e.g., zero sensor reading). Prereqs: Natural Numbers. Unlocks: Number Systems. Projects: All", prereqs: ["natural_numbers"], unlocks: ["number_systems"], time: { estimated: "2-3 hrs", spent: "0 hrs" } },
+    { id: "integers", x: 550, y: 250, title: "Integers", tooltip: "Positive and negative numbers (…, -2, -1, 0, 1, …). Vital for signed values (e.g., motor direction, error signals). Prereqs: Whole Numbers. Unlocks: Number Systems. Projects: All. Example: -3 + 5 = 2", prereqs: ["whole_numbers"], unlocks: ["number_systems"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "rational_numbers", x: 600, y: 250, title: "Rational Numbers", tooltip: "Fractions and decimals (e.g., 1/2, 0.75). Used in precise measurements (e.g., gear ratios, PWM duty). Prereqs: Integers. Unlocks: Number Systems. Projects: All", prereqs: ["integers"], unlocks: ["number_systems"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "irrational_numbers", x: 650, y: 250, title: "Irrational Numbers", tooltip: "Non-repeating decimals (e.g., √2, π). Common in mechatronics (e.g., circular motion, harmonic analysis). Prereqs: Rational Numbers. Unlocks: Number Systems. Projects: All. Tip: Approximate π as 3.14", prereqs: ["rational_numbers"], unlocks: ["number_systems"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "binary_numbers", x: 700, y: 250, title: "Binary Numbers", tooltip: "Base-2 system (e.g., 1010 = 10 decimal). Essential for digital electronics and microcontroller logic. Prereqs: Rational Numbers. Unlocks: Number Systems. Projects: All. Example: 1100 = 12", prereqs: ["rational_numbers"], unlocks: ["number_systems"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "hexadecimal_numbers", x: 750, y: 250, title: "Hexadecimal Numbers", tooltip: "Base-16 system (e.g., 0xFF = 255 decimal). Used in mechatronics for register settings (e.g., I2C addresses). Prereqs: Binary Numbers. Unlocks: Number Systems. Projects: All. Tip: Learn 0-9, A-F!", prereqs: ["binary_numbers"], unlocks: ["number_systems"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "floating_point_numbers", x: 800, y: 250, title: "Floating-Point Numbers", tooltip: "Precision decimals (e.g., 3.14 in IEEE 754). Key for sensor data and control algorithms in mechatronics. Prereqs: Rational Numbers. Unlocks: Number Systems. Projects: All. Example: 0.001 precision", prereqs: ["rational_numbers"], unlocks: ["number_systems"], time: { estimated: "5-7 hrs", spent: "0 hrs" } },
+    { id: "prime_factorization", x: 850, y: 250, title: "Prime Factorization", tooltip: "Break into primes (e.g., 12 = 2² × 3). Optimizes gear ratios and timing in mechatronics. Prereqs: Integers. Unlocks: Number Systems. Projects: All", prereqs: ["integers"], unlocks: ["number_systems"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+
+    // Subcategory 2: Basic Operations
+    { id: "basic_operations", x: 850, y: 150, title: "Basic Operations", tooltip: "Core skills: add, subtract, multiply, divide, modulo. Drives all mechatronics math (e.g., summing forces, timing loops). Prereqs: Number Systems. Unlocks: Arithmetic. Projects: All. Example: 4 × 3 = 12", prereqs: ["number_systems"], unlocks: ["arithmetic"], time: { estimated: "20-30 hrs", spent: "0 hrs" } },
+    { id: "addition", x: 800, y: 250, title: "Addition", tooltip: "Combining quantities (e.g., 3 + 5 = 8). Sums sensor inputs or currents in mechatronics. Prereqs: Number Systems. Unlocks: Basic Operations. Projects: All. Tip: Practice multi-digit with carrying!", prereqs: ["number_systems"], unlocks: ["basic_operations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "subtraction", x: 850, y: 250, title: "Subtraction", tooltip: "Finding differences (e.g., 8 - 3 = 5). Key for error correction (e.g., PID control, position offset). Prereqs: Addition. Unlocks: Basic Operations. Projects: All. Example: 10 - 4 = 6", prereqs: ["addition"], unlocks: ["basic_operations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "multiplication", x: 900, y: 250, title: "Multiplication", tooltip: "Scaling numbers (e.g., 4 × 3 = 12). Scales power or torque in mechatronics. Prereqs: Addition. Unlocks: Basic Operations. Projects: All. Tip: Memorize times tables!", prereqs: ["addition"], unlocks: ["basic_operations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "division", x: 950, y: 250, title: "Division", tooltip: "Partitioning (e.g., 12 ÷ 3 = 4). Divides resources (e.g., power split across motors). Prereqs: Multiplication. Unlocks: Basic Operations. Projects: All. Example: 15 ÷ 3 = 5", prereqs: ["multiplication"], unlocks: ["basic_operations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "modulo_operation", x: 1000, y: 250, title: "Modulo Operation", tooltip: "Remainder after division (e.g., 10 % 3 = 1). Used in mechatronics for cyclic timing (e.g., every 5th loop). Prereqs: Division. Unlocks: Basic Operations. Projects: All. Example: 7 % 2 = 1", prereqs: ["division"], unlocks: ["basic_operations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "negative_number_operations", x: 1050, y: 250, title: "Negative Number Ops", tooltip: "Handle signed values (e.g., -3 + 5 = 2, -4 × 2 = -8). Key for error signals and voltage drops. Prereqs: Subtraction. Unlocks: Basic Operations. Projects: All", prereqs: ["subtraction"], unlocks: ["basic_operations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "modeling_problems", x: 1100, y: 250, title: "Modeling Problems", tooltip: "Translate scenarios (e.g., 3 motors at 2A = 6A total). Applies arithmetic to mechatronics tasks. Prereqs: Division. Unlocks: Basic Operations. Projects: All", prereqs: ["division"], unlocks: ["basic_operations"], time: { estimated: "5-7 hrs", spent: "0 hrs" } },
+
+    // Subcategory 3: Properties of Operations
+    { id: "properties_operations", x: 650, y: 350, title: "Properties of Operations", tooltip: "Rules for number manipulation. Basis for mechatronics equations (e.g., distributing forces, matrix ops prep). Prereqs: Basic Operations. Unlocks: Arithmetic. Projects: All", prereqs: ["basic_operations"], unlocks: ["arithmetic"], time: { estimated: "10-15 hrs", spent: "0 hrs" } },
+    { id: "commutative_property", x: 600, y: 450, title: "Commutative Property", tooltip: "Order doesn't matter (e.g., 2 + 3 = 3 + 2). Simplifies mechatronics calcs (e.g., summing currents). Prereqs: Basic Operations. Unlocks: Properties of Operations. Projects: All", prereqs: ["basic_operations"], unlocks: ["properties_operations"], time: { estimated: "2-3 hrs", spent: "0 hrs" } },
+    { id: "associative_property", x: 650, y: 450, title: "Associative Property", tooltip: "Grouping doesn't matter (e.g., (2 + 3) + 4 = 2 + (3 + 4)). Useful in multi-step mechatronics math. Prereqs: Commutative Property. Unlocks: Properties of Operations. Projects: All", prereqs: ["commutative_property"], unlocks: ["properties_operations"], time: { estimated: "2-3 hrs", spent: "0 hrs" } },
+    { id: "distributive_property", x: 700, y: 450, title: "Distributive Property", tooltip: "Multiply over addition (e.g., 2 × (3 + 4) = 6 + 8). Key for factoring in control systems and signal processing. Prereqs: Associative Property. Unlocks: Properties of Operations. Projects: All", prereqs: ["associative_property"], unlocks: ["properties_operations"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "identity_elements", x: 750, y: 450, title: "Identity Elements", tooltip: "0 for addition, 1 for multiplication (e.g., 5 + 0 = 5). Sets baselines in mechatronics (e.g., zero voltage). Prereqs: Distributive Property. Unlocks: Properties of Operations. Projects: All", prereqs: ["distributive_property"], unlocks: ["properties_operations"], time: { estimated: "2-3 hrs", spent: "0 hrs" } },
+    { id: "inverse_operations", x: 800, y: 450, title: "Inverse Operations", tooltip: "Undoing operations (e.g., 5 + (-5) = 0). Balances equations in mechatronics (e.g., feedback loops). Prereqs: Identity Elements. Unlocks: Properties of Operations. Projects: All", prereqs: ["identity_elements"], unlocks: ["properties_operations"], time: { estimated: "2-3 hrs", spent: "0 hrs" } },
+
+    // Subcategory 4: Fractions and Decimals
+    { id: "fractions_decimals", x: 550, y: 350, title: "Fractions & Decimals", tooltip: "Parts of wholes and precision. Vital for mechatronics accuracy (e.g., 0.01m tolerance, unit conversions). Prereqs: Basic Operations. Unlocks: Arithmetic. Projects: All", prereqs: ["basic_operations"], unlocks: ["arithmetic"], time: { estimated: "15-25 hrs", spent: "0 hrs" } },
+    { id: "fraction_operations", x: 500, y: 450, title: "Fraction Operations", tooltip: "Add, subtract, multiply, divide fractions (e.g., 1/2 + 1/3 = 5/6). Used in gear ratios and scaling. Prereqs: Basic Operations. Unlocks: Fractions & Decimals. Projects: All", prereqs: ["basic_operations"], unlocks: ["fractions_decimals"], time: { estimated: "5-7 hrs", spent: "0 hrs" } },
+    { id: "simplifying_fractions", x: 550, y: 450, title: "Simplifying Fractions", tooltip: "Reduce terms (e.g., 4/8 = 1/2). Simplifies mechatronics math (e.g., resistor ratios). Prereqs: Fraction Operations. Unlocks: Fractions & Decimals. Projects: All", prereqs: ["fraction_operations"], unlocks: ["fractions_decimals"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "converting_fractions_decimals", x: 600, y: 450, title: "Converting Frac/Dec", tooltip: "Switch forms (e.g., 1/4 = 0.25). Key for sensor data and programming formats. Prereqs: Simplifying Fractions. Unlocks: Fractions & Decimals. Projects: All", prereqs: ["simplifying_fractions"], unlocks: ["fractions_decimals"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "decimal_operations", x: 650, y: 450, title: "Decimal Operations", tooltip: "Operate on decimals (e.g., 0.3 × 0.2 = 0.06). Common in mechatronics precision (e.g., ADC readings). Prereqs: Converting Frac/Dec. Unlocks: Fractions & Decimals. Projects: All", prereqs: ["converting_fractions_decimals"], unlocks: ["fractions_decimals"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "dimensional_analysis", x: 700, y: 450, title: "Dimensional Analysis", tooltip: "Unit conversions (e.g., 5 m/s to 18 km/h). Ensures mechatronics calcs match physical systems (e.g., RPM to rad/s). Prereqs: Decimal Operations. Unlocks: Fractions & Decimals. Projects: All. Tip: Check units!", prereqs: ["decimal_operations"], unlocks: ["fractions_decimals"], time: { estimated: "5-10 hrs", spent: "0 hrs" } },
+
+    // Subcategory 5: Exponents and Roots
+    { id: "exponents_roots", x: 750, y: 350, title: "Exponents & Roots", tooltip: "Powers and inverses. Used in mechatronics for growth models (e.g., battery decay, signal decay). Prereqs: Basic Operations. Unlocks: Arithmetic. Projects: All", prereqs: ["basic_operations"], unlocks: ["arithmetic"], time: { estimated: "18-25 hrs", spent: "0 hrs" } },
+    { id: "exponents", x: 700, y: 450, title: "Exponents", tooltip: "Repeated multiplication (e.g., 2³ = 8). Models exponential behavior in mechatronics (e.g., motor response). Prereqs: Basic Operations. Unlocks: Exponents & Roots. Projects: All. Tip: Learn negative exponents!", prereqs: ["basic_operations"], unlocks: ["exponents_roots"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "square_roots", x: 750, y: 450, title: "Square Roots", tooltip: "Inverse of squaring (e.g., √16 = 4). Used in distance and RMS calculations. Prereqs: Exponents. Unlocks: Exponents & Roots. Projects: All", prereqs: ["exponents"], unlocks: ["exponents_roots"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "laws_of_exponents", x: 800, y: 450, title: "Laws of Exponents", tooltip: "Rules like a^m × a^n = a^(m+n). Simplifies complex mechatronics equations (e.g., power scaling). Prereqs: Square Roots. Unlocks: Exponents & Roots. Projects: All", prereqs: ["square_roots"], unlocks: ["exponents_roots"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "logarithms", x: 850, y: 450, title: "Logarithms", tooltip: "Inverse of exponents (e.g., log₂(8) = 3). Analyzes decay (e.g., battery life) and signal strength. Prereqs: Laws of Exponents. Unlocks: Exponents & Roots. Projects: All. Example: log₁₀(100) = 2", prereqs: ["laws_of_exponents"], unlocks: ["exponents_roots"], time: { estimated: "5-10 hrs", spent: "0 hrs" } },
+    { id: "scientific_notation", x: 900, y: 450, title: "Scientific Notation", tooltip: "Express as powers of 10 (e.g., 0.0015 = 1.5 × 10⁻³). Used for tolerances and specs in mechatronics. Prereqs: Exponents. Unlocks: Exponents & Roots. Projects: All", prereqs: ["exponents"], unlocks: ["exponents_roots"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+
+    // Subcategory 6: Order of Operations
+    { id: "order_operations", x: 650, y: 550, title: "Order of Operations", tooltip: "PEMDAS rules for expressions. Ensures correct mechatronics calcs (e.g., motor power in code). Prereqs: Exponents & Roots. Unlocks: Arithmetic. Projects: All", prereqs: ["exponents_roots"], unlocks: ["arithmetic"], time: { estimated: "5-10 hrs", spent: "0 hrs" } },
+    { id: "parentheses_grouping", x: 600, y: 650, title: "Parentheses & Grouping", tooltip: "Resolve nested terms (e.g., (2 + 3) × 4 = 20). Key for complex mechatronics equations. Prereqs: Exponents & Roots. Unlocks: Order of Operations. Projects: All", prereqs: ["exponents_roots"], unlocks: ["order_operations"], time: { estimated: "2-4 hrs", spent: "0 hrs" } },
+    { id: "expression_evaluation", x: 650, y: 650, title: "Expression Evaluation", tooltip: "Apply PEMDAS (e.g., 2 + 3 × 4 = 14). Avoids errors in mechatronics programming. Prereqs: Parentheses & Grouping. Unlocks: Order of Operations. Projects: All", prereqs: ["parentheses_grouping"], unlocks: ["order_operations"], time: { estimated: "3-6 hrs", spent: "0 hrs" } },
+
+    // Subcategory 7: Percentages and Ratios
+    { id: "percentages_ratios", x: 550, y: 550, title: "Percentages & Ratios", tooltip: "Proportions and comparisons. Used in mechatronics (e.g., battery %, PWM duty cycles). Prereqs: Fractions & Decimals. Unlocks: Arithmetic. Projects: All", prereqs: ["fractions_decimals"], unlocks: ["arithmetic"], time: { estimated: "10-15 hrs", spent: "0 hrs" } },
+    { id: "percentages", x: 500, y: 650, title: "Percentages", tooltip: "Parts per hundred (e.g., 25% of 80 = 20). Tracks drone battery or motor efficiency. Prereqs: Fractions & Decimals. Unlocks: Percentages & Ratios. Projects: All", prereqs: ["fractions_decimals"], unlocks: ["percentages_ratios"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "ratios", x: 550, y: 650, title: "Ratios", tooltip: "Comparing quantities (e.g., 2:3 gear ratio). Key for mechanical design and scaling. Prereqs: Percentages. Unlocks: Percentages & Ratios. Projects: All", prereqs: ["percentages"], unlocks: ["percentages_ratios"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
+    { id: "proportions", x: 600, y: 650, title: "Proportions", tooltip: "Equal ratios (e.g., 2/3 = x/6 → x = 4). Scales designs in mechatronics (e.g., motor sizing). Prereqs: Ratios. Unlocks: Percentages & Ratios. Projects: All", prereqs: ["ratios"], unlocks: ["percentages_ratios"], time: { estimated: "4-6 hrs", spent: "0 hrs" } },
+
+    // Subcategory 8: Estimation and Rounding
+    { id: "estimation_rounding", x: 750, y: 550, title: "Estimation & Rounding", tooltip: "Approximating numbers. Quick checks in mechatronics (e.g., motor power, prototyping). Prereqs: Fractions & Decimals. Unlocks: Arithmetic. Projects: All", prereqs: ["fractions_decimals"], unlocks: ["arithmetic"], time: { estimated: "5-10 hrs", spent: "0 hrs" } },
+    { id: "rounding", x: 700, y: 650, title: "Rounding", tooltip: "To nearest integer/decimal (e.g., 3.7 ≈ 4). Simplifies sensor data and specs. Prereqs: Fractions & Decimals. Unlocks: Estimation & Rounding. Projects: All", prereqs: ["fractions_decimals"], unlocks: ["estimation_rounding"], time: { estimated: "2-4 hrs", spent: "0 hrs" } },
+    { id: "estimation", x: 750, y: 650, title: "Estimation", tooltip: "Quick approximations (e.g., 49 × 21 ≈ 1000). Useful for rapid mechatronics prototyping. Prereqs: Rounding. Unlocks: Estimation & Rounding. Projects: All", prereqs: ["rounding"], unlocks: ["estimation_rounding"], time: { estimated: "3-6 hrs", spent: "0 hrs" } }
+];
+
+        const canvas = document.getElementById("canvas");
+        const infoTitle = document.getElementById("info-title");
+        const infoContent = document.getElementById("info-content");
+        const infoPanel = document.getElementById("info-panel");
+
+        // Add collision detection and resolution
+        function checkCollision(node1, node2) {
+            const padding = 30; // Increased padding from 20 to 30 for more space between nodes
+            return !(node1.x + 150 + padding < node2.x || 
+                    node1.x > node2.x + 150 + padding || 
+                    node1.y + 60 + padding < node2.y || 
+                    node1.y > node2.y + 60 + padding);
+        }
+
+        function resolveCollisions() {
+            let hasCollision = true;
+            let iterations = 0;
+            const maxIterations = 150; // Increased from 100 to 150 for more thorough resolution
+            
+            while (hasCollision && iterations < maxIterations) {
+                hasCollision = false;
+                iterations++;
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (checkCollision(nodes[i], nodes[j])) {
+                            hasCollision = true;
+                            
+                            // Calculate the direction to move nodes apart
+                            const dx = nodes[j].x - nodes[i].x;
+                            const dy = nodes[j].y - nodes[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance === 0) {
+                                // If nodes are exactly on top of each other, move them apart randomly
+                                nodes[i].x -= 60;
+                                nodes[j].x += 60;
+                            } else {
+                                // Move nodes apart along their center line
+                                const moveX = (dx / distance) * 40; // Increased from 25 to 40
+                                const moveY = (dy / distance) * 40; // Increased from 25 to 40
+                                
+                                nodes[i].x -= moveX;
+                                nodes[i].y -= moveY;
+                                nodes[j].x += moveX;
+                                nodes[j].y += moveY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Function to ensure nodes are not behind the sidebar
+        function ensureNodesNotBehindSidebar() {
+            const sidebarWidth = 300; // Width of the info panel
+            const buffer = 50; // Additional buffer space
+            const minX = sidebarWidth + buffer; // Minimum x position for any node
+            
+            // Find the minimum x position of all nodes
+            const minNodeX = Math.min(...nodes.map(node => node.x));
+            
+            // If any node is behind the sidebar, shift all nodes to the right
+            if (minNodeX < minX) {
+                const shiftAmount = minX - minNodeX;
+                nodes.forEach(node => {
+                    node.x += shiftAmount;
+                });
+            }
+        }
+
+        // Function to increase spacing between nodes
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
+            // Add offset to move everything right of info panel
+            const infoPanelOffset = 450; // Increased from 400 to 450 for more space
+            
+            // Find the minimum x and y to maintain relative positioning
+            const minX = Math.min(...nodes.map(node => node.x));
+            const minY = Math.min(...nodes.map(node => node.y));
+            
+            // Apply spacing to each node
+            nodes.forEach(node => {
+                // Calculate new position relative to minimum values
+                const relativeX = node.x - minX;
+                const relativeY = node.y - minY;
+                
+                // Apply spacing factors and restore offset with additional right shift
+                node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
+                node.y = minY + (relativeY * verticalFactor);
+            });
+
+            // Ensure no nodes are behind the sidebar
+            ensureNodesNotBehindSidebar();
+            
+            // Resolve any collisions after spacing
+            resolveCollisions();
+            
+            // Final check to ensure no nodes are overlapping
+            ensureNoOverlap();
+        }
+        
+        // Function to ensure no nodes are overlapping after all positioning
+        function ensureNoOverlap() {
+            // Sort nodes by x position to handle left-to-right
+            const sortedNodes = [...nodes].sort((a, b) => a.x - b.x);
+            
+            for (let i = 0; i < sortedNodes.length; i++) {
+                for (let j = i + 1; j < sortedNodes.length; j++) {
+                    if (checkCollision(sortedNodes[i], sortedNodes[j])) {
+                        // Move the right node further right
+                        sortedNodes[j].x += 60;
+                    }
+                }
+            }
+        }
+
+        // Apply increased spacing
+        increaseSpacing(2.2, 2.0);
+
+        // Draw lines between nodes
+        function drawLines() {
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+        }
+
+        // Create nodes
+        nodes.forEach(node => {
+            // Ensure node is not behind sidebar before creating the element
+            const sidebarWidth = 300;
+            const buffer = 50;
+            if (node.x < sidebarWidth + buffer) {
+                node.x = sidebarWidth + buffer;
+            }
+            
+            const div = document.createElement('div');
+            div.className = 'node';
+            div.id = node.id;
+            div.style.left = `${node.x}px`;
+            div.style.top = `${node.y}px`;
+            div.innerHTML = node.title;
+            
+            // Add tier class based on y position
+            const tier = Math.floor((node.y - 50) / 200) + 1;
+            div.classList.add(`tier-${tier}`);
+            
+            // Add status indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'status-indicator';
+            const status = getNodeStatus(node.id);
+            indicator.classList.add(`status-${status}`);
+            
+            // Add progress bar
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.classList.add(status);
+            
+            // Set progress bar width based on status
+            if (status === 'in-progress') {
+                progressBar.style.width = '50%';
+            } else if (status === 'finished') {
+                progressBar.style.width = '100%';
+            } else {
+                progressBar.style.width = '0%';
+            }
+            
+            // Add progress tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'progress-tooltip';
+            tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            // Add click handler for status indicator
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent node click event
+                
+                const currentStatus = getNodeStatus(node.id);
+                let newStatus;
+                
+                // Cycle through statuses
+                if (currentStatus === 'not-started') {
+                    newStatus = 'in-progress';
+                } else if (currentStatus === 'in-progress') {
+                    newStatus = 'finished';
+                } else if (currentStatus === 'finished') {
+                    newStatus = 'not-started';
+                }
+                
+                updateNodeStatus(node.id, newStatus);
+                
+                // Update tooltip
+                tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
+            });
+            
+            // Show tooltip on hover
+            indicator.addEventListener('mouseenter', (e) => {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+            });
+            
+            indicator.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+            });
+            
+            indicator.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            });
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
+
+            // Add event listeners for highlighting connections
+            div.addEventListener('mouseenter', () => {
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = nodeTimeSpent[node.id] || "0 hrs";
+                
+                // Store the current node ID for time tracking
+                document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                
+                // Store the current node ID for timer
+                document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+                
+                // If there's an active timer, update the activeNodeId
+                if (activeTimer) {
+                    activeNodeId = node.id;
+                }
+            });
+
+            div.addEventListener('mouseleave', () => {
+                // Remove highlight from all lines
+                document.querySelectorAll('.line.highlight').forEach(line => {
+                    line.classList.remove('highlight');
+                });
+                
+                // Reset info panel
+                infoTitle.textContent = "Arithmetic Tech Tree";
+                infoContent.textContent = "Hover over a node to see detailed information about that concept.";
+                
+                // Reset time info
+                document.getElementById('estimated-time').textContent = "-";
+                document.getElementById('time-spent').textContent = "-";
+            });
+
+            canvas.appendChild(div);
+        });
+
+        // Draw lines after creating nodes
+        drawLines();
+
+        function updateNodeProgress() {
+            // Get progress for each node from nodeProgress object
+            nodes.forEach(node => {
+                const status = getNodeStatus(node.id);
+                const nodeElement = document.getElementById(node.id);
+                if (nodeElement) {
+                    const indicator = nodeElement.querySelector('.status-indicator');
+                    const progressBar = nodeElement.querySelector('.progress-bar');
+                    
+                    if (indicator && progressBar) {
+                        // Remove all status classes
+                        indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                        progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                        
+                        // Add current status class
+                        indicator.classList.add(`status-${status}`);
+                        progressBar.classList.add(status);
+                        
+                        // Set progress bar width based on status
+                        if (status === 'in-progress') {
+                            progressBar.style.width = '50%';
+                        } else if (status === 'finished') {
+                            progressBar.style.width = '100%';
+                        } else {
+                            progressBar.style.width = '0%';
+                        }
+                    }
+                }
+            });
+            
+            // Update progress summary
+            updateProgressSummary();
+        }
+
+        // Add click handler for selecting a node
+        let clickTimer = null;
+        div.addEventListener('click', (e) => {
+            // Clear any existing click timer
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+                clickTimer = null;
+                
+                // Double click detected
+                handleDoubleClick(node);
+            } else {
+                // Set a timer for single click
+                clickTimer = setTimeout(() => {
+                    handleSingleClick(node, div);
+                }, 300);
+            }
+        });
+
+        // Call updateNodeProgress when the page loads
+        window.addEventListener('load', updateNodeProgress);
+        
+        // Add time tracking functionality
+        let activeTimer = null;
+        let timerStartTime = null;
+        let timerInterval = null;
+        let activeNodeId = null;
+
+        function formatTime(ms) {
+            const seconds = Math.floor((ms / 1000) % 60);
+            const minutes = Math.floor((ms / (1000 * 60)) % 60);
+            const hours = Math.floor(ms / (1000 * 60 * 60));
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            if (timerStartTime) {
+                const elapsed = Date.now() - timerStartTime;
+                document.getElementById('timer-display').textContent = formatTime(elapsed);
+            }
+        }
+
+        function startTimer(nodeId) {
+            if (activeTimer) {
+                stopTimer();
+            }
+            
+            activeNodeId = nodeId;
+            timerStartTime = Date.now();
+            document.getElementById('start-timer').textContent = 'Stop Timer';
+            document.getElementById('active-timer').style.display = 'block';
+            document.getElementById('start-timer').classList.add('active');
+            
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            if (timerStartTime && activeNodeId) {
+                const elapsedHours = (Date.now() - timerStartTime) / (1000 * 60 * 60);
+                updateNodeTime(activeNodeId, elapsedHours);
+            }
+            
+            timerStartTime = null;
+            activeNodeId = null;
+            document.getElementById('start-timer').textContent = 'Start Timer';
+            document.getElementById('active-timer').style.display = 'none';
+            document.getElementById('start-timer').classList.remove('active');
+        }
+
+        document.getElementById('start-timer').addEventListener('click', () => {
+            const nodeId = document.getElementById('start-timer').getAttribute('data-node-id');
+            
+            if (!nodeId) {
+                alert('Please hover over a node to start the timer');
+                return;
+            }
+            
+            if (activeTimer) {
+                stopTimer();
+            } else {
+                startTimer(nodeId);
+            }
+        });
+
+        // Add back the event listeners for add and reset time buttons
+        document.getElementById('add-time').addEventListener('click', () => {
+            const nodeId = document.getElementById('add-time').getAttribute('data-node-id');
+            const timeInput = document.getElementById('hours-input');
+            const hoursToAdd = parseFloat(timeInput.value);
+            
+            if (nodeId && !isNaN(hoursToAdd) && hoursToAdd > 0) {
+                updateNodeTime(nodeId, hoursToAdd);
+                timeInput.value = ''; // Clear input after adding
+            }
+        });
+        
+        document.getElementById('reset-time').addEventListener('click', () => {
+            const nodeId = document.getElementById('reset-time').getAttribute('data-node-id');
+            
+            if (nodeId) {
+                resetNodeTime(nodeId);
+            }
+        });
+
+        // Export progress data
+        document.getElementById('export-button').addEventListener('click', () => {
+            // Collect all progress data
+            const progressData = {
+                arithmeticProgress: localStorage.getItem('arithmeticProgress') || '0',
+                arithmeticNodes: {},
+                arithmeticTimeSpent: {}
+            };
+            
+            // Get all arithmetic node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('arithmetic_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('arithmetic_', '').replace('_progress', '');
+                    progressData.arithmeticNodes[nodeId] = localStorage.getItem(key);
+                }
+                if (key.startsWith('arithmetic_') && key.endsWith('_time')) {
+                    const nodeId = key.replace('arithmetic_', '').replace('_time', '');
+                    progressData.arithmeticTimeSpent[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Create and download the file
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'arithmetic-progress.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Import progress data
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Clear existing arithmetic progress data
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('arithmetic_') && (key.endsWith('_progress') || key.endsWith('_time'))) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Restore arithmetic progress data
+                    if (progressData.arithmeticProgress) {
+                        localStorage.setItem('arithmeticProgress', progressData.arithmeticProgress);
+                    }
+                    
+                    // Restore arithmetic node progress
+                    if (progressData.arithmeticNodes) {
+                        Object.entries(progressData.arithmeticNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`arithmetic_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Restore arithmetic time spent
+                    if (progressData.arithmeticTimeSpent) {
+                        Object.entries(progressData.arithmeticTimeSpent).forEach(([nodeId, time]) => {
+                            localStorage.setItem(`arithmetic_${nodeId}_time`, time);
+                        });
+                    }
+                    
+                    // Reload progress data
+                    loadProgress();
+                    
+                    // Update the UI
+                    updateNodeProgress();
+                    
+                    // Show success message
+                    alert('Arithmetic progress data imported successfully!');
+                } catch (error) {
+                    console.error('Error importing progress data:', error);
+                    alert('Error importing progress data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Function to handle single click on a node
+        function handleSingleClick(node, div) {
+            // Remove selected class from all nodes
+            document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                selectedNode.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked node
+            div.classList.add('selected');
+            
+            // Highlight outgoing connections
+            document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                line.classList.add('highlight');
+            });
+            // Highlight incoming connections
+            document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                line.classList.add('highlight');
+            });
+            
+            // Update info panel
+            infoTitle.textContent = node.title;
+            infoContent.textContent = node.tooltip;
+            
+            // Update time info
+            document.getElementById('estimated-time').textContent = node.time.estimated;
+            document.getElementById('time-spent').textContent = nodeTimeSpent[node.id] || "0 hrs";
+            
+            // Store the current node ID for time tracking
+            document.getElementById('add-time').setAttribute('data-node-id', node.id);
+            document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+            
+            // Store the current node ID for timer
+            document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+        }
+
+        // Function to handle double click on a node
+        function handleDoubleClick(node) {
+            // Check if the node has any links to follow
+            if (node.unlocks && node.unlocks.length > 0) {
+                // Find the first unlocked node
+                const firstUnlockedNode = nodes.find(n => node.unlocks.includes(n.id));
+                if (firstUnlockedNode) {
+                    // Scroll to the first unlocked node
+                    const nodeElement = document.getElementById(firstUnlockedNode.id);
+                    if (nodeElement) {
+                        nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Highlight the node briefly
+                        nodeElement.classList.add('selected');
+                        setTimeout(() => {
+                            nodeElement.classList.remove('selected');
+                        }, 2000);
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

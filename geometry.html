@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #info-panel {
+            width: 300px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #time-tracker {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        #time-tracker h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #time-tracker p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        #canvas {
+            flex: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line {
+            position: relative;
+            z-index: 2;
+        }
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #A29BFE, #81ECEC);
+            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+        }
+        .node.tier-5 {
+            background: linear-gradient(135deg, #55EFC4, #00B894);
+            box-shadow: 0 4px 15px rgba(85, 239, 196, 0.4);
+        }
+        .node.tier-6 {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            box-shadow: 0 4px 15px rgba(255, 234, 167, 0.4);
+        }
+        .node.tier-7 {
+            background: linear-gradient(135deg, #FAB1A0, #E17055);
+            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
+        }
+        .node.tier-8 {
+            background: linear-gradient(135deg, #FF7675, #D63031);
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
+        }
+        .node.tier-9 {
+            background: linear-gradient(135deg, #81ECEC, #00CEC9);
+            box-shadow: 0 4px 15px rgba(129, 236, 236, 0.4);
+        }
+        .node.tier-10 {
+            background: linear-gradient(135deg, #A8E6CF, #1DE9B6);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+        .node.tier-11 {
+            background: linear-gradient(135deg, #B39DDB, #9575CD);
+            box-shadow: 0 4px 15px rgba(179, 157, 219, 0.4);
+        }
+        .node.tier-12 {
+            background: linear-gradient(135deg, #90CAF9, #42A5F5);
+            box-shadow: 0 4px 15px rgba(144, 202, 249, 0.4);
+        }
+        .node::before {
+            content: attr(data-progress) '%';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .node[data-progress]:not([data-progress="0"])::before {
+            opacity: 1;
+        }
+        .node.tier-1:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7676);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        .node.tier-2:hover {
+            background: linear-gradient(135deg, #3DBEB6, #34A8A0);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        .node.tier-3:hover {
+            background: linear-gradient(135deg, #34A8A0, #2B938B);
+            box-shadow: 0 6px 20px rgba(69, 183, 175, 0.6);
+        }
+        .node.tier-4:hover {
+            background: linear-gradient(135deg, #2B938B, #227E77);
+            box-shadow: 0 6px 20px rgba(60, 162, 154, 0.6);
+        }
+        .node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s;
+        }
+        .status-not-started {
+            background-color: #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 2s infinite;
+        }
+        .status-finished {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+            50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 0 0 5px 5px;
+        }
+        .progress-bar.in-progress {
+            background: linear-gradient(90deg, #FFC107, #FF9800);
+        }
+        .progress-bar.finished {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+        .progress-bar.not-started {
+            width: 0 !important;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+        .progress-summary {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        #time-tracker {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        #time-tracker h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #time-tracker p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
+        .back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .back-button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='index.html'">Back to Main</button>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Geometry Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <script>
+        // Initialize nodeProgress as an object
+        let nodeProgress = {};
+
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('geometryProgress');
+            if (savedProgress) {
+                try {
+                    const parsed = JSON.parse(savedProgress);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        nodeProgress = parsed;
+                        console.log('Loaded progress from localStorage:', nodeProgress);
+                        
+                        // Apply saved status to all nodes
+                        nodes.forEach(nodeData => {
+                            const status = nodeProgress[nodeData.id] || 'not-started';
+                            const node = document.getElementById(nodeData.id);
+                            if (node) {
+                                const indicator = node.querySelector('.status-indicator');
+                                const progressBar = node.querySelector('.progress-bar');
+                                
+                                if (indicator && progressBar) {
+                                    // Remove all status classes
+                                    indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                                    progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                                    
+                                    // Add current status class
+                                    indicator.classList.add(`status-${status}`);
+                                    progressBar.classList.add(status);
+                                    
+                                    // Set progress bar width based on status
+                                    if (status === 'in-progress') {
+                                        progressBar.style.width = '50%';
+                                    } else if (status === 'finished') {
+                                        progressBar.style.width = '100%';
+                                    } else {
+                                        progressBar.style.width = '0%';
+                                    }
+                                    
+                                    console.log(`Initialized node ${nodeData.id} with status: ${status}`);
+                                }
+                            }
+                        });
+                    } else {
+                        console.error('Invalid progress data in localStorage');
+                        nodeProgress = {};
+                    }
+                } catch (e) {
+                    console.error('Error parsing nodeProgress from localStorage:', e);
+                    nodeProgress = {};
+                }
+            } else {
+                console.log('No saved progress found in localStorage');
+                nodeProgress = {};
+            }
+        }
+        
+        function saveProgress() {
+            if (typeof nodeProgress !== 'object' || nodeProgress === null) {
+                console.error('Invalid nodeProgress object:', nodeProgress);
+                nodeProgress = {};
+            }
+            console.log('Saving progress to localStorage:', nodeProgress);
+            localStorage.setItem('geometryProgress', JSON.stringify(nodeProgress));
+        }
+        
+        function updateNodeStatus(nodeId, status) {
+            if (typeof nodeProgress !== 'object' || nodeProgress === null) {
+                nodeProgress = {};
+            }
+            
+            console.log(`Updating node ${nodeId} to status: ${status}`);
+            console.log('Current nodeProgress:', nodeProgress);
+            
+            // Update the status in memory
+            nodeProgress[nodeId] = status;
+            
+            // Save to localStorage
+            saveProgress();
+            console.log('Updated nodeProgress:', nodeProgress);
+            
+            // Update visual indicators
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const indicator = node.querySelector('.status-indicator');
+                const progressBar = node.querySelector('.progress-bar');
+                
+                if (!indicator || !progressBar) {
+                    console.error(`Could not find indicator or progress bar for node ${nodeId}`);
+                    return;
+                }
+                
+                // Remove all status classes
+                indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                
+                // Add new status class
+                indicator.classList.add(`status-${status}`);
+                progressBar.classList.add(status);
+                
+                console.log(`Added classes: status-${status} and ${status}`);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+                
+                console.log(`Set progress bar width to: ${progressBar.style.width}`);
+            } else {
+                console.error(`Could not find node with id: ${nodeId}`);
+            }
+        }
+        
+        function getNodeStatus(nodeId) {
+            if (typeof nodeProgress !== 'object' || nodeProgress === null) {
+                nodeProgress = {};
+            }
+            
+            // Check if we have the status in memory
+            if (nodeProgress[nodeId]) {
+                console.log(`Retrieved status for ${nodeId} from memory: ${nodeProgress[nodeId]}`);
+                return nodeProgress[nodeId];
+            }
+            
+            console.log(`No saved status found for ${nodeId}, defaulting to not-started`);
+            return 'not-started';
+        }
+
+        // Load progress when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize time tracking
+            let totalTime = parseInt(localStorage.getItem('geometryTotalTime') || '0');
+            let sessionStartTime = Date.now();
+            let lastUpdateTime = sessionStartTime;
+
+            // Load saved progress
+            loadProgress();
+
+            // Add event listeners for time controls
+            document.getElementById('add-time').addEventListener('click', () => {
+                const hoursInput = document.getElementById('hours-input');
+                const hours = parseFloat(hoursInput.value);
+                if (!isNaN(hours) && hours > 0) {
+                    addTime(hours);
+                    hoursInput.value = ''; // Clear input after adding time
+                } else {
+                    alert('Please enter a valid number of hours');
+                }
+            });
+
+            document.getElementById('reset-time').addEventListener('click', () => {
+                resetTime();
+            });
+
+            document.getElementById('start-timer').addEventListener('click', () => {
+                toggleTimer();
+            });
+
+            // Update time displays
+            function updateTimeDisplays() {
+                const currentTime = Date.now();
+                const sessionTime = Math.floor((currentTime - sessionStartTime) / 60000);
+                document.getElementById('total-time').textContent = totalTime;
+                document.getElementById('session-time').textContent = sessionTime;
+            }
+
+            // Update time every minute
+            setInterval(() => {
+                const currentTime = Date.now();
+                const minutesSinceLastUpdate = Math.floor((currentTime - lastUpdateTime) / 60000);
+                
+                if (minutesSinceLastUpdate > 0) {
+                    totalTime += minutesSinceLastUpdate;
+                    localStorage.setItem('geometryTotalTime', totalTime.toString());
+                    lastUpdateTime = currentTime;
+                    updateTimeDisplays();
+                }
+            }, 60000);
+
+            // Initial time display update
+            updateTimeDisplays();
+        });
+
+        const nodes = [
+    // Parent Node: Geometry (Tier 1 - Root)
+    { id: "geometry", x: 500, y: 50, title: "Geometry", tooltip: "Geometry forms the foundation of spatial understanding for robotics and mechatronics, enabling you to design, model, and analyze physical structures and motion. This tree covers 2D/3D shapes, transformations, and advanced applications like stress analysis for your projects. Mastering geometry is crucial for designing drone frames, spiderbot legs, and Artemis’ hybrid systems. Prereqs: Arithmetic (basic number skills). Unlocks: Basic Shapes (core shape skills), Spatial Reasoning (positioning and motion). Projects: Drone (flight dynamics), Spiderbot (leg design), Artemis (chassis layout).", prereqs: ["arithmetic"], unlocks: ["basic_shapes", "spatial_reasoning"], time: { estimated: "40-60 hrs", spent: "0 hrs" }, class: "tier-1" },
+
+    // Main Branches (Tier 2)
+    { id: "basic_shapes", x: 400, y: 150, title: "Basic Shapes", tooltip: "This branch introduces you to the fundamental building blocks of geometry—2D and 3D shapes—essential for designing physical components in robotics. You’ll learn to calculate properties like area, perimeter, and volume, which are key for optimizing drone frames for weight and strength, crafting spiderbot leg assemblies, or sizing Artemis’ battery pack. Start with simple shapes and progress to more complex forms like cylinders and spheres, laying the groundwork for structural design. Prereqs: Geometry (root node). Unlocks: Area Perimeter (2D calculations), 3D Figures (3D design skills). Projects: Drone (wing design), Spiderbot (base plate).", prereqs: ["geometry"], unlocks: ["area_perimeter", "3d_figures"], time: { estimated: "15-20 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "spatial_reasoning", x: 600, y: 150, title: "Spatial Reasoning", tooltip: "Spatial Reasoning focuses on understanding positions, coordinates, and transformations in 2D and 3D space, a critical skill for robotics motion and navigation. You’ll learn to plot drone flight paths on a coordinate plane, resize spiderbot prototypes using scale factors, and model Artemis’ component layouts in 3D. This branch builds your ability to visualize and manipulate objects in space, which is essential for kinematics and system integration. Prereqs: Geometry (root node). Unlocks: Coordinate Plane (positioning), Units of Measurement (precision). Projects: Drone (trajectories), Spiderbot (motion paths).", prereqs: ["geometry"], unlocks: ["coordinate_plane", "units_measurement"], time: { estimated: "20-25 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "angles_trigonometry", x: 700, y: 150, title: "Angles and Trigonometry", tooltip: "This branch dives into angles and trigonometry, foundational tools for modeling motion and forces in robotics. You’ll learn to measure angles for drone propeller tilts, use trigonometry to calculate spiderbot leg movements, and apply angle relationships to ensure stable designs. Trigonometry also sets the stage for advanced signal processing techniques like Fourier series, which can analyze periodic motion in your robots. Prereqs: Geometry (root node). Unlocks: Measuring Angles (angle basics), Plane Figures (2D shapes). Projects: Spiderbot (gait planning), Drone (flight angles).", prereqs: ["geometry"], unlocks: ["measuring_angles", "plane_figures"], time: { estimated: "15-20 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "advanced_applications", x: 800, y: 150, title: "Advanced Applications", tooltip: "Advanced Applications explores high-level geometry concepts tailored for complex mechatronics systems, such as stress analysis for structural integrity. This branch is crucial for ensuring Artemis’ chassis can withstand loads or optimizing military tech designs for durability. You’ll apply geometry to simulate real-world stresses on spiderbot joints or drone frames, bridging theoretical shapes to practical engineering challenges. Prereqs: Geometry (root node). Unlocks: Intro to Stress Analysis (stress concepts). Projects: Artemis (chassis strength), Military Tech (swarm durability).", prereqs: ["geometry"], unlocks: ["intro_stress_analysis"], time: { estimated: "15-20 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    // Basic Shapes Branch (Tier 3)
+    { id: "area_perimeter", x: 350, y: 250, title: "Area and Perimeter", tooltip: "Learn to calculate the area and perimeter of basic 2D shapes like squares, triangles, and rectangles, a fundamental skill for designing efficient components. For example, you’ll determine the surface area of a drone wing to optimize lift or the perimeter of a spiderbot base plate for material usage. This node builds your ability to quantify shapes, setting the stage for more complex calculations like decomposing irregular shapes. Prereqs: Basic Shapes (core shape skills). Unlocks: Decomposing Area (irregular shapes). Projects: Drone (wing design), Spiderbot (base plate).", prereqs: ["basic_shapes"], unlocks: ["decomposing_area"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "3d_figures", x: 450, y: 250, title: "3D Figures", tooltip: "This node focuses on understanding and analyzing 3D shapes like cubes, prisms, and pyramids, which are essential for designing physical components in robotics. You’ll learn to visualize and calculate properties of 3D figures, such as the dimensions of a drone frame for stability or a spiderbot leg assembly for weight distribution. This skill also prepares you for advanced techniques like cross-sectional analysis and volume calculations for Artemis’ parts. Prereqs: Basic Shapes (core shape skills). Unlocks: Volume (3D calculations), Cross Sections (part analysis). Projects: Drone (frame design), Spiderbot (leg assembly).", prereqs: ["basic_shapes"], unlocks: ["volume", "cross_sections"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "circles_cylinders", x: 500, y: 250, title: "Circles, Cylinders, Cones, Spheres", tooltip: "Explore the properties of circular shapes—circles, cylinders, cones, and spheres—which are common in robotics design. You’ll calculate the circumference of a drone propeller for speed optimization, the volume of a cylindrical Artemis battery pack for capacity, or the surface area of a spherical sensor for coverage. This node bridges 2D and 3D geometry, preparing you for rotational dynamics in moving parts. Prereqs: Basic Shapes (core shape skills). Unlocks: Rotational Geometry (symmetry). Projects: Drone (propellers), Artemis (sensors).", prereqs: ["basic_shapes"], unlocks: ["rotational_geometry"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Spatial Reasoning Branch (Tier 3)
+    { id: "coordinate_plane", x: 550, y: 250, title: "Coordinate Plane", tooltip: "Master the coordinate plane to plot points, lines, and paths in 2D space, a key skill for robotics navigation and design. You’ll use this to map out a drone’s flight path during a test run or plot the movement trajectory of a spiderbot leg in a simulation. This node introduces you to Cartesian coordinates, setting the foundation for 3D positioning and vector analysis in later nodes. Prereqs: Spatial Reasoning (positioning basics). Unlocks: Coordinate Geometry in 3D (3D positioning), Vectors in 2D and 3D (force calculations). Projects: Drone (flight paths), Spiderbot (leg trajectories).", prereqs: ["spatial_reasoning"], unlocks: ["coordinate_geometry_3d", "vectors_2d_3d"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "units_measurement", x: 650, y: 250, title: "Units of Measurement", tooltip: "Learn to work with and convert units of measurement (e.g., mm to cm, inches to meters) to ensure precision in your designs. This skill is critical for maintaining consistency across drone blueprints, spiderbot schematics, and Artemis’ component layouts, especially when sourcing parts or scaling designs. Proper unit conversion prevents errors in manufacturing and assembly. Prereqs: Spatial Reasoning (positioning basics). Unlocks: Scale (resizing designs). Projects: All (design precision).", prereqs: ["spatial_reasoning"], unlocks: ["scale"], time: { estimated: "2-3 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Angles and Trigonometry Branch (Tier 2 - Adjusted)
+    { id: "measuring_angles", x: 700, y: 150, title: "Measuring Angles", tooltip: "Develop the ability to measure and calculate angles accurately, a fundamental skill for robotics motion and design. You’ll measure the angle of a drone propeller for optimal lift or the angle between spiderbot leg segments for stable walking. This node introduces tools like protractors and basic angle calculations, preparing you for more advanced trigonometric applications. Prereqs: Geometry (root node). Unlocks: Angle Relationships (angle properties), Plane Figures (2D shapes). Projects: Drone (propeller tilt), Spiderbot (leg angles).", prereqs: ["geometry"], unlocks: ["angle_relationships", "plane_figures"], time: { estimated: "2-4 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "plane_figures", x: 750, y: 250, title: "Plane Figures", tooltip: "Understand the properties of 2D shapes like triangles, quadrilaterals, and polygons, which are the building blocks of many robotic components. You’ll use this to design a triangular drone frame for stability or a polygonal spiderbot base for weight distribution. This node also introduces concepts like symmetry and congruence, which are useful for ensuring balanced designs. Prereqs: Measuring Angles (angle basics). Unlocks: Triangle Side Lengths (structural stability). Projects: Drone (frame design), Spiderbot (base plate).", prereqs: ["measuring_angles"], unlocks: ["triangle_side_lengths"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Advanced Applications Branch (Tier 3)
+    { id: "intro_stress_analysis", x: 800, y: 250, title: "Intro to Stress Analysis", tooltip: "Learn the basics of stress and strain in materials, a stepping stone to finite element analysis (FEA). You’ll explore how forces affect robotic components, such as the bending of a spiderbot leg or the compression of a drone frame. This node introduces concepts like stress types (tensile, compressive) and prepares you for FEA simulations. Suggested resource: ‘Introduction to Mechanics of Materials’ on Coursera. Prereqs: Advanced Applications (complex systems). Unlocks: FEA Geometry (stress simulation). Projects: Spiderbot (leg strength), Drone (frame durability).", prereqs: ["advanced_applications"], unlocks: ["fea_geometry"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Basic Shapes Branch (Tier 4)
+    { id: "decomposing_area", x: 350, y: 350, title: "Decomposing to Find Area", tooltip: "Learn to break down complex, irregular shapes into simpler ones to calculate their area, a practical skill for optimizing designs. For example, you’ll decompose a drone wing’s irregular shape to determine its surface area for lift calculations or calculate the area of Artemis’ chassis for material estimation. This node builds on basic area calculations, preparing you for optimization techniques. Prereqs: Area and Perimeter (2D calculations). Unlocks: Geometric Optimization (efficiency). Projects: Drone (wing area), Artemis (chassis design).", prereqs: ["area_perimeter"], unlocks: ["geometric_optimization"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "volume", x: 400, y: 350, title: "Volume", tooltip: "Master the calculation of volume for 3D objects like cubes, cylinders, and prisms, a key skill for sizing components in robotics. You’ll compute the volume of Artemis’ battery pack to ensure sufficient capacity or a drone’s payload bay for weight limits. This node also introduces you to the relationship between volume and mass, critical for weight distribution in your designs. Prereqs: 3D Figures (3D design skills). Unlocks: Intro to Mass and Volume (mass calculations). Projects: Artemis (battery sizing).", prereqs: ["3d_figures"], unlocks: ["intro_mass_volume"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "cross_sections", x: 450, y: 350, title: "Cross Sections and Projections", tooltip: "Analyze cross sections and projections of 3D parts, a technique used to understand internal structures and prepare for manufacturing. You’ll examine the cross section of a drone motor housing to optimize its design or project Artemis’ chassis layout for assembly planning. This skill is essential for FEA and ensuring components fit together correctly. Prereqs: 3D Figures (3D design skills). Unlocks: FEA Geometry (stress simulation). Projects: Drone (motor housing), Artemis (chassis layout).", prereqs: ["3d_figures"], unlocks: ["fea_geometry"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "rotational_geometry", x: 500, y: 350, title: "Rotational Geometry", tooltip: "Explore the geometry of rotating objects, focusing on symmetry and rotational properties of shapes like circles and cylinders. This is crucial for designing drone propellers that spin efficiently or Artemis’ rotating sensors for 360-degree coverage. You’ll learn to calculate properties like rotational inertia, which impacts the performance of moving parts in your robots. Prereqs: Circles, Cylinders (circular shapes). Unlocks: Elliptical Trajectories (motion paths). Projects: Drone (propeller design), Artemis (sensor rotation).", prereqs: ["circles_cylinders"], unlocks: ["elliptical_trajectories"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Spatial Reasoning Branch (Tier 4)
+    { id: "coordinate_geometry_3d", x: 500, y: 350, title: "Coordinate Geometry in 3D", tooltip: "Extend your coordinate skills to 3D space, allowing you to position components precisely in a three-dimensional environment. You’ll use this to place Artemis’ drone backpack relative to its legs or map the 3D coordinates of a spiderbot’s joints for motion planning. This node builds on 2D coordinates, preparing you for advanced applications like FEA and system integration. Prereqs: Coordinate Plane (2D positioning). Unlocks: FEA Geometry (stress simulation). Projects: Artemis (component layout).", prereqs: ["coordinate_plane"], unlocks: ["fea_geometry"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "vectors_2d_3d", x: 550, y: 350, title: "Vectors in 2D and 3D", tooltip: "Learn to work with vectors in both 2D and 3D space, a critical skill for calculating directions, forces, and motion in robotics. You’ll use vectors to determine the thrust direction of a drone in crosswinds or the resultant force on a spiderbot leg during movement. This node introduces vector operations like dot and cross products, setting the stage for kinematic modeling. Prereqs: Coordinate Plane (2D positioning). Unlocks: Geometry of Motion (kinematics). Projects: Drone (thrust vectors), Spiderbot (leg forces).", prereqs: ["coordinate_plane"], unlocks: ["geometry_of_motion"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "scale", x: 650, y: 350, title: "Scale", tooltip: "Understand how to apply scale factors to resize designs, a practical skill for prototyping and testing. You’ll scale down a drone prototype for wind tunnel testing or adjust the size of a spiderbot model to fit manufacturing constraints. This node teaches you to maintain proportions while resizing, ensuring your designs remain functional at different scales. Prereqs: Units of Measurement (precision). Unlocks: Geometric Transformations (motion modeling). Projects: Drone (prototype testing), Spiderbot (model sizing).", prereqs: ["units_measurement"], unlocks: ["geometric_transformations"], time: { estimated: "2-4 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "intro_rotation_matrices", x: 600, y: 350, title: "Intro to Rotation Matrices", tooltip: "Get introduced to rotation matrices, a fundamental tool for modeling 3D rotations in robotics. You’ll learn to rotate a drone frame in 3D space to simulate a turn or adjust a spiderbot leg’s orientation for walking. This node provides a gentle introduction to matrix-based transformations, preparing you for more advanced spatial modeling. Suggested resource: Khan Academy’s ‘Introduction to Linear Algebra’ section on rotations. Prereqs: Coordinate Plane (2D positioning). Unlocks: Spatial Transformations (robotics motion). Projects: Drone (flight turns), Spiderbot (leg adjustments).", prereqs: ["coordinate_plane"], unlocks: ["spatial_transformations"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Angles and Trigonometry Branch (Tier 3 - Adjusted)
+    { id: "angle_relationships", x: 700, y: 250, title: "Angle Relationships", tooltip: "Dive into angle relationships like complementary, supplementary, and vertical angles, which are essential for ensuring stable and balanced designs. You’ll use these relationships to design spiderbot leg joints that maintain stability during walking or ensure drone components are aligned for optimal performance. This node builds on basic angle measurement, preparing you for trigonometric applications. Prereqs: Measuring Angles (angle basics). Unlocks: Trigonometric Applications (trig calculations). Projects: Spiderbot (joint stability).", prereqs: ["measuring_angles"], unlocks: ["trigonometric_applications"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "triangle_side_lengths", x: 750, y: 350, title: "Triangle Side Lengths", tooltip: "Learn to apply the triangle inequality theorem and other properties to ensure stable triangular structures, which are common in robotics for their strength. You’ll use this to design a triangular drone frame that can withstand flight stresses or a spiderbot base that maintains balance. This node helps you create robust designs by ensuring geometric feasibility. Prereqs: Plane Figures (2D shapes). Unlocks: Geometric Constraints (design stability). Projects: Drone (frame stability).", prereqs: ["plane_figures"], unlocks: ["geometric_constraints"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Basic Shapes Branch (Tier 5)
+    { id: "geometric_optimization", x: 350, y: 450, title: "Geometric Optimization", tooltip: "Master the art of optimizing shapes for efficiency, such as minimizing material usage while maximizing strength. You’ll optimize a drone wing’s shape to achieve maximum lift with minimal weight or streamline Artemis’ chassis for better aerodynamics. This node introduces optimization techniques, preparing you for advanced concepts like topology in swarm designs. Prereqs: Decomposing Area (irregular shapes). Unlocks: Topology Basics (swarm connectivity). Projects: Drone (wing optimization), Artemis (chassis design).", prereqs: ["decomposing_area"], unlocks: ["topology_basics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    { id: "intro_mass_volume", x: 400, y: 450, title: "Intro to Mass and Volume", tooltip: "Understand the relationship between mass and volume to calculate the weight of components, a crucial skill for robotics design. You’ll determine the mass of Artemis’ battery pack based on its volume and material density, ensuring proper weight distribution for flight. This node connects geometry to physics, helping you balance your designs effectively. Prereqs: Volume (3D calculations). Unlocks: None. Projects: Artemis (weight distribution).", prereqs: ["volume"], unlocks: [], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    { id: "elliptical_trajectories", x: 500, y: 450, title: "Elliptical and Parabolic Trajectories", tooltip: "Learn to model elliptical and parabolic paths, which are common in robotics motion and navigation. You’ll calculate an elliptical orbit for a drone in a surveillance mission or a parabolic arc for Artemis’ projectile sensors. This node applies rotational geometry to real-world motion, bridging shape properties with dynamic behavior. Prereqs: Rotational Geometry (symmetry). Unlocks: Mechanics (motion physics). Projects: Drone (flight orbits), Artemis (sensor arcs).", prereqs: ["rotational_geometry"], unlocks: ["mechanics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    // Spatial Reasoning Branch (Tier 5)
+    { id: "geometry_of_motion", x: 550, y: 450, title: "Geometry of Motion (Kinematics)", tooltip: "Apply geometry to model the motion of robotic systems, focusing on kinematic paths and trajectories. You’ll use parametric equations to simulate a spiderbot leg’s walking path or a drone’s flight trajectory during a maneuver. This node connects spatial reasoning with motion physics, preparing you for advanced kinematic analysis in robotics. Prereqs: Vectors in 2D and 3D (force calculations). Unlocks: Mechanics (motion physics). Projects: Spiderbot (gait modeling), Drone (flight paths).", prereqs: ["vectors_2d_3d"], unlocks: ["mechanics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    { id: "geometric_transformations", x: 650, y: 450, title: "Geometric Transformations", tooltip: "Master transformations like translation, rotation, and scaling, which are essential for modeling motion in robotics. You’ll rotate a drone’s frame to simulate a turn in flight or scale a spiderbot model to test different sizes. This node teaches you to manipulate shapes dynamically, preparing you for advanced spatial transformations in robotic systems. Prereqs: Scale (resizing designs). Unlocks: Spatial Transformations (robotics motion). Projects: Drone (flight maneuvers), Spiderbot (model adjustments).", prereqs: ["scale"], unlocks: ["spatial_transformations"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    // Angles and Trigonometry Branch (Tier 4)
+    { id: "trigonometric_applications", x: 650, y: 350, title: "Trigonometric Applications", tooltip: "Apply sine, cosine, and tangent to solve real-world problems in robotics, such as calculating angles for motion and forces. You’ll determine the angle of a drone’s ascent for optimal lift or the angle of a spiderbot leg for balanced walking. This node also introduces trig concepts that are foundational for signal processing techniques like Fourier series. Prereqs: Angle Relationships (angle properties). Unlocks: Inverse Trigonometry (unknown angles), Intro to Signals and Waves (signal basics). Projects: Drone (ascent angles), Spiderbot (leg motion).", prereqs: ["angle_relationships"], unlocks: ["inverse_trigonometry", "intro_signals_waves"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "geometric_constraints", x: 750, y: 450, title: "Geometric Constraints", tooltip: "Learn to apply geometric constraints like parallel or perpendicular lines to ensure stable and precise designs. You’ll use this to design spiderbot leg joints that maintain alignment during motion or a drone frame with consistent angles for balance. This node introduces principles of geometric tolerancing, preparing you for manufacturing precision. Prereqs: Triangle Side Lengths (structural stability). Unlocks: Geometric Tolerancing (manufacturing precision). Projects: Spiderbot (joint alignment).", prereqs: ["triangle_side_lengths"], unlocks: ["geometric_tolerancing"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    // Advanced Applications Branch (Tier 5 - Adjusted)
+    { id: "fea_geometry", x: 800, y: 450, title: "Finite Element Analysis Geometry", tooltip: "Dive into finite element analysis (FEA) geometry, where you’ll use meshes to simulate stress and deformation on robotic components. This skill is crucial for testing the structural integrity of Artemis’ chassis under load or ensuring spiderbot joints can withstand repeated motion. You’ll learn to create geometric meshes and interpret FEA results, bridging geometry with engineering analysis. Suggested resource: Fusion 360 FEA tutorials on YouTube. Prereqs: Intro to Stress Analysis (stress concepts), Cross Sections (part analysis), Coordinate Geometry 3D (3D positioning). Unlocks: Solid Mechanics (stress analysis). Projects: Artemis (chassis strength), Spiderbot (joint durability).", prereqs: ["intro_stress_analysis", "cross_sections", "coordinate_geometry_3d"], unlocks: ["solid_mechanics"], time: { estimated: "10-15 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    // Basic Shapes Branch (Tier 6)
+    { id: "topology_basics", x: 350, y: 550, title: "Topology Basics", tooltip: "Explore basic topology concepts like connectivity and continuity, which are useful for designing efficient swarm formations in military tech. You’ll learn how geometric shapes can be abstracted to optimize drone swarm layouts, ensuring minimal overlap and maximum coverage. This node bridges geometry with advanced navigation strategies. Prereqs: Geometric Optimization (efficiency). Unlocks: Non-Euclidean Geometry (optional mastery). Projects: Military Tech (swarm design).", prereqs: ["geometric_optimization"], unlocks: ["non_euclidean_geometry"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+    // Spatial Reasoning Branch (Tier 6)
+    { id: "spatial_transformations", x: 650, y: 550, title: "Spatial Transformations for Robotics", tooltip: "Dive into advanced spatial transformations using rotation matrices and quaternions to model complex motion in robotics. You’ll rotate spiderbot legs in 3D space to simulate walking or adjust Artemis’ orientation during flight. This node builds on basic transformations, preparing you for kinematic modeling and system integration in advanced robotic systems. Prereqs: Geometric Transformations (motion modeling), Intro to Rotation Matrices (matrix basics). Unlocks: Geometry of Motion (kinematics). Projects: Spiderbot (leg motion), Artemis (flight orientation).", prereqs: ["geometric_transformations", "intro_rotation_matrices"], unlocks: ["geometry_of_motion"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+    // Angles and Trigonometry Branch (Tier 5)
+    { id: "inverse_trigonometry", x: 600, y: 450, title: "Inverse Trigonometry", tooltip: "Learn to use inverse trigonometric functions (arcsine, arccos, arctan) to find unknown angles in your designs. You’ll calculate the angle of a spiderbot leg to achieve a specific height or the tilt of a drone during a turn. This node enhances your ability to solve for angles in complex motion scenarios, completing your trig foundation. Prereqs: Trigonometric Applications (trig calculations). Unlocks: Trigonometry (full trig mastery). Projects: Spiderbot (leg angles), Drone (flight tilt).", prereqs: ["trigonometric_applications"], unlocks: ["trigonometry"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    { id: "intro_signals_waves", x: 650, y: 450, title: "Intro to Signals and Waves", tooltip: "Get introduced to the basics of signals and waves, focusing on periodic patterns relevant to robotics. You’ll learn how to identify periodic motion in spiderbot gait cycles or drone sensor data, setting the stage for advanced signal processing techniques like Fourier series. This node bridges trigonometry with signal analysis. Suggested resource: ‘Signals and Systems’ course on edX. Prereqs: Trigonometric Applications (trig calculations). Unlocks: Fourier Series (signal analysis). Projects: Spiderbot (gait analysis), Drone (sensor data).", prereqs: ["trigonometric_applications"], unlocks: ["fourier_series_geometry"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    { id: "geometric_tolerancing", x: 750, y: 550, title: "Geometric Tolerancing", tooltip: "Master geometric tolerancing to ensure precision in manufacturing your robotic components. You’ll define tolerances for drone frame parts or spiderbot joints to guarantee they fit together perfectly during assembly. This node introduces industry-standard practices for specifying allowable deviations, ensuring your designs are production-ready. Suggested resource: ‘GD&T Basics’ on YouTube by GD&T Guy. Prereqs: Geometric Constraints (design stability). Unlocks: Manufacturing (production skills). Projects: Drone (frame assembly), Spiderbot (joint precision).", prereqs: ["geometric_constraints"], unlocks: ["manufacturing"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+    // Angles and Trigonometry Branch (Tier 7 - Adjusted)
+    { id: "fourier_series_geometry", x: 650, y: 550, title: "Fourier Series for Geometric Signals", tooltip: "Apply Fourier series to decompose periodic geometric patterns, such as the cyclic motion of a spiderbot’s legs during walking. This advanced technique allows you to analyze and optimize repetitive motion, which is also useful for signal processing in sensors. This node connects geometry to advanced robotics applications like motion smoothing. Suggested resource: ‘Fourier Series’ tutorials on Brilliant.org. Prereqs: Intro to Signals and Waves (signal basics). Unlocks: Signal Processing (sensor analysis). Projects: Spiderbot (gait optimization).", prereqs: ["intro_signals_waves"], unlocks: ["signal_processing"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+    // Basic Shapes Branch (Tier 7 - Optional Mastery)
+    { id: "non_euclidean_geometry", x: 350, y: 650, title: "Non-Euclidean Geometry (Mastery)", tooltip: "Explore non-Euclidean geometry, an optional mastery node dealing with curved spaces, useful for advanced navigation in military tech. You’ll learn how to model drone swarm movements on spherical or hyperbolic surfaces, enabling more efficient path planning in complex environments. This node pushes the boundaries of traditional geometry for cutting-edge applications. Suggested resource: ‘Non-Euclidean Geometry’ course on Coursera. Prereqs: Topology Basics (swarm connectivity). Unlocks: Advanced Navigation (complex path planning). Projects: Military Tech (swarm navigation).", prereqs: ["topology_basics"], unlocks: ["advanced_navigation"], time: { estimated: "8-10 hrs", spent: "0 hrs" }, class: "tier-7" }
+];
+
+        const canvas = document.getElementById("canvas");
+        const infoTitle = document.getElementById("info-title");
+        const infoContent = document.getElementById("info-content");
+        const infoPanel = document.getElementById("info-panel");
+
+        // Add collision detection and resolution
+        function checkCollision(node1, node2) {
+            const padding = 20; // Minimum space between nodes
+            return !(node1.x + 140 + padding < node2.x || 
+                    node1.x > node2.x + 140 + padding || 
+                    node1.y + 40 + padding < node2.y || 
+                    node1.y > node2.y + 40 + padding);
+        }
+
+        function resolveCollisions() {
+            let hasCollision = true;
+            let iterations = 0;
+            const maxIterations = 100; // Prevent infinite loops
+            
+            while (hasCollision && iterations < maxIterations) {
+                hasCollision = false;
+                iterations++;
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (checkCollision(nodes[i], nodes[j])) {
+                            hasCollision = true;
+                            
+                            // Calculate the direction to move nodes apart
+                            const dx = nodes[j].x - nodes[i].x;
+                            const dy = nodes[j].y - nodes[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance === 0) {
+                                // If nodes are exactly on top of each other, move them apart randomly
+                                nodes[i].x -= 50;
+                                nodes[j].x += 50;
+                            } else {
+                                // Move nodes apart along their center line
+                                const moveX = (dx / distance) * 25;
+                                const moveY = (dy / distance) * 25;
+                                
+                                nodes[i].x -= moveX;
+                                nodes[i].y -= moveY;
+                                nodes[j].x += moveX;
+                                nodes[j].y += moveY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Function to increase spacing between nodes
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
+            // Add offset to move everything right of info panel
+            const infoPanelOffset = 450; // Increased from 400 to 450 for more space
+            
+            // Find the minimum x and y to maintain relative positioning
+            const minX = Math.min(...nodes.map(node => node.x));
+            const minY = Math.min(...nodes.map(node => node.y));
+            
+            // Apply spacing to each node
+            nodes.forEach(node => {
+                // Calculate new position relative to minimum values
+                const relativeX = node.x - minX;
+                const relativeY = node.y - minY;
+                
+                // Apply spacing factors and restore offset with additional right shift
+                node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
+                node.y = minY + (relativeY * verticalFactor);
+                
+                // Ensure no node is positioned behind the sidebar
+                if (node.x < 350) { // 300px sidebar width + 50px buffer
+                    node.x = 350;
+                }
+            });
+
+            // Resolve any collisions after spacing
+            resolveCollisions();
+        }
+
+        // Apply increased spacing and resolve collisions
+        increaseSpacing(2.2, 2.0);
+
+        // Draw lines between nodes
+        function drawLines() {
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+        }
+
+        // Create nodes
+        nodes.forEach(node => {
+            const div = document.createElement('div');
+            div.className = `node ${node.class || ''}`;
+            div.id = node.id;
+            div.style.left = `${node.x}px`;
+            div.style.top = `${node.y}px`;
+            div.innerHTML = node.title;
+            
+            // Add status indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'status-indicator';
+            const status = getNodeStatus(node.id);
+            indicator.classList.add(`status-${status}`);
+            
+            // Add progress bar
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.classList.add(status);
+            
+            // Set progress bar width based on status
+            if (status === 'in-progress') {
+                progressBar.style.width = '50%';
+            } else if (status === 'finished') {
+                progressBar.style.width = '100%';
+            } else {
+                progressBar.style.width = '0%';
+            }
+            
+            // Add progress tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'progress-tooltip';
+            tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            // Add click handler for status indicator
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent node click event
+                
+                const currentStatus = getNodeStatus(node.id);
+                let newStatus;
+                
+                console.log(`Current status for ${node.id}:`, currentStatus);
+                console.log('Current nodeProgress:', nodeProgress);
+                
+                // Cycle through statuses: not-started -> in-progress -> finished -> not-started
+                if (currentStatus === 'not-started') {
+                    newStatus = 'in-progress';
+                } else if (currentStatus === 'in-progress') {
+                    newStatus = 'finished';
+                } else if (currentStatus === 'finished') {
+                    newStatus = 'not-started';
+                } else {
+                    newStatus = 'not-started';
+                }
+                
+                console.log(`Setting new status for ${node.id} to:`, newStatus);
+                
+                // Update the status
+                updateNodeStatus(node.id, newStatus);
+                
+                // Update tooltip
+                tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
+            });
+            
+            // Show tooltip on hover
+            indicator.addEventListener('mouseenter', (e) => {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+            });
+            
+            indicator.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+            });
+            
+            indicator.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            });
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
+
+            // Add event listeners for highlighting connections
+            div.addEventListener('mouseenter', () => {
+                // Only show hover information if no node is selected
+                if (!document.querySelector('.node.selected')) {
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel with node details
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info with specific node data
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Add visual feedback for hover state
+                    div.style.transform = 'scale(1.05)';
+                    div.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+                }
+            });
+
+            div.addEventListener('mouseleave', () => {
+                // Only reset if no node is selected
+                if (!document.querySelector('.node.selected')) {
+                    // Remove highlight from all lines
+                    document.querySelectorAll('.line.highlight').forEach(line => {
+                        line.classList.remove('highlight');
+                    });
+                    
+                    // Reset info panel to default state
+                    infoTitle.textContent = "Geometry Tech Tree Information";
+                    infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+                    
+                    // Reset time info to default state
+                    document.getElementById('estimated-time').textContent = "-";
+                    document.getElementById('time-spent').textContent = "0 hrs";
+                    
+                    // Reset visual feedback
+                    div.style.transform = '';
+                    div.style.boxShadow = '';
+                }
+            });
+
+            // Add click handler for Geometry node
+            if (node.id === 'geometry') {
+                div.style.cursor = 'pointer';
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+                });
+            }
+
+            canvas.appendChild(div);
+        });
+
+        // Create tier sections before drawing lines
+        drawLines();
+
+        // Export progress data
+        document.getElementById('export-button').addEventListener('click', () => {
+            // Collect all progress data
+            const progressData = {
+                geometryProgress: localStorage.getItem('geometryProgress') || '0',
+                geometryNodes: {}
+            };
+            
+            // Get all geometry node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('geometry_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('geometry_', '').replace('_progress', '');
+                    progressData.geometryNodes[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Create and download the file
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'geometry-progress.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Import progress data
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Clear existing progress data
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key.includes('Progress') || key.includes('_progress')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Restore progress data
+                    if (progressData.geometryProgress) {
+                        localStorage.setItem('geometryProgress', progressData.geometryProgress);
+                    }
+                    
+                    // Restore geometry node progress
+                    if (progressData.geometryNodes) {
+                        Object.entries(progressData.geometryNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`geometry_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Update the UI
+                    loadProgress();
+                    
+                    // Show success message
+                    alert('Progress data imported successfully!');
+                } catch (error) {
+                    console.error('Error importing progress data:', error);
+                    alert('Error importing progress data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Start/Stop timer
+        function toggleTimer() {
+            const timerButton = document.getElementById('start-timer');
+            const activeTimer = document.getElementById('active-timer');
+            
+            if (!startTime) {
+                // Start timer
+                startTime = new Date();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                timerButton.textContent = 'Stop Timer';
+                activeTimer.style.display = 'block';
+            } else {
+                // Stop timer
+                const endTime = new Date();
+                const elapsedHours = (endTime - startTime) / (1000 * 60 * 60);
+                totalTimeSpent += elapsedHours;
+                
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                
+                timerButton.textContent = 'Start Timer';
+                activeTimer.style.display = 'none';
+                document.getElementById('timer-display').textContent = '00:00:00';
+                
+                updateTimeDisplay();
+                saveTime();
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            if (!startTime) return;
+            
+            const currentTime = new Date();
+            const elapsedMs = currentTime - startTime;
+            const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsedMs % (1000 * 60)) / 1000);
+            
+            document.getElementById('timer-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Format time for display
+        function formatTime(hours) {
+            if (hours === 0) return '0 hrs';
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            if (minutes === 0) return `${wholeHours} hrs`;
+            return `${wholeHours} hrs ${minutes} mins`;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            if (selectedNodeId) {
+                const node = nodes.find(n => n.id === selectedNodeId);
+                if (node) {
+                    node.time.spent = formatTime(totalTimeSpent);
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                }
+            }
+        }
+
+        // Add time manually
+        function addTime(hours) {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent += hours;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Reset time tracking
+        function resetTime() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent = 0;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Save time to localStorage
+        function saveTime() {
+            if (selectedNodeId) {
+                localStorage.setItem(`${selectedNodeId}_total_time`, totalTimeSpent.toString());
+                const node = nodes.find(n => n.id === selectedNodeId);
+                if (node) {
+                    node.time.spent = formatTime(totalTimeSpent);
+                }
+            }
+        }
+
+        // Load time from localStorage
+        function loadTime() {
+            if (selectedNodeId) {
+                const savedTime = localStorage.getItem(`${selectedNodeId}_total_time`);
+                if (savedTime) {
+                    totalTimeSpent = parseFloat(savedTime);
+                    const node = nodes.find(n => n.id === selectedNodeId);
+                    if (node) {
+                        node.time.spent = formatTime(totalTimeSpent);
+                    }
+                } else {
+                    totalTimeSpent = 0;
+                    const node = nodes.find(n => n.id === selectedNodeId);
+                    if (node) {
+                        node.time.spent = "0 hrs";
+                    }
+                }
+                updateTimeDisplay();
+            }
+        }
+    </script>
+</body>
+</html> 
