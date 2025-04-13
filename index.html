@@ -886,16 +886,21 @@
     { id: "energy_waves", x: 250, y: 350, title: "Energy and Waves", tooltip: "Learn about Energy (Thermodynamics) and Waves (Optics) to manage heat and enhance sensors in robotics. Prereqs: Physics (root node). Unlocks: Thermodynamics in Robotics, Advanced Optics in Robotics (from detailed Physics tree).", prereqs: ["physics"], unlocks: ["thermodynamics_robotics", "advanced_optics_robotics"], class: "tier-1", time: { estimated: "15-25 hrs", spent: "0 hrs" } },
 
     // New Suggested Node: Sensor Design (unlocked by Physics)
-    { id: "sensor_design", x: 1100, y: 100, title: "Sensor Design", tooltip: "Design advanced sensors for robotics using physics principles. Prereqs: Physics (Electromagnetism, Waves and Optics). Unlocks: None.", prereqs: ["physics"], unlocks: [], subnodes: [], class: "tier-1", time: { estimated: "20-30 hrs", spent: "0 hrs" } },
+    { id: "sensor_design", x: 300, y: 250, title: "Sensor Design", tooltip: "Design advanced sensors for robotics using physics principles. Prereqs: Physics (Electromagnetism, Waves and Optics). Unlocks: None.", prereqs: ["physics"], unlocks: [], subnodes: [], class: "tier-1", time: { estimated: "20-30 hrs", spent: "0 hrs" } },
 
     // Tier 1: Foundations - Programming Breakdown
-    { id: "programming_python", x: 400, y: 250, title: "Programming (Python)", tooltip: "Core coding skills. Unlocks: Simulations, AI, Embedded Prog. Projects: Drone, Artemis", prereqs: [], unlocks: ["simulation", "ai_ml", "embedded_programming"], time: { estimated: "20-30 hrs", spent: "0 hrs" } },
-    { id: "variables_loops", x: 320, y: 350, title: "Variables & Loops", tooltip: "Basic syntax. Prereqs: None. Unlocks: Programming (Python). Projects: All", prereqs: [], unlocks: ["programming_python"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
-    { id: "functions_python", x: 400, y: 350, title: "Functions (Python)", tooltip: "Modular code. Prereqs: Variables & Loops. Unlocks: Programming (Python). Projects: All", prereqs: ["variables_loops"], unlocks: ["programming_python"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-    { id: "numpy", x: 480, y: 350, title: "NumPy", tooltip: "Arrays and math. Prereqs: Functions (Python). Unlocks: Programming (Python). Projects: All", prereqs: ["functions_python"], unlocks: ["programming_python"], time: { estimated: "5-10 hrs", spent: "0 hrs" } },
+    { id: "programming", x: 400, y: 250, title: "Programming", tooltip: "Master coding for robotics with Fundamentals, Robotics Programming, and Embedded Systems. This section equips you to write drone flight control, spiderbot sensor logic, and Artemis' navigation code. Prereqs: Algebra (from Mathematics). Unlocks: AI & Machine Learning, Control Systems (PID). Suggested resource: 'CS50 Introduction to Computer Science' on edX.", prereqs: ["algebra"], unlocks: ["ai_ml", "control_systems_pid"], subnodes: ["fundamentals", "robotics_programming", "embedded_systems"], class: "tier-1", time: { estimated: "40-50 hrs", spent: "0 hrs" } },
 
+    // Subnode: Fundamentals
+    { id: "fundamentals", x: 350, y: 350, title: "Fundamentals", tooltip: "Learn the basics of programming to start coding for robotics. Covers syntax, control structures, and more. Prereqs: Programming (root node). Unlocks: Object-Oriented Programming (from detailed Programming tree). Projects: Drone (speed calculator), Spiderbot (basic logic).", prereqs: ["programming"], unlocks: ["object_oriented_programming"], class: "tier-1", time: { estimated: "15-20 hrs", spent: "0 hrs" } },
+
+    // Subnode: Robotics Programming
+    { id: "robotics_programming", x: 400, y: 350, title: "Robotics Programming", tooltip: "Dive into robotics-specific programming to control your systems. Covers control algorithms, ROS, and more. Prereqs: Programming (root node). Unlocks: Advanced Robotics Frameworks (from detailed Programming tree). Projects: Drone (flight path), Spiderbot (leg movements).", prereqs: ["programming"], unlocks: ["advanced_robotics_frameworks"], class: "tier-1", time: { estimated: "15-20 hrs", spent: "0 hrs" } },
+
+    // Subnode: Embedded Systems
+    { id: "embedded_systems", x: 450, y: 350, title: "Embedded Systems", tooltip: "Program hardware for robotics with embedded systems. Covers microcontrollers, real-time systems, and more. Prereqs: Programming (root node). Unlocks: Embedded Programming in Robotics (from detailed Programming tree). Projects: Artemis (motor control), Drone (sensor data).", prereqs: ["programming"], unlocks: ["embedded_programming_robotics"], class: "tier-1", time: { estimated: "15-20 hrs", spent: "0 hrs" } },
     // Tier 1: Foundations - Electronics Breakdown
-    { id: "electronics", x: 700, y: 250, title: "Electronics", tooltip: "Circuits and components. Unlocks: Drone Eng, PCB Design, Power Systems. Projects: All", prereqs: [], unlocks: ["drone_engineering", "pcb_design", "power_systems"], time: { estimated: "15-25 hrs", spent: "0 hrs" } },
+    { id: "electronics", x: 700, y: 250, title: "Electronics", tooltip: "Circuits and components. Unlocks: Drone Eng, PCB Design, Power Systems. Projects: All", prereqs: [], unlocks: ["drone_engineering", "pcb_design", "power_systems"], time: { estimated: "15-25 hrs", spent: "0 hrs" }, class: "tier-1" },
     { id: "ohms_law", x: 620, y: 350, title: "Ohm's Law", tooltip: "V=IR basics. Prereqs: None. Unlocks: Electronics. Projects: All", prereqs: [], unlocks: ["electronics"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
     { id: "breadboarding", x: 700, y: 350, title: "Breadboarding", tooltip: "Prototyping circuits. Prereqs: Ohm's Law. Unlocks: Electronics. Projects: All", prereqs: ["ohms_law"], unlocks: ["electronics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
     { id: "components", x: 780, y: 350, title: "Components", tooltip: "Resistors, capacitors. Prereqs: Breadboarding. Unlocks: Electronics. Projects: All", prereqs: ["breadboarding"], unlocks: ["electronics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
@@ -1529,6 +1534,124 @@
                         clickTimer = null;
                         // Double click - follow link
                         window.location.href = 'arithmetic.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+            
+            // Add click handler for Programming node
+            if (node.id === 'programming') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'programming.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+            
+            // Add click handler for Electronics node
+            if (node.id === 'electronics') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'electronics.html';
                     } else {
                         // Single click - just select the node
                         clickTimer = setTimeout(() => {
@@ -2214,6 +2337,65 @@
             }
         });
 
+        // Add click handler for programming node
+        document.getElementById('programming').addEventListener('click', function(e) {
+            // Clear any existing selections
+            document.querySelectorAll('.node.selected').forEach(node => {
+                node.classList.remove('selected');
+            });
+            
+            // Add selected class to this node
+            this.classList.add('selected');
+            
+            // Update info panel
+            infoTitle.textContent = this.textContent;
+            infoContent.textContent = this.getAttribute('tooltip');
+            
+            // Highlight connections
+            document.querySelectorAll('.line').forEach(line => {
+                line.classList.remove('highlight');
+            });
+            
+            // Highlight lines connected to this node
+            document.querySelectorAll(`.line[data-from="${this.id}"], .line[data-to="${this.id}"]`).forEach(line => {
+                line.classList.add('highlight');
+            });
+            
+            // Handle double click to navigate to programming.html
+            if (e.detail === 2) {
+                window.location.href = 'programming.html';
+            }
+        });
+
+        // Add click handler for electronics node
+        document.getElementById('electronics').addEventListener('click', function(e) {
+            // Clear any existing selections
+            document.querySelectorAll('.node.selected').forEach(node => {
+                node.classList.remove('selected');
+            });
+            
+            // Add selected class to this node
+            this.classList.add('selected');
+            
+            // Update info panel
+            infoTitle.textContent = this.textContent;
+            infoContent.textContent = this.getAttribute('tooltip');
+            
+            // Highlight connections
+            document.querySelectorAll('.line').forEach(line => {
+                line.classList.remove('highlight');
+            });
+            
+            // Highlight lines connected to this node
+            document.querySelectorAll(`.line[data-from="${this.id}"], .line[data-to="${this.id}"]`).forEach(line => {
+                line.classList.add('highlight');
+            });
+            
+            // Handle double click to navigate to electronics.html
+            if (e.detail === 2) {
+                window.location.href = 'electronics.html';
+            }
+        });
     </script>
 </body>
 </html>
