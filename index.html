@@ -900,16 +900,22 @@
     // Subnode: Embedded Systems
     { id: "embedded_systems", x: 450, y: 350, title: "Embedded Systems", tooltip: "Program hardware for robotics with embedded systems. Covers microcontrollers, real-time systems, and more. Prereqs: Programming (root node). Unlocks: Embedded Programming in Robotics (from detailed Programming tree). Projects: Artemis (motor control), Drone (sensor data).", prereqs: ["programming"], unlocks: ["embedded_programming_robotics"], class: "tier-1", time: { estimated: "15-20 hrs", spent: "0 hrs" } },
     // Tier 1: Foundations - Electronics Breakdown
-    { id: "electronics", x: 700, y: 250, title: "Electronics", tooltip: "Circuits and components. Unlocks: Drone Eng, PCB Design, Power Systems. Projects: All", prereqs: [], unlocks: ["drone_engineering", "pcb_design", "power_systems"], time: { estimated: "15-25 hrs", spent: "0 hrs" }, class: "tier-1" },
+    { id: "electronics", x: 700, y: 250, title: "Electronics", tooltip: "Circuits and components. Unlocks: Drone Eng, PCB Design, Power Systems. Projects: All", prereqs: [], unlocks: ["drone_engineering", "pcb_design", "power_systems"], time: { estimated: "40-50 hrs", spent: 0 }, class: "tier-1" },
     { id: "ohms_law", x: 620, y: 350, title: "Ohm's Law", tooltip: "V=IR basics. Prereqs: None. Unlocks: Electronics. Projects: All", prereqs: [], unlocks: ["electronics"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
     { id: "breadboarding", x: 700, y: 350, title: "Breadboarding", tooltip: "Prototyping circuits. Prereqs: Ohm's Law. Unlocks: Electronics. Projects: All", prereqs: ["ohms_law"], unlocks: ["electronics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
     { id: "components", x: 780, y: 350, title: "Components", tooltip: "Resistors, capacitors. Prereqs: Breadboarding. Unlocks: Electronics. Projects: All", prereqs: ["breadboarding"], unlocks: ["electronics"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
 
     // Tier 1: Foundations - Mechanical Design Breakdown
-    { id: "mechanical_design", x: 1000, y: 250, title: "Mechanical Design", tooltip: "3D modeling basics. Unlocks: Drone Eng, Robotics. Projects: All", prereqs: [], unlocks: ["drone_engineering", "robotics_ros"], time: { estimated: "15-25 hrs", spent: "0 hrs" } },
-    { id: "sketching_fusion", x: 920, y: 350, title: "Sketching (Fusion 360)", tooltip: "2D outlines. Prereqs: None. Unlocks: Mechanical Design. Projects: All", prereqs: [], unlocks: ["mechanical_design"], time: { estimated: "3-5 hrs", spent: "0 hrs" } },
-    { id: "extruding", x: 1000, y: 350, title: "Extruding", tooltip: "3D from 2D. Prereqs: Sketching (Fusion 360). Unlocks: Mechanical Design. Projects: All", prereqs: ["sketching_fusion"], unlocks: ["mechanical_design"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-    { id: "assemblies", x: 1080, y: 350, title: "Assemblies", tooltip: "Part integration. Prereqs: Extruding. Unlocks: Mechanical Design. Projects: All", prereqs: ["extruding"], unlocks: ["mechanical_design"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+    { id: "mechanical_design", x: 1000, y: 250, title: "Mechanical Design", tooltip: "Master the structural design of robotics with Fundamentals, CAD and Modeling, and Mechanism Design. This section equips you to design drone frames, spiderbot legs, and Artemis' chassis. Prereqs: Physics (mechanics basics), Algebra (basic math). Unlocks: Control Systems (PID), Robotics Assembly. Suggested resource: 'Introduction to Mechanical Engineering Design' on Coursera.", prereqs: ["physics", "algebra"], unlocks: ["control_systems_pid", "robotics_assembly"], class: "tier-1 clickable", time: { estimated: "15-25 hrs", spent: "0 hrs" } },
+
+    // Subnode: Fundamentals of Mechanical Design
+    { id: "fundamentals_mechanical_design", x: 920, y: 350, title: "Fundamentals of Mechanical Design", tooltip: "Learn the basics of mechanical design to start creating robotics parts. Covers engineering drawing, tolerances, and more. Prereqs: Mechanical Design (root node). Unlocks: Practical Mechanical Design (from detailed Mechanical Design tree). Projects: Drone (propeller mount), Spiderbot (basic sketches).", prereqs: ["mechanical_design"], unlocks: ["practical_mechanical_design"], class: "tier-1", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+
+    // Subnode: CAD and Modeling
+    { id: "cad_modeling", x: 1000, y: 350, title: "CAD and Modeling", tooltip: "Dive into CAD tools to model robotics components. Covers 2D CAD, 3D modeling, and more. Prereqs: Mechanical Design (root node). Unlocks: CAD for Robotics (from detailed Mechanical Design tree). Projects: Spiderbot (leg blueprint), Drone (frame model).", prereqs: ["mechanical_design"], unlocks: ["cad_for_robotics"], class: "tier-1", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
+
+    // Subnode: Mechanism Design
+    { id: "mechanism_design", x: 1080, y: 350, title: "Mechanism Design", tooltip: "Design moving parts for robotics systems. Covers kinematics, dynamics, and more. Prereqs: Mechanical Design (root node). Unlocks: Robotics Mechanism Design (from detailed Mechanical Design tree). Projects: Spiderbot (leg linkage), Drone (gear system).", prereqs: ["mechanical_design"], unlocks: ["robotics_mechanism_design"], class: "tier-1", time: { estimated: "5-8 hrs", spent: "0 hrs" } },
 
     // Tier 2: Core Skills - Detailed Breakdown
     { id: "aerodynamics", x: 100, y: 500, title: "Aerodynamics", tooltip: "Flight principles. Prereqs: Mechanics. Unlocks: Drone Eng. Projects: Drone", prereqs: ["mechanics"], unlocks: ["drone_engineering"], class: "engineering", time: { estimated: "15-25 hrs", spent: "0 hrs" } },
@@ -2074,6 +2080,65 @@
                 });
             }
 
+            // Add click handler for Mechanical Design node
+            if (node.id === 'mechanical_design') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'MechanicalDesign.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
             canvas.appendChild(div);
 
             // Add click handler for node selection
@@ -2394,6 +2459,36 @@
             // Handle double click to navigate to electronics.html
             if (e.detail === 2) {
                 window.location.href = 'electronics.html';
+            }
+        });
+
+        // Add click handler for mechanical design node
+        document.getElementById('mechanical_design').addEventListener('click', function(e) {
+            // Clear any existing selections
+            document.querySelectorAll('.node.selected').forEach(node => {
+                node.classList.remove('selected');
+            });
+            
+            // Add selected class to this node
+            this.classList.add('selected');
+            
+            // Update info panel
+            infoTitle.textContent = this.textContent;
+            infoContent.textContent = this.getAttribute('tooltip');
+            
+            // Highlight connections
+            document.querySelectorAll('.line').forEach(line => {
+                line.classList.remove('highlight');
+            });
+            
+            // Highlight lines connected to this node
+            document.querySelectorAll(`.line[data-from="${this.id}"], .line[data-to="${this.id}"]`).forEach(line => {
+                line.classList.add('highlight');
+            });
+            
+            // Handle double click to navigate to MechanicalDesign.html
+            if (e.detail === 2) {
+                window.location.href = 'MechanicalDesign.html';
             }
         });
     </script>
