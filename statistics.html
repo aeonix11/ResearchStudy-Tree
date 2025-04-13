@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algebra Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #info-panel {
+            width: 300px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #time-tracker {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        #time-tracker h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #time-tracker p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        #canvas {
+            flex: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line {
+            position: relative;
+            z-index: 2;
+        }
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #A29BFE, #81ECEC);
+            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+        }
+        .node.tier-5 {
+            background: linear-gradient(135deg, #55EFC4, #00B894);
+            box-shadow: 0 4px 15px rgba(85, 239, 196, 0.4);
+        }
+        .node.tier-6 {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            box-shadow: 0 4px 15px rgba(255, 234, 167, 0.4);
+        }
+        .node.tier-7 {
+            background: linear-gradient(135deg, #FAB1A0, #E17055);
+            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
+        }
+        .node.tier-8 {
+            background: linear-gradient(135deg, #FF7675, #D63031);
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
+        }
+        .node.tier-9 {
+            background: linear-gradient(135deg, #81ECEC, #00CEC9);
+            box-shadow: 0 4px 15px rgba(129, 236, 236, 0.4);
+        }
+        .node.tier-10 {
+            background: linear-gradient(135deg, #A8E6CF, #1DE9B6);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+        .node.tier-11 {
+            background: linear-gradient(135deg, #B39DDB, #9575CD);
+            box-shadow: 0 4px 15px rgba(179, 157, 219, 0.4);
+        }
+        .node.tier-12 {
+            background: linear-gradient(135deg, #90CAF9, #42A5F5);
+            box-shadow: 0 4px 15px rgba(144, 202, 249, 0.4);
+        }
+        .node::before {
+            content: attr(data-progress) '%';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .node[data-progress]:not([data-progress="0"])::before {
+            opacity: 1;
+        }
+        .node.tier-1:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7676);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        .node.tier-2:hover {
+            background: linear-gradient(135deg, #3DBEB6, #34A8A0);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        .node.tier-3:hover {
+            background: linear-gradient(135deg, #34A8A0, #2B938B);
+            box-shadow: 0 6px 20px rgba(69, 183, 175, 0.6);
+        }
+        .node.tier-4:hover {
+            background: linear-gradient(135deg, #2B938B, #227E77);
+            box-shadow: 0 6px 20px rgba(60, 162, 154, 0.6);
+        }
+        .node.clickable {
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+        .node.clickable:hover {
+            transform: scale(1.1);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+        }
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        #back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        #back-button:hover {
+            background: #45a049;
+        }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s;
+        }
+        .status-not-started {
+            background-color: #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 2s infinite;
+        }
+        .status-completed {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        }
+        .status-finished {
+            background-color: #9C27B0;
+            box-shadow: 0 0 5px rgba(156, 39, 176, 0.7);
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+            50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 0 0 5px 5px;
+        }
+        .progress-bar.in-progress {
+            background: linear-gradient(90deg, #FFC107, #FF9800);
+        }
+        .progress-bar.completed {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+        .progress-bar.not-started {
+            width: 0 !important;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+        .progress-summary {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="back-button" onclick="window.location.href='index.html'">← Back to Main Tree</button>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Algebra Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div style="flex-grow: 1;"></div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <script>
+        // Load saved progress from localStorage
+        let nodeProgress = {};
+        
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('algebraProgress');
+            if (savedProgress) {
+                nodeProgress = JSON.parse(savedProgress);
+            }
+        }
+        
+        function saveProgress() {
+            localStorage.setItem('algebraProgress', JSON.stringify(nodeProgress));
+            
+            // Calculate and save progress for the main page
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const progressPercentage = (finishedNodes / totalNodes) * 100;
+            
+            // Save progress to localStorage for the main page
+            localStorage.setItem('algebraMainProgress', progressPercentage.toString());
+        }
+        
+        function updateNodeStatus(nodeId, status) {
+            // Save to nodeProgress object
+            nodeProgress[nodeId] = status;
+            
+            // Save to localStorage with the correct key format
+            localStorage.setItem(`algebra_${nodeId}_progress`, status);
+            
+            // Update visual indicators
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const indicator = node.querySelector('.status-indicator');
+                const progressBar = node.querySelector('.progress-bar');
+                const tooltip = node.querySelector('.progress-tooltip');
+                
+                // Remove all status classes
+                indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                
+                // Add new status class
+                indicator.classList.add(`status-${status}`);
+                progressBar.classList.add(status);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+
+                // Update tooltip if it exists
+                if (tooltip) {
+                    tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+                }
+            }
+            
+            // Check if any algebra nodes are in progress or finished
+            const algebraNodes = Object.keys(localStorage)
+                .filter(key => key.startsWith('algebra_') && key.endsWith('_progress'))
+                .map(key => localStorage.getItem(key));
+            
+            const hasProgress = algebraNodes.some(nodeStatus => 
+                nodeStatus === 'in-progress' || nodeStatus === 'finished'
+            );
+            
+            // Update the parent node status in the main page
+            if (hasProgress) {
+                localStorage.setItem('algebra_progress', 'in-progress');
+            } else {
+                localStorage.setItem('algebra_progress', 'not-started');
+            }
+            
+            // Save overall progress
+            saveProgress();
+        }
+        
+        function getNodeStatus(nodeId) {
+            // First check if we have a saved status in localStorage
+            const savedStatus = localStorage.getItem(`algebra_${nodeId}_progress`);
+            if (savedStatus) {
+                return savedStatus;
+            }
+            
+            // If no saved status, check if the node has prerequisites
+            const node = nodes.find(n => n.id === nodeId);
+            if (node && node.prerequisites && node.prerequisites.length > 0) {
+                // If it has prerequisites, it starts as not-started
+                return 'not-started';
+            }
+            
+            // Default to not-started
+            return 'not-started';
+        }
+        
+        function updateProgressSummary() {
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const notStartedNodes = Object.values(nodeProgress).filter(status => status === 'not-started').length;
+            
+            const progressSummary = document.getElementById('progress-summary');
+            if (progressSummary) {
+                progressSummary.innerHTML = `
+                    <div>Total Nodes: ${totalNodes}</div>
+                    <div>Finished: ${finishedNodes}</div>
+                    <div>In Progress: ${inProgressNodes}</div>
+                    <div>Not Started: ${notStartedNodes}</div>
+                    <div>Overall Progress: ${Math.round((finishedNodes / totalNodes) * 100)}%</div>
+                `;
+            }
+        }
+        
+        // Load progress when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            
+            // Create progress summary element
+            const progressSummary = document.createElement('div');
+            progressSummary.id = 'progress-summary';
+            progressSummary.className = 'progress-summary';
+            document.body.appendChild(progressSummary);
+            
+            // Update progress summary
+            updateProgressSummary();
+
+            // Initialize time tracking
+            let totalTime = parseInt(localStorage.getItem('algebraTotalTime') || '0');
+            let sessionStartTime = Date.now();
+            let lastUpdateTime = sessionStartTime;
+
+            // Update time displays
+            function updateTimeDisplays() {
+                const currentTime = Date.now();
+                const sessionTime = Math.floor((currentTime - sessionStartTime) / 60000);
+                document.getElementById('total-time').textContent = totalTime;
+                document.getElementById('session-time').textContent = sessionTime;
+            }
+
+            // Update time every minute
+            setInterval(() => {
+                const currentTime = Date.now();
+                const minutesSinceLastUpdate = Math.floor((currentTime - lastUpdateTime) / 60000);
+                
+                if (minutesSinceLastUpdate > 0) {
+                    totalTime += minutesSinceLastUpdate;
+                    localStorage.setItem('algebraTotalTime', totalTime.toString());
+                    lastUpdateTime = currentTime;
+                    updateTimeDisplays();
+                }
+            }, 60000);
+
+            // Initial time display update
+            updateTimeDisplays();
+        });
+
+        const nodes = [
+    // Parent Node: Statistics (Tier 1 - Root)
+    { id: "statistics", x: 500, y: 50, title: "Statistics", tooltip: "Embark on a quest to master Statistics, the art of analyzing data and modeling uncertainty in robotics! This tree will empower you to process drone sensor data, ensure spiderbot reliability, and optimize Artemis’ decision-making. You’ll journey from descriptive stats to advanced statistical methods. Prereqs: Algebra (basic math skills). Unlocks: Descriptive Statistics, Probability Basics, Statistical Inference. Projects: Drone (sensor analysis), Spiderbot (reliability), Artemis (decision-making). Suggested resource: ‘Intro to Statistics’ course on Khan Academy.", prereqs: ["algebra"], unlocks: ["descriptive_statistics", "probability_basics", "statistical_inference"], time: { estimated: "40-60 hrs", spent: "0 hrs" }, class: "tier-1", badge: "Statistics Novice (Complete this node to unlock!)" },
+
+    // Main Branches (Tier 2)
+    { id: "descriptive_statistics", x: 400, y: 150, title: "Descriptive Statistics", tooltip: "Begin your journey by learning to summarize and visualize data, a key skill for analyzing robotics performance! Compute metrics like the average speed of a drone (e.g., mean speed = 10 m/s from 5 flights) or the variance in spiderbot sensor readings. This node introduces measures of central tendency (mean, median, mode) and dispersion. Prereqs: Statistics (root node). Unlocks: Data Visualization, Measures of Dispersion. Projects: Drone (speed analysis), Spiderbot (sensor variance). Suggested resource: ‘Descriptive Statistics’ module on Khan Academy.", prereqs: ["statistics"], unlocks: ["data_visualization", "measures_dispersion"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "probability_basics", x: 500, y: 150, title: "Probability Basics", tooltip: "Unlock the secrets of probability, the foundation for modeling uncertainty in robotics! Calculate the likelihood of a drone’s sensor failing (e.g., 5% chance per flight) or the probability of Artemis encountering an obstacle. This node introduces core probability concepts like events and sample spaces. Prereqs: Statistics (root node). Unlocks: Probability Rules, Random Variables. Projects: Drone (sensor failure), Artemis (obstacle probability). Suggested resource: ‘Probability’ course on Khan Academy.", prereqs: ["statistics"], unlocks: ["probability_rules", "random_variables"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    { id: "statistical_inference", x: 600, y: 150, title: "Statistical Inference", tooltip: "Step into the world of statistical inference to make data-driven decisions in robotics! Estimate spiderbot motor reliability or test hypotheses about drone flight performance. This node introduces inference techniques like sampling and estimation. Prereqs: Statistics (root node). Unlocks: Hypothesis Testing, Confidence Intervals. Projects: Spiderbot (motor reliability), Drone (flight performance). Suggested resource: ‘Statistical Inference’ course on Coursera.", prereqs: ["statistics"], unlocks: ["hypothesis_testing", "confidence_intervals"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+    // Descriptive Statistics Branch (Tier 3)
+    { id: "data_visualization", x: 350, y: 250, title: "Data Visualization", tooltip: "Visualize your robotics data like a pro using graphs like histograms and scatter plots! Plot drone flight paths to identify patterns (e.g., a scatter plot showing altitude vs. time) or visualize Artemis’ sensor data for anomalies. This node teaches you to create and interpret statistical visualizations. Prereqs: Descriptive Statistics (descriptive basics). Unlocks: Statistical Software Tools. Projects: Drone (flight path plots), Artemis (sensor anomalies). Suggested resource: ‘Data Visualization’ module on Khan Academy.", prereqs: ["descriptive_statistics"], unlocks: ["statistical_software_tools"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "measures_dispersion", x: 450, y: 250, title: "Measures of Dispersion", tooltip: "Measure data variability to assess consistency in robotics systems! Analyze the variability in spiderbot leg motion (e.g., standard deviation of step length = 2 cm) or drone battery life. This node covers variance, standard deviation, and range, building on descriptive stats for deeper insights. Prereqs: Descriptive Statistics (descriptive basics). Unlocks: Outlier Detection. Projects: Spiderbot (leg motion variability), Drone (battery life). Suggested resource: ‘Measures of Dispersion’ on Khan Academy.", prereqs: ["descriptive_statistics"], unlocks: ["outlier_detection"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Probability Basics Branch (Tier 3)
+    { id: "probability_rules", x: 500, y: 250, title: "Probability Rules", tooltip: "Master probability rules to conquer uncertainty in robotics! Use addition, multiplication, and conditional probability to calculate the chance of multiple drone sensors failing simultaneously (e.g., P(A and B) = 0.05 * 0.03 = 0.0015) or Artemis navigating a complex terrain successfully. This node provides tools for uncertainty modeling. Prereqs: Probability Basics (probability fundamentals). Unlocks: Bayes’ Theorem. Projects: Drone (sensor failure), Artemis (navigation success). Suggested resource: ‘Probability Rules’ on Khan Academy.", prereqs: ["probability_basics"], unlocks: ["bayes_theorem"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "random_variables", x: 550, y: 250, title: "Random Variables", tooltip: "Dive into random variables and their distributions to model robotics uncertainties! Model the error in a drone’s GPS readings (e.g., normally distributed with mean 0, variance 1 m²) or the variability in spiderbot motor response times. This node introduces probability distributions like discrete and continuous variables. Prereqs: Probability Basics (probability fundamentals). Unlocks: Probability Distributions. Projects: Drone (GPS error), Spiderbot (motor response). Suggested resource: ‘Random Variables’ on Khan Academy.", prereqs: ["probability_basics"], unlocks: ["probability_distributions"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Statistical Inference Branch (Tier 3)
+    { id: "hypothesis_testing", x: 600, y: 250, title: "Hypothesis Testing", tooltip: "Test hypotheses to make data-driven decisions in robotics! Test if a drone’s new battery lasts longer (e.g., H₀: μ = 30 min, H₁: μ > 30 min, p-value = 0.03) or if spiderbot sensors are reliable under stress. This node introduces p-values and significance testing. Prereqs: Statistical Inference (inference basics). Unlocks: A/B Testing in Robotics. Projects: Drone (battery life), Spiderbot (sensor reliability). Suggested resource: ‘Hypothesis Testing’ on Khan Academy.", prereqs: ["statistical_inference"], unlocks: ["ab_testing_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    { id: "confidence_intervals", x: 650, y: 250, title: "Confidence Intervals", tooltip: "Use confidence intervals to estimate parameters with uncertainty! Estimate the average flight time of a drone (e.g., 95% CI: 28-32 min) or Artemis’ sensor accuracy. This node teaches you to quantify uncertainty in robotics data using intervals. Prereqs: Statistical Inference (inference basics). Unlocks: Parameter Estimation. Projects: Drone (flight time), Artemis (sensor accuracy). Suggested resource: ‘Confidence Intervals’ on Khan Academy.", prereqs: ["statistical_inference"], unlocks: ["parameter_estimation"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+    // Descriptive Statistics Branch (Tier 4)
+    { id: "statistical_software_tools", x: 350, y: 350, title: "Statistical Software Tools", tooltip: "Harness the power of tools like Python (NumPy, Pandas) or R to analyze robotics data! Analyze drone flight data or visualize spiderbot performance metrics with code. This node introduces software for data processing. Prereqs: Data Visualization (visualization basics). Unlocks: Data Cleaning in Robotics. Projects: Drone (flight data), Spiderbot (performance metrics). Suggested resource: ‘Python for Data Analysis’ course on Coursera.", prereqs: ["data_visualization"], unlocks: ["data_cleaning_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "outlier_detection", x: 450, y: 350, title: "Outlier Detection", tooltip: "Become a data detective by identifying outliers in robotics data! Detect erroneous sensor readings from a drone (e.g., z-score > 3) or unusual Artemis motor behavior. This node uses statistical methods like z-scores to spot anomalies. Prereqs: Measures of Dispersion (dispersion basics). Unlocks: Robust Statistics. Projects: Drone (sensor errors), Artemis (motor anomalies).", prereqs: ["measures_dispersion"], unlocks: ["robust_statistics"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Probability Basics Branch (Tier 4)
+    { id: "bayes_theorem", x: 500, y: 350, title: "Bayes’ Theorem", tooltip: "Master Bayes’ Theorem to navigate Artemis through obstacles with confidence! Update probabilities based on new data, like refining the likelihood of Artemis detecting an obstacle (e.g., P(A|B) = [P(B|A) * P(A)] / P(B)) or a drone avoiding a collision. This node introduces Bayesian reasoning. Prereqs: Probability Rules (probability rules). Unlocks: Bayesian Inference in Robotics. Projects: Artemis (obstacle detection), Drone (collision avoidance).", prereqs: ["probability_rules"], unlocks: ["bayesian_inference_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "probability_distributions", x: 550, y: 350, title: "Probability Distributions", tooltip: "Explore key probability distributions to model robotics phenomena! Model the number of spiderbot sensor failures (e.g., Poisson distribution, λ = 2 failures/hour) or the distribution of drone flight times (normal distribution). This node covers normal, binomial, and Poisson distributions. Prereqs: Random Variables (random variable basics). Unlocks: Applications of Distributions. Projects: Spiderbot (sensor failures), Drone (flight times).", prereqs: ["random_variables"], unlocks: ["applications_distributions"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Statistical Inference Branch (Tier 4)
+    { id: "ab_testing_robotics", x: 600, y: 350, title: "A/B Testing in Robotics", tooltip: "Optimize your robotics systems with A/B testing! Compare two drone propeller designs for efficiency (e.g., Design A: mean speed = 12 m/s, Design B: 14 m/s, p-value = 0.02) or two spiderbot control algorithms for stability. This node uses hypothesis testing to improve performance. Prereqs: Hypothesis Testing (testing basics). Unlocks: Experimental Design. Projects: Drone (propeller efficiency), Spiderbot (control stability).", prereqs: ["hypothesis_testing"], unlocks: ["experimental_design"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    { id: "parameter_estimation", x: 650, y: 350, title: "Parameter Estimation", tooltip: "Estimate key parameters to ensure robotics reliability! Use maximum likelihood estimation to estimate the failure rate of Artemis’ motors (e.g., λ = 0.01 failures/hour) or the mean accuracy of a drone’s sensors. This node builds on confidence intervals for precise estimation. Prereqs: Confidence Intervals (interval basics). Unlocks: Regression Analysis. Projects: Artemis (motor failure rate), Drone (sensor accuracy).", prereqs: ["confidence_intervals"], unlocks: ["regression_analysis"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+    // Descriptive Statistics Branch (Tier 5)
+    { id: "data_cleaning_robotics", x: 350, y: 450, title: "Data Cleaning in Robotics", tooltip: "Clean your robotics data like a pro to ensure accurate analysis! Handle missing values and inconsistencies in drone flight logs or spiderbot sensor data, preparing them for statistical insights. Prereqs: Statistical Software Tools (software basics). Unlocks: None. Projects: Drone (flight logs), Spiderbot (sensor data).", prereqs: ["statistical_software_tools"], unlocks: [], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5", badge: "Data Analyst (Complete the Descriptive Statistics branch to unlock!)" },
+
+    { id: "robust_statistics", x: 450, y: 450, title: "Robust Statistics", tooltip: "Conquer noisy data with robust statistical methods! Analyze drone sensor data with noise or Artemis’ performance under extreme conditions, ensuring reliable insights. This node enhances your data analysis toolkit with robust techniques. Prereqs: Outlier Detection (outlier basics). Unlocks: None. Projects: Drone (noisy sensor data), Artemis (extreme conditions).", prereqs: ["outlier_detection"], unlocks: [], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    // Probability Basics Branch (Tier 5)
+    { id: "bayesian_inference_robotics", x: 500, y: 450, title: "Bayesian Inference in Robotics", tooltip: "Use Bayesian inference to make probabilistic decisions in robotics! Update the likelihood of a drone’s position based on sensor data (e.g., P(Position|Data) ∝ P(Data|Position) * P(Position)) or Artemis’ obstacle avoidance confidence. This node applies Bayes’ Theorem for decision-making. Prereqs: Bayes’ Theorem (Bayesian basics). Unlocks: Monte Carlo Methods. Projects: Drone (position estimation), Artemis (obstacle avoidance).", prereqs: ["bayes_theorem"], unlocks: ["monte_carlo_methods"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    { id: "applications_distributions", x: 550, y: 450, title: "Applications of Distributions", tooltip: "Apply probability distributions to real-world robotics scenarios! Use the normal distribution to model drone sensor errors (e.g., 68% of errors within 1 standard deviation) or the Poisson distribution for spiderbot failure rates. This node bridges theory to practice, preparing you for the Central Limit Theorem. Prereqs: Probability Distributions (distribution basics). Unlocks: Central Limit Theorem. Projects: Drone (sensor errors), Spiderbot (failure rates).", prereqs: ["probability_distributions"], unlocks: ["central_limit_theorem"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    // Statistical Inference Branch (Tier 5)
+    { id: "experimental_design", x: 600, y: 450, title: "Experimental Design", tooltip: "Design experiments to test and improve your robotics systems! Compare drone battery types for longevity or spiderbot leg materials for durability, using statistical methods to ensure valid results. Prereqs: A/B Testing in Robotics (testing basics). Unlocks: ANOVA in Robotics. Projects: Drone (battery longevity), Spiderbot (leg durability).", prereqs: ["ab_testing_robotics"], unlocks: ["anova_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    { id: "regression_analysis", x: 650, y: 450, title: "Regression Analysis", tooltip: "Unlock the power to predict with regression analysis! Model relationships in robotics data, like predicting drone flight time based on battery charge (e.g., Flight Time = 5 + 0.2 * Charge) or Artemis’ speed based on motor power. This node introduces linear and nonlinear regression. Prereqs: Parameter Estimation (estimation basics). Unlocks: Time Series Analysis. Projects: Drone (flight time prediction), Artemis (speed prediction). Suggested resource: ‘Regression Analysis’ on Khan Academy.", prereqs: ["parameter_estimation"], unlocks: ["time_series_analysis"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+    // Probability Basics Branch (Tier 6)
+    { id: "monte_carlo_methods", x: 500, y: 550, title: "Monte Carlo Methods", tooltip: "Simulate probabilistic systems in robotics with Monte Carlo methods! Estimate the reliability of a drone’s sensors or Artemis’ navigation success rate through simulations. This node uses simulation for uncertainty modeling. Prereqs: Bayesian Inference in Robotics (Bayesian methods). Unlocks: None. Projects: Drone (sensor reliability), Artemis (navigation success). Suggested resource: ‘Introduction to Monte Carlo Methods’ course on edX.", prereqs: ["bayesian_inference_robotics"], unlocks: [], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6", badge: "Probability Master (Complete the Probability Basics branch to unlock!)" },
+
+    { id: "central_limit_theorem", x: 550, y: 550, title: "Central Limit Theorem", tooltip: "Discover why many distributions tend to be normal with the Central Limit Theorem! Apply this to analyze the average performance of spiderbot motors (e.g., sample mean approximates normal distribution) or drone flight durations. This node bridges probability to inference. Prereqs: Applications of Distributions (practical distribution applications). Unlocks: Sampling Distributions. Projects: Spiderbot (motor performance), Drone (flight durations).", prereqs: ["applications_distributions"], unlocks: ["sampling_distributions"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+    // Statistical Inference Branch (Tier 6)
+    { id: "anova_robotics", x: 600, y: 550, title: "ANOVA in Robotics", tooltip: "Compare multiple robotics systems with Analysis of Variance (ANOVA)! Test different drone propeller designs or spiderbot control algorithms for performance, extending hypothesis testing to multiple groups. Prereqs: Experimental Design (design basics). Unlocks: None. Projects: Drone (propeller designs), Spiderbot (control algorithms).", prereqs: ["anova_robotics"], unlocks: [], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+    { id: "time_series_analysis", x: 650, y: 550, title: "Time Series Analysis", tooltip: "Analyze time series data to uncover trends in robotics! Study drone flight trajectories over time or Artemis’ motor temperature trends, using techniques like autoregression to model and predict patterns. Prereqs: Regression Analysis (regression basics). Unlocks: Introduction to Statistical ML. Projects: Drone (flight trajectories), Artemis (temperature trends).", prereqs: ["time_series_analysis"], unlocks: ["intro_statistical_ml"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+    // Probability Basics Branch (Tier 7)
+    { id: "sampling_distributions", x: 550, y: 650, title: "Sampling Distributions", tooltip: "Understand how sample statistics behave with sampling distributions! Estimate the mean accuracy of spiderbot sensors or the variability in drone flight times, connecting probability to inference. Prereqs: Central Limit Theorem (CLT basics). Unlocks: Statistical Quality Control. Projects: Spiderbot (sensor accuracy), Drone (flight time variability).", prereqs: ["central_limit_theorem"], unlocks: ["statistical_quality_control"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+    // Statistical Inference Branch (Tier 7)
+    { id: "intro_statistical_ml", x: 650, y: 650, title: "Introduction to Statistical ML", tooltip: "Take your first steps into statistical machine learning! Learn simpler ML techniques like linear regression and basic clustering to prepare for advanced methods. You’ll apply these to classify drone flight patterns or cluster Artemis’ sensor data for insights. Prereqs: Time Series Analysis (time series basics). Unlocks: Statistical Machine Learning. Projects: Drone (flight pattern classification), Artemis (sensor clustering).", prereqs: ["time_series_analysis"], unlocks: ["statistical_machine_learning"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+    // Statistical Inference Branch (Tier 8)
+    { id: "statistical_machine_learning", x: 650, y: 750, title: "Statistical Machine Learning", tooltip: "Enhance your robotics systems with statistical machine learning! Use logistic regression and clustering to classify drone flight patterns or detect anomalies in Artemis’ sensor data, bridging statistics to AI/ML. Prereqs: Introduction to Statistical ML (basic ML techniques). Unlocks: None. Projects: Drone (flight pattern classification), Artemis (anomaly detection). Suggested resource: ‘Machine Learning’ course by Andrew Ng on Coursera.", prereqs: ["intro_statistical_ml"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-8", badge: "Inference Expert (Complete the Statistical Inference branch to unlock!)" },
+
+    // Probability Basics Branch (Tier 8)
+    { id: "statistical_quality_control", x: 550, y: 750, title: "Statistical Quality Control", tooltip: "Ensure reliability in your robotics systems with statistical quality control! Monitor drone sensor consistency or spiderbot motor performance using control charts and process capability analysis. Prereqs: Sampling Distributions (sampling basics). Unlocks: Reliability Analysis in Robotics. Projects: Drone (sensor consistency), Spiderbot (motor performance).", prereqs: ["sampling_distributions"], unlocks: ["reliability_analysis_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-8" },
+
+    // Probability Basics Branch (Tier 9)
+    { id: "reliability_analysis_robotics", x: 550, y: 850, title: "Reliability Analysis in Robotics", tooltip: "Assess and improve the dependability of your robotics systems! Calculate the mean time to failure of drone motors or Artemis’ components, applying statistics to ensure system robustness. Prereqs: Statistical Quality Control (quality control basics). Unlocks: None. Projects: Drone (motor failure), Artemis (component reliability).", prereqs: ["statistical_quality_control"], unlocks: [], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-9" }
+];
+
+        const canvas = document.getElementById("canvas");
+        const infoTitle = document.getElementById("info-title");
+        const infoContent = document.getElementById("info-content");
+        const infoPanel = document.getElementById("info-panel");
+
+        // Add collision detection and resolution
+        function checkCollision(node1, node2) {
+            const padding = 20; // Minimum space between nodes
+            return !(node1.x + 140 + padding < node2.x || 
+                    node1.x > node2.x + 140 + padding || 
+                    node1.y + 40 + padding < node2.y || 
+                    node1.y > node2.y + 40 + padding);
+        }
+
+        function resolveCollisions() {
+            let hasCollision = true;
+            let iterations = 0;
+            const maxIterations = 100; // Prevent infinite loops
+            
+            while (hasCollision && iterations < maxIterations) {
+                hasCollision = false;
+                iterations++;
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (checkCollision(nodes[i], nodes[j])) {
+                            hasCollision = true;
+                            
+                            // Calculate the direction to move nodes apart
+                            const dx = nodes[j].x - nodes[i].x;
+                            const dy = nodes[j].y - nodes[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance === 0) {
+                                // If nodes are exactly on top of each other, move them apart randomly
+                                nodes[i].x -= 50;
+                                nodes[j].x += 50;
+                            } else {
+                                // Move nodes apart along their center line
+                                const moveX = (dx / distance) * 25;
+                                const moveY = (dy / distance) * 25;
+                                
+                                nodes[i].x -= moveX;
+                                nodes[i].y -= moveY;
+                                nodes[j].x += moveX;
+                                nodes[j].y += moveY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Function to increase spacing between nodes
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
+            // Add offset to move everything right of info panel
+            const infoPanelOffset = 450; // Increased from 400 to 450 for more space
+            
+            // Find the minimum x and y to maintain relative positioning
+            const minX = Math.min(...nodes.map(node => node.x));
+            const minY = Math.min(...nodes.map(node => node.y));
+            
+            // Apply spacing to each node
+            nodes.forEach(node => {
+                // Calculate new position relative to minimum values
+                const relativeX = node.x - minX;
+                const relativeY = node.y - minY;
+                
+                // Apply spacing factors and restore offset with additional right shift
+                node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
+                node.y = minY + (relativeY * verticalFactor);
+                
+                // Ensure no node is positioned behind the sidebar
+                if (node.x < 350) { // 300px sidebar width + 50px buffer
+                    node.x = 350;
+                }
+            });
+
+            // Resolve any collisions after spacing
+            resolveCollisions();
+        }
+
+        // Apply increased spacing and resolve collisions
+        increaseSpacing(2.2, 2.0);
+
+        // Draw lines between nodes
+        function drawLines() {
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+        }
+
+        // Create nodes
+        nodes.forEach(node => {
+            const div = document.createElement('div');
+            div.className = 'node';
+            div.id = node.id;
+            div.style.left = `${node.x}px`;
+            div.style.top = `${node.y}px`;
+            div.innerHTML = node.title;
+            
+            // Add tier class based on y position
+            const tier = Math.floor((node.y - 50) / 200) + 1;
+            div.classList.add(`tier-${tier}`);
+            
+            // Add status indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'status-indicator';
+            const status = getNodeStatus(node.id);
+            indicator.classList.add(`status-${status}`);
+            
+            // Add progress bar
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.classList.add(status);
+            
+            // Set progress bar width based on status
+            if (status === 'in-progress') {
+                progressBar.style.width = '50%';
+            } else if (status === 'finished') {
+                progressBar.style.width = '100%';
+            } else {
+                progressBar.style.width = '0%';
+            }
+            
+            // Add progress tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'progress-tooltip';
+            tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            // Add click handler for status indicator
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent node click event
+                
+                const currentStatus = getNodeStatus(node.id);
+                let newStatus;
+                
+                // Cycle through statuses
+                if (currentStatus === 'not-started') {
+                    newStatus = 'in-progress';
+                } else if (currentStatus === 'in-progress') {
+                    newStatus = 'finished';
+                } else if (currentStatus === 'finished') {
+                    newStatus = 'not-started';
+                }
+                
+                updateNodeStatus(node.id, newStatus);
+                
+                // Update tooltip
+                tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
+            });
+            
+            // Show tooltip on hover
+            indicator.addEventListener('mouseenter', (e) => {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+            });
+            
+            indicator.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+            });
+            
+            indicator.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            });
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
+
+            // Add event listeners for highlighting connections
+            div.addEventListener('mouseenter', () => {
+                // Set selected node
+                selectedNodeId = node.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            });
+
+            div.addEventListener('mouseleave', () => {
+                // Clear selected node
+                selectedNodeId = null;
+                
+                // Remove highlight from all lines
+                document.querySelectorAll('.line.highlight').forEach(line => {
+                    line.classList.remove('highlight');
+                });
+                
+                // Reset info panel
+                infoTitle.textContent = "Algebra Tech Tree Information";
+                infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+                
+                // Reset time info
+                document.getElementById('estimated-time').textContent = "-";
+                document.getElementById('time-spent').textContent = "0 hrs";
+            });
+
+            canvas.appendChild(div);
+        });
+
+        // Draw lines after creating nodes
+        drawLines();
+
+        function updateNodeProgress() {
+            // Get progress for each node from nodeProgress object
+            nodes.forEach(node => {
+                const status = getNodeStatus(node.id);
+                const nodeElement = document.getElementById(node.id);
+                if (nodeElement) {
+                    const indicator = nodeElement.querySelector('.status-indicator');
+                    const progressBar = nodeElement.querySelector('.progress-bar');
+                    
+                    if (indicator && progressBar) {
+                        // Remove all status classes
+                        indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                        progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                        
+                        // Add current status class
+                        indicator.classList.add(`status-${status}`);
+                        progressBar.classList.add(status);
+                        
+                        // Set progress bar width based on status
+                        if (status === 'in-progress') {
+                            progressBar.style.width = '50%';
+                        } else if (status === 'finished') {
+                            progressBar.style.width = '100%';
+                        } else {
+                            progressBar.style.width = '0%';
+                        }
+                    }
+                }
+            });
+            
+            // Update progress summary
+            updateProgressSummary();
+        }
+
+        // Add click handler for nodes to update progress
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            nodes.forEach(node => {
+                if (Math.abs(node.x - x) < 30 && Math.abs(node.y - y) < 30) {
+                    const currentStatus = getNodeStatus(node.id);
+                    let newStatus;
+                    
+                    // Cycle through statuses
+                    if (currentStatus === 'not-started') {
+                        newStatus = 'in-progress';
+                    } else if (currentStatus === 'in-progress') {
+                        newStatus = 'finished';
+                    } else if (currentStatus === 'finished') {
+                        newStatus = 'not-started';
+                    }
+                    
+                    updateNodeStatus(node.id, newStatus);
+                }
+            });
+        });
+
+        // Call updateNodeProgress when the page loads
+        window.addEventListener('load', updateNodeProgress);
+        
+        // Export progress data
+        document.getElementById('export-button').addEventListener('click', () => {
+            // Collect all progress data
+            const progressData = {
+                algebraProgress: localStorage.getItem('algebraProgress') || '0',
+                algebraNodes: {}
+            };
+            
+            // Get all algebra node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('algebra_', '').replace('_progress', '');
+                    progressData.algebraNodes[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Create and download the file
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'algebra-progress.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Import progress data
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Clear existing algebra progress data
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Restore algebra progress data
+                    if (progressData.algebraProgress) {
+                        localStorage.setItem('algebraProgress', progressData.algebraProgress);
+                    }
+                    
+                    // Restore algebra node progress
+                    if (progressData.algebraNodes) {
+                        Object.entries(progressData.algebraNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`algebra_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Update the UI
+                    updateNodeProgress();
+                    
+                    // Show success message
+                    alert('Algebra progress data imported successfully!');
+                } catch (error) {
+                    console.error('Error importing progress data:', error);
+                    alert('Error importing progress data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Time tracking variables
+        let totalTimeSpent = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let selectedNodeId = null;  // Track currently selected node
+
+        // Format time for display
+        function formatTime(hours) {
+            if (hours === 0) return '0 hrs';
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            if (minutes === 0) return `${wholeHours} hrs`;
+            return `${wholeHours} hrs ${minutes} mins`;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            if (selectedNodeId) {
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            }
+        }
+
+        // Add time manually
+        function addTime(hours) {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent += hours;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Reset time tracking
+        function resetTime() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent = 0;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Start/Stop timer
+        function toggleTimer() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            
+            const timerButton = document.getElementById('start-timer');
+            const activeTimer = document.getElementById('active-timer');
+            
+            if (!startTime) {
+                // Start timer
+                startTime = new Date();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                timerButton.textContent = 'Stop Timer';
+                activeTimer.style.display = 'block';
+            } else {
+                // Stop timer
+                const endTime = new Date();
+                const elapsedHours = (endTime - startTime) / (1000 * 60 * 60);
+                totalTimeSpent += elapsedHours;
+                
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                
+                timerButton.textContent = 'Start Timer';
+                activeTimer.style.display = 'none';
+                document.getElementById('timer-display').textContent = '00:00:00';
+                
+                updateTimeDisplay();
+                saveTime();
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            if (!startTime) return;
+            
+            const currentTime = new Date();
+            const elapsedMs = currentTime - startTime;
+            const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsedMs % (1000 * 60)) / 1000);
+            
+            document.getElementById('timer-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Save time to localStorage
+        function saveTime() {
+            if (selectedNodeId) {
+                localStorage.setItem(`algebra_${selectedNodeId}_total_time`, totalTimeSpent.toString());
+            }
+        }
+
+        // Load time from localStorage
+        function loadTime() {
+            if (selectedNodeId) {
+                const savedTime = localStorage.getItem(`algebra_${selectedNodeId}_total_time`);
+                if (savedTime) {
+                    totalTimeSpent = parseFloat(savedTime);
+                } else {
+                    totalTimeSpent = 0;
+                }
+                updateTimeDisplay();
+            }
+        }
+
+        // Event listeners for time tracking
+        document.getElementById('add-time').addEventListener('click', () => {
+            const timeInput = document.getElementById('hours-input');
+            const hours = parseFloat(timeInput.value);
+            if (!isNaN(hours) && hours > 0) {
+                addTime(hours);
+                timeInput.value = '';
+            }
+        });
+
+        document.getElementById('reset-time').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the time tracking?')) {
+                resetTime();
+            }
+        });
+
+        document.getElementById('start-timer').addEventListener('click', toggleTimer);
+
+        // Initialize time tracking
+        loadTime();
+    </script>
+</body>
+</html> 

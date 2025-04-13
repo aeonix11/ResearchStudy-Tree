@@ -958,7 +958,10 @@
 
     { id: "system_integration", x: 500, y: 1050, title: "System Integration", tooltip: "Full Artemis. Prereqs: PCB Design, Power Systems, Hybrid Systems, AI/ML, Military Tech. Your Iron Man goal! Milestone: Boot Artemis", prereqs: ["pcb_design", "power_systems", "hybrid_systems", "ai_ml", "military_tech"], unlocks: [], class: "advanced", time: { estimated: "30-50 hrs", spent: "0 hrs" } },
     { id: "custom_os", x: 400, y: 1150, title: "Custom OS", tooltip: "Linux setup. Prereqs: Programming (Python). Unlocks: System Integration. Projects: Artemis", prereqs: ["programming_python"], unlocks: ["system_integration"], class: "advanced", time: { estimated: "10-15 hrs", spent: "0 hrs" } },
-    { id: "middleware", x: 600, y: 1150, title: "Middleware", tooltip: "System glue. Prereqs: Custom OS. Unlocks: System Integration. Projects: Artemis", prereqs: ["custom_os"], unlocks: ["system_integration"], class: "advanced", time: { estimated: "10-15 hrs", spent: "0 hrs" } }
+    { id: "middleware", x: 600, y: 1150, title: "Middleware", tooltip: "System glue. Prereqs: Custom OS. Unlocks: System Integration. Projects: Artemis", prereqs: ["custom_os"], unlocks: ["system_integration"], class: "advanced", time: { estimated: "10-15 hrs", spent: "0 hrs" } },
+    
+    // Statistics Node
+    { id: "statistics", x: 1300, y: 50, title: "Statistics", tooltip: "Data analysis and visualization. Track your progress and analyze your learning journey. Prereqs: Arithmetic, Algebra, Programming (Python). Unlocks: None. Projects: All. Tip: Use this to monitor your progress!", prereqs: ["arithmetic", "algebra", "programming_python"], unlocks: [], class: "tier-1", time: { estimated: "5-10 hrs", spent: "0 hrs" } }
 ];
 
         const canvas = document.getElementById("canvas");
@@ -1050,6 +1053,7 @@
         // Draw lines between nodes
         function drawLines() {
             nodes.forEach(node => {
+                // Draw lines for unlocks (outgoing connections)
                 node.unlocks.forEach(unlockId => {
                     const target = nodes.find(n => n.id === unlockId);
                     if (target) {
@@ -1068,6 +1072,28 @@
                         canvas.appendChild(line);
                     }
                 });
+
+                // Draw lines for prereqs (incoming connections)
+                if (node.prereqs && node.prereqs.length > 0) {
+                    node.prereqs.forEach(prereqId => {
+                        const source = nodes.find(n => n.id === prereqId);
+                        if (source) {
+                            const line = document.createElement("div");
+                            const dx = node.x + 70 - (source.x + 70);
+                            const dy = node.y - source.y;
+                            const length = Math.sqrt(dx * dx + dy * dy);
+                            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                            line.className = "line";
+                            line.setAttribute("data-from", source.id);
+                            line.setAttribute("data-to", node.id);
+                            line.style.width = `${length}px`;
+                            line.style.left = `${source.x + 70}px`;
+                            line.style.top = `${source.y + 20}px`;
+                            line.style.transform = `rotate(${angle}deg)`;
+                            canvas.appendChild(line);
+                        }
+                    });
+                }
             });
         }
 
@@ -1789,6 +1815,65 @@
                         clickTimer = null;
                         // Double click - follow link
                         window.location.href = 'differentialequations.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
+            // Add click handler for Statistics node
+            if (node.id === 'statistics') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'statistics.html';
                     } else {
                         // Single click - just select the node
                         clickTimer = setTimeout(() => {
