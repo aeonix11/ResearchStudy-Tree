@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algebra Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #info-panel {
+            width: 300px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #time-tracker {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+        }
+        #time-tracker h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #time-tracker p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        #canvas {
+            flex: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line {
+            position: relative;
+            z-index: 2;
+        }
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #A29BFE, #81ECEC);
+            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+        }
+        .node.tier-5 {
+            background: linear-gradient(135deg, #55EFC4, #00B894);
+            box-shadow: 0 4px 15px rgba(85, 239, 196, 0.4);
+        }
+        .node.tier-6 {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            box-shadow: 0 4px 15px rgba(255, 234, 167, 0.4);
+        }
+        .node.tier-7 {
+            background: linear-gradient(135deg, #FAB1A0, #E17055);
+            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
+        }
+        .node.tier-8 {
+            background: linear-gradient(135deg, #FF7675, #D63031);
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
+        }
+        .node.tier-9 {
+            background: linear-gradient(135deg, #81ECEC, #00CEC9);
+            box-shadow: 0 4px 15px rgba(129, 236, 236, 0.4);
+        }
+        .node.tier-10 {
+            background: linear-gradient(135deg, #A8E6CF, #1DE9B6);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+        .node.tier-11 {
+            background: linear-gradient(135deg, #B39DDB, #9575CD);
+            box-shadow: 0 4px 15px rgba(179, 157, 219, 0.4);
+        }
+        .node.tier-12 {
+            background: linear-gradient(135deg, #90CAF9, #42A5F5);
+            box-shadow: 0 4px 15px rgba(144, 202, 249, 0.4);
+        }
+        .node::before {
+            content: attr(data-progress) '%';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .node[data-progress]:not([data-progress="0"])::before {
+            opacity: 1;
+        }
+        .node.tier-1:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7676);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        .node.tier-2:hover {
+            background: linear-gradient(135deg, #3DBEB6, #34A8A0);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        .node.tier-3:hover {
+            background: linear-gradient(135deg, #34A8A0, #2B938B);
+            box-shadow: 0 6px 20px rgba(69, 183, 175, 0.6);
+        }
+        .node.tier-4:hover {
+            background: linear-gradient(135deg, #2B938B, #227E77);
+            box-shadow: 0 6px 20px rgba(60, 162, 154, 0.6);
+        }
+        .node.clickable {
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+        .node.clickable:hover {
+            transform: scale(1.1);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+        }
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        #back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        #back-button:hover {
+            background: #45a049;
+        }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s;
+        }
+        .status-not-started {
+            background-color: #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 2s infinite;
+        }
+        .status-completed {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        }
+        .status-finished {
+            background-color: #9C27B0;
+            box-shadow: 0 0 5px rgba(156, 39, 176, 0.7);
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+            50% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 193, 7, 0.7); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 0 0 5px 5px;
+        }
+        .progress-bar.in-progress {
+            background: linear-gradient(90deg, #FFC107, #FF9800);
+        }
+        .progress-bar.completed {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+        .progress-bar.not-started {
+            width: 0 !important;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+        .progress-summary {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="back-button" onclick="window.location.href='index.html'">← Back to Main Tree</button>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Algebra Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div style="flex-grow: 1;"></div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <script>
+        // Load saved progress from localStorage
+        let nodeProgress = {};
+        
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('algebraProgress');
+            if (savedProgress) {
+                nodeProgress = JSON.parse(savedProgress);
+            }
+        }
+        
+        function saveProgress() {
+            localStorage.setItem('algebraProgress', JSON.stringify(nodeProgress));
+            
+            // Calculate and save progress for the main page
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const progressPercentage = (finishedNodes / totalNodes) * 100;
+            
+            // Save progress to localStorage for the main page
+            localStorage.setItem('algebraMainProgress', progressPercentage.toString());
+        }
+        
+        function updateNodeStatus(nodeId, status) {
+            // Save to nodeProgress object
+            nodeProgress[nodeId] = status;
+            
+            // Save to localStorage with the correct key format
+            localStorage.setItem(`algebra_${nodeId}_progress`, status);
+            
+            // Update visual indicators
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const indicator = node.querySelector('.status-indicator');
+                const progressBar = node.querySelector('.progress-bar');
+                const tooltip = node.querySelector('.progress-tooltip');
+                
+                // Remove all status classes
+                indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                
+                // Add new status class
+                indicator.classList.add(`status-${status}`);
+                progressBar.classList.add(status);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+
+                // Update tooltip if it exists
+                if (tooltip) {
+                    tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+                }
+            }
+            
+            // Check if any algebra nodes are in progress or finished
+            const algebraNodes = Object.keys(localStorage)
+                .filter(key => key.startsWith('algebra_') && key.endsWith('_progress'))
+                .map(key => localStorage.getItem(key));
+            
+            const hasProgress = algebraNodes.some(nodeStatus => 
+                nodeStatus === 'in-progress' || nodeStatus === 'finished'
+            );
+            
+            // Update the parent node status in the main page
+            if (hasProgress) {
+                localStorage.setItem('algebra_progress', 'in-progress');
+            } else {
+                localStorage.setItem('algebra_progress', 'not-started');
+            }
+            
+            // Save overall progress
+            saveProgress();
+        }
+        
+        function getNodeStatus(nodeId) {
+            // First check if we have a saved status in localStorage
+            const savedStatus = localStorage.getItem(`algebra_${nodeId}_progress`);
+            if (savedStatus) {
+                return savedStatus;
+            }
+            
+            // If no saved status, check if the node has prerequisites
+            const node = nodes.find(n => n.id === nodeId);
+            if (node && node.prerequisites && node.prerequisites.length > 0) {
+                // If it has prerequisites, it starts as not-started
+                return 'not-started';
+            }
+            
+            // Default to not-started
+            return 'not-started';
+        }
+        
+        function updateProgressSummary() {
+            const totalNodes = Object.keys(nodeProgress).length;
+            const finishedNodes = Object.values(nodeProgress).filter(status => status === 'finished').length;
+            const inProgressNodes = Object.values(nodeProgress).filter(status => status === 'in-progress').length;
+            const notStartedNodes = Object.values(nodeProgress).filter(status => status === 'not-started').length;
+            
+            const progressSummary = document.getElementById('progress-summary');
+            if (progressSummary) {
+                progressSummary.innerHTML = `
+                    <div>Total Nodes: ${totalNodes}</div>
+                    <div>Finished: ${finishedNodes}</div>
+                    <div>In Progress: ${inProgressNodes}</div>
+                    <div>Not Started: ${notStartedNodes}</div>
+                    <div>Overall Progress: ${Math.round((finishedNodes / totalNodes) * 100)}%</div>
+                `;
+            }
+        }
+        
+        // Load progress when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            
+            // Create progress summary element
+            const progressSummary = document.createElement('div');
+            progressSummary.id = 'progress-summary';
+            progressSummary.className = 'progress-summary';
+            document.body.appendChild(progressSummary);
+            
+            // Update progress summary
+            updateProgressSummary();
+
+            // Initialize time tracking
+            let totalTime = parseInt(localStorage.getItem('algebraTotalTime') || '0');
+            let sessionStartTime = Date.now();
+            let lastUpdateTime = sessionStartTime;
+
+            // Update time displays
+            function updateTimeDisplays() {
+                const currentTime = Date.now();
+                const sessionTime = Math.floor((currentTime - sessionStartTime) / 60000);
+                document.getElementById('total-time').textContent = totalTime;
+                document.getElementById('session-time').textContent = sessionTime;
+            }
+
+            // Update time every minute
+            setInterval(() => {
+                const currentTime = Date.now();
+                const minutesSinceLastUpdate = Math.floor((currentTime - lastUpdateTime) / 60000);
+                
+                if (minutesSinceLastUpdate > 0) {
+                    totalTime += minutesSinceLastUpdate;
+                    localStorage.setItem('algebraTotalTime', totalTime.toString());
+                    lastUpdateTime = currentTime;
+                    updateTimeDisplays();
+                }
+            }, 60000);
+
+            // Initial time display update
+            updateTimeDisplays();
+        });
+
+        const nodes = [
+            // Parent Node: Differential Equations (Tier 1 - Root)
+            { id: "diff_equations", x: 500, y: 50, title: "Differential Equations", tooltip: "Differential Equations (DEs) model dynamic systems in robotics, from motion to heat transfer. This tree equips you to analyze drone stability, spiderbot leg vibrations, and Artemis' thermal dynamics. You'll progress from first-order DEs to advanced numerical methods. Prereqs: Calculus (derivatives, integrals). Unlocks: First-Order DEs, Second-Order DEs, Numerical Solutions for DEs. Projects: Drone (stability analysis), Spiderbot (vibration modeling), Artemis (thermal dynamics).", prereqs: ["calculus"], unlocks: ["first_order_des", "second_order_des", "numerical_solutions_des"], time: { estimated: "40-60 hrs", spent: "0 hrs" }, class: "tier-1" },
+
+            // Main Branches (Tier 2)
+            { id: "first_order_des", x: 400, y: 150, title: "First-Order DEs", tooltip: "Learn to solve first-order differential equations, which model simple dynamic systems in robotics. You'll analyze the exponential decay of a drone's battery voltage or the cooling of Artemis' motors. This node introduces basic solution techniques, setting the foundation for more complex DEs. Prereqs: Differential Equations (root node). Unlocks: Separable Equations, Linear First-Order DEs. Projects: Drone (battery decay), Artemis (motor cooling).", prereqs: ["diff_equations"], unlocks: ["separable_equations", "linear_first_order_des"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            { id: "second_order_des", x: 500, y: 150, title: "Second-Order DEs", tooltip: "Master second-order differential equations, which model oscillatory systems in robotics, such as spiderbot leg vibrations or a drone's response to turbulence. This node introduces techniques for solving linear second-order DEs, crucial for control and dynamics. Prereqs: Differential Equations (root node). Unlocks: Homogeneous Second-Order DEs, Nonhomogeneous Second-Order DEs. Projects: Spiderbot (leg vibrations), Drone (turbulence response).", prereqs: ["diff_equations"], unlocks: ["homogeneous_second_order_des", "nonhomogeneous_second_order_des"], time: { estimated: "8-10 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            { id: "numerical_solutions_des", x: 600, y: 150, title: "Numerical Solutions for DEs", tooltip: "Explore numerical methods to solve differential equations when analytical solutions are impractical. You'll use these to simulate a drone's flight path under varying conditions or Artemis' energy dynamics over time. This node introduces computational techniques for DEs in robotics. Prereqs: Differential Equations (root node). Unlocks: Euler's Method, Runge-Kutta Methods. Projects: Drone (flight simulation), Artemis (energy dynamics).", prereqs: ["diff_equations"], unlocks: ["eulers_method", "runge_kutta_methods"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            // First-Order DEs Branch (Tier 3)
+            { id: "separable_equations", x: 350, y: 250, title: "Separable Equations", tooltip: "Solve separable first-order DEs by separating variables, a technique used to model exponential growth or decay in robotics. You'll apply this to model the charging of a drone's battery or the decay of a spiderbot's motor heat. This node builds foundational skills for solving DEs. Prereqs: First-Order DEs (first-order basics). Unlocks: Applications of First-Order DEs. Projects: Drone (battery charging), Spiderbot (motor heat decay).", prereqs: ["first_order_des"], unlocks: ["applications_first_order_des"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "linear_first_order_des", x: 450, y: 250, title: "Linear First-Order DEs", tooltip: "Solve linear first-order DEs using integrating factors, useful for modeling linear systems in robotics. You'll use this to analyze the velocity of a drone under constant thrust or the rate of cooling in Artemis' chassis. This node introduces a key technique for linear DEs. Prereqs: First-Order DEs (first-order basics). Unlocks: Applications of First-Order DEs. Projects: Drone (velocity under thrust), Artemis (chassis cooling).", prereqs: ["first_order_des"], unlocks: ["applications_first_order_des"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // Second-Order DEs Branch (Tier 3)
+            { id: "homogeneous_second_order_des", x: 500, y: 250, title: "Homogeneous Second-Order DEs", tooltip: "Solve homogeneous second-order DEs, which model free oscillations in robotics systems. You'll apply this to analyze the natural vibrations of a spiderbot leg or the oscillatory motion of a drone in wind. This node introduces the characteristic equation method. Prereqs: Second-Order DEs (second-order basics). Unlocks: Damped Oscillations. Projects: Spiderbot (leg vibrations), Drone (wind oscillations).", prereqs: ["second_order_des"], unlocks: ["damped_oscillations"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "nonhomogeneous_second_order_des", x: 550, y: 250, title: "Nonhomogeneous Second-Order DEs", tooltip: "Solve nonhomogeneous second-order DEs using methods like undetermined coefficients, modeling forced oscillations in robotics. You'll use this to study a drone's response to external forces or Artemis' motor response to periodic inputs. This node builds on homogeneous solutions. Prereqs: Second-Order DEs (second-order basics). Unlocks: Forced Oscillations. Projects: Drone (external forces), Artemis (motor response).", prereqs: ["second_order_des"], unlocks: ["forced_oscillations"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // Numerical Solutions Branch (Tier 3)
+            { id: "eulers_method", x: 600, y: 250, title: "Euler's Method", tooltip: "Learn Euler's method, a simple numerical technique to approximate solutions to DEs. You'll use it to simulate the trajectory of a drone under varying wind conditions or the temperature change in Artemis' motors over time. This node introduces numerical solutions for DEs. Prereqs: Numerical Solutions for DEs (numerical basics). Unlocks: Numerical Stability Analysis. Projects: Drone (trajectory simulation), Artemis (temperature change).", prereqs: ["numerical_solutions_des"], unlocks: ["numerical_stability_analysis"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "runge_kutta_methods", x: 650, y: 250, title: "Runge-Kutta Methods", tooltip: "Explore Runge-Kutta methods, more accurate numerical techniques for solving DEs. You'll apply these to model the complex motion of a spiderbot leg or the energy dynamics of Artemis during a mission. This node enhances your numerical toolkit for robotics simulations. Prereqs: Numerical Solutions for DEs (numerical basics). Unlocks: Numerical Stability Analysis. Projects: Spiderbot (leg motion), Artemis (energy dynamics).", prereqs: ["numerical_solutions_des"], unlocks: ["numerical_stability_analysis"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // First-Order DEs Branch (Tier 4)
+            { id: "applications_first_order_des", x: 400, y: 350, title: "Applications of First-Order DEs", tooltip: "Apply first-order DEs to solve real-world robotics problems, such as modeling the exponential growth of a drone's altitude during ascent or the decay of heat in Artemis' components. This node bridges theory to practical applications in dynamic systems. Prereqs: Separable Equations, Linear First-Order DEs (first-order techniques). Unlocks: Systems of First-Order DEs. Projects: Drone (altitude growth), Artemis (heat decay).", prereqs: ["separable_equations", "linear_first_order_des"], unlocks: ["systems_first_order_des"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // Second-Order DEs Branch (Tier 4)
+            { id: "damped_oscillations", x: 500, y: 350, title: "Damped Oscillations", tooltip: "Model damped oscillations using homogeneous second-order DEs, critical for robotics stability. You'll analyze the damped motion of a spiderbot leg to reduce vibrations or a drone's stabilization system in turbulent air. This node introduces damping concepts in oscillatory systems. Prereqs: Homogeneous Second-Order DEs (homogeneous solutions). Unlocks: Control Systems with DEs. Projects: Spiderbot (vibration reduction), Drone (stabilization).", prereqs: ["homogeneous_second_order_des"], unlocks: ["control_systems_des"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "forced_oscillations", x: 550, y: 350, title: "Forced Oscillations", tooltip: "Study forced oscillations using nonhomogeneous second-order DEs, modeling systems under external periodic forces. You'll apply this to analyze a drone's response to wind gusts or Artemis' motor vibrations under periodic loads. This node connects DEs to forced dynamics in robotics. Prereqs: Nonhomogeneous Second-Order DEs (nonhomogeneous solutions). Unlocks: Resonance in Robotics. Projects: Drone (wind gust response), Artemis (motor vibrations).", prereqs: ["nonhomogeneous_second_order_des"], unlocks: ["resonance_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // Numerical Solutions Branch (Tier 4)
+            { id: "numerical_stability_analysis", x: 625, y: 350, title: "Numerical Stability Analysis", tooltip: "Analyze the stability and accuracy of numerical methods for solving DEs, ensuring reliable simulations in robotics. You'll assess the stability of Euler's or Runge-Kutta methods when simulating a drone's flight path or Artemis' energy consumption. This node ensures your numerical solutions are robust. Prereqs: Euler's Method, Runge-Kutta Methods (numerical methods). Unlocks: Advanced Numerical Methods. Projects: Drone (flight path stability), Artemis (energy simulation).", prereqs: ["eulers_method", "runge_kutta_methods"], unlocks: ["advanced_numerical_methods"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // First-Order DEs Branch (Tier 5)
+            { id: "systems_first_order_des", x: 400, y: 450, title: "Systems of First-Order DEs", tooltip: "Solve systems of first-order DEs, which model coupled dynamics in robotics, such as the interaction between a drone's altitude and speed or Artemis' power and temperature. You'll use matrix methods to solve these systems, preparing for advanced applications. Prereqs: Applications of First-Order DEs (first-order applications). Unlocks: Linear Systems in Robotics. Projects: Drone (altitude-speed dynamics), Artemis (power-temperature coupling).", prereqs: ["applications_first_order_des"], unlocks: ["linear_systems_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            // Second-Order DEs Branch (Tier 5)
+            { id: "control_systems_des", x: 500, y: 450, title: "Control Systems with DEs", tooltip: "Apply second-order DEs to design control systems, such as stabilizing a drone in turbulent conditions or ensuring smooth spiderbot leg motion. You'll model feedback loops using DEs, a key skill for robotics control. Prereqs: Damped Oscillations (damping basics). Unlocks: Laplace Transforms. Projects: Drone (turbulence stabilization), Spiderbot (leg motion control).", prereqs: ["damped_oscillations"], unlocks: ["laplace_transforms"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "resonance_robotics", x: 550, y: 450, title: "Resonance in Robotics", tooltip: "Study resonance in robotics systems using forced oscillations, identifying frequencies that amplify motion. You'll analyze resonance in a drone's frame to avoid structural failure or in Artemis' motors to optimize performance. This node connects DEs to resonance phenomena. Prereqs: Forced Oscillations (forced dynamics). Unlocks: None. Projects: Drone (frame resonance), Artemis (motor optimization).", prereqs: ["forced_oscillations"], unlocks: [], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            // Numerical Solutions Branch (Tier 5)
+            { id: "advanced_numerical_methods", x: 625, y: 450, title: "Advanced Numerical Methods", tooltip: "Explore advanced numerical methods like adaptive step-size Runge-Kutta for solving DEs with high accuracy. You'll use these to simulate complex spiderbot gait dynamics or Artemis' thermal behavior under varying conditions. This node enhances your simulation capabilities. Suggested resource: 'Numerical Methods for Engineers' course on Coursera. Prereqs: Numerical Stability Analysis (numerical stability). Unlocks: Simulation with DEs. Projects: Spiderbot (gait simulation), Artemis (thermal behavior).", prereqs: ["numerical_stability_analysis"], unlocks: ["simulation_des"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            // First-Order DEs Branch (Tier 6)
+            { id: "linear_systems_robotics", x: 400, y: 550, title: "Linear Systems in Robotics", tooltip: "Apply systems of first-order DEs to model linear dynamics in robotics, such as the coupled motion of a drone's propellers or Artemis' power distribution across components. This node uses linear algebra to solve systems, bridging DEs to robotics applications. Prereqs: Systems of First-Order DEs (systems basics). Unlocks: Nonlinear Systems. Projects: Drone (propeller dynamics), Artemis (power distribution).", prereqs: ["systems_first_order_des"], unlocks: ["nonlinear_systems"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            // Second-Order DEs Branch (Tier 6)
+            { id: "laplace_transforms", x: 500, y: 550, title: "Laplace Transforms", tooltip: "Use Laplace transforms to solve DEs, a powerful technique for control systems in robotics. You'll apply this to design a drone's feedback control system or stabilize spiderbot leg motion under varying loads. This node introduces transform methods for DEs. Suggested resource: 'Control Systems Engineering' book by Norman S. Nise. Prereqs: Control Systems with DEs (control basics). Unlocks: Transfer Functions in Robotics. Projects: Drone (feedback control), Spiderbot (leg stabilization).", prereqs: ["control_systems_des"], unlocks: ["transfer_functions_robotics"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            // Numerical Solutions Branch (Tier 6)
+            { id: "simulation_des", x: 625, y: 550, title: "Simulation with DEs", tooltip: "Use numerical solutions of DEs to simulate robotics systems, such as a drone's flight under turbulent conditions or Artemis' energy consumption during a mission. You'll apply advanced numerical methods to create accurate simulations. Prereqs: Advanced Numerical Methods (numerical methods). Unlocks: None. Projects: Drone (turbulence simulation), Artemis (energy simulation).", prereqs: ["advanced_numerical_methods"], unlocks: [], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            // First-Order DEs Branch (Tier 7)
+            { id: "nonlinear_systems", x: 400, y: 650, title: "Nonlinear Systems", tooltip: "Analyze nonlinear systems of DEs, which model complex dynamics in robotics, such as the nonlinear motion of a spiderbot on uneven terrain or a drone's behavior under sudden gusts. You'll explore techniques like linearization to handle these systems. Prereqs: Linear Systems in Robotics (linear systems). Unlocks: Chaos in Robotics. Projects: Spiderbot (terrain navigation), Drone (gust response).", prereqs: ["linear_systems_robotics"], unlocks: ["chaos_robotics"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            // Second-Order DEs Branch (Tier 7)
+            { id: "transfer_functions_robotics", x: 500, y: 650, title: "Transfer Functions in Robotics", tooltip: "Apply transfer functions derived from Laplace transforms to analyze and design robotics control systems. You'll use this to optimize a drone's stability in flight or ensure smooth operation of Artemis' motors. This node connects DEs to control theory. Prereqs: Laplace Transforms (transform methods). Unlocks: State-Space Models. Projects: Drone (flight stability), Artemis (motor operation).", prereqs: ["laplace_transforms"], unlocks: ["state_space_models"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            // First-Order DEs Branch (Tier 8)
+            { id: "chaos_robotics", x: 400, y: 750, title: "Chaos in Robotics", tooltip: "Explore chaotic dynamics in nonlinear systems, which can arise in robotics under certain conditions, such as unpredictable drone behavior in extreme turbulence. You'll study chaos theory to understand and mitigate these effects. Suggested resource: 'Nonlinear Dynamics and Chaos' course on edX. Prereqs: Nonlinear Systems (nonlinear basics). Unlocks: None. Projects: Drone (turbulence chaos).", prereqs: ["nonlinear_systems"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-8" },
+
+            // Second-Order DEs Branch (Tier 8)
+            { id: "state_space_models", x: 500, y: 750, title: "State-Space Models", tooltip: "Use state-space models to represent systems of DEs, a modern approach for robotics control. You'll model the multi-variable dynamics of a spiderbot's legs or Artemis' hybrid systems, enabling advanced control design. This node bridges DEs to state-space control. Prereqs: Transfer Functions in Robotics (transfer functions). Unlocks: Partial Differential Equations. Projects: Spiderbot (leg dynamics), Artemis (hybrid systems).", prereqs: ["transfer_functions_robotics"], unlocks: ["partial_differential_equations"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-8" },
+
+            // Advanced DEs Branch (Tier 9)
+            { id: "partial_differential_equations", x: 500, y: 850, title: "Partial Differential Equations", tooltip: "Solve partial differential equations (PDEs) to model complex phenomena in robotics, such as heat distribution in Artemis' motors or airflow over a drone's wings. This advanced node introduces PDEs for robotics applications, completing your DE journey. Suggested resource: 'Partial Differential Equations' course on edX. Prereqs: State-Space Models (advanced DEs). Unlocks: None. Projects: Artemis (heat distribution), Drone (airflow modeling).", prereqs: ["state_space_models"], unlocks: [], time: { estimated: "8-10 hrs", spent: "0 hrs" }, class: "tier-9" }
+        ];
+
+        const canvas = document.getElementById("canvas");
+        const infoTitle = document.getElementById("info-title");
+        const infoContent = document.getElementById("info-content");
+        const infoPanel = document.getElementById("info-panel");
+
+        // Add collision detection and resolution
+        function checkCollision(node1, node2) {
+            const padding = 20; // Minimum space between nodes
+            return !(node1.x + 140 + padding < node2.x || 
+                    node1.x > node2.x + 140 + padding || 
+                    node1.y + 40 + padding < node2.y || 
+                    node1.y > node2.y + 40 + padding);
+        }
+
+        function resolveCollisions() {
+            let hasCollision = true;
+            let iterations = 0;
+            const maxIterations = 100; // Prevent infinite loops
+            
+            while (hasCollision && iterations < maxIterations) {
+                hasCollision = false;
+                iterations++;
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (checkCollision(nodes[i], nodes[j])) {
+                            hasCollision = true;
+                            
+                            // Calculate the direction to move nodes apart
+                            const dx = nodes[j].x - nodes[i].x;
+                            const dy = nodes[j].y - nodes[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance === 0) {
+                                // If nodes are exactly on top of each other, move them apart randomly
+                                nodes[i].x -= 50;
+                                nodes[j].x += 50;
+                            } else {
+                                // Move nodes apart along their center line
+                                const moveX = (dx / distance) * 25;
+                                const moveY = (dy / distance) * 25;
+                                
+                                nodes[i].x -= moveX;
+                                nodes[i].y -= moveY;
+                                nodes[j].x += moveX;
+                                nodes[j].y += moveY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Function to increase spacing between nodes
+        function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
+            // Add offset to move everything right of info panel
+            const infoPanelOffset = 450; // Increased from 400 to 450 for more space
+            
+            // Find the minimum x and y to maintain relative positioning
+            const minX = Math.min(...nodes.map(node => node.x));
+            const minY = Math.min(...nodes.map(node => node.y));
+            
+            // Apply spacing to each node
+            nodes.forEach(node => {
+                // Calculate new position relative to minimum values
+                const relativeX = node.x - minX;
+                const relativeY = node.y - minY;
+                
+                // Apply spacing factors and restore offset with additional right shift
+                node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
+                node.y = minY + (relativeY * verticalFactor);
+                
+                // Ensure no node is positioned behind the sidebar
+                if (node.x < 350) { // 300px sidebar width + 50px buffer
+                    node.x = 350;
+                }
+            });
+
+            // Resolve any collisions after spacing
+            resolveCollisions();
+        }
+
+        // Apply increased spacing and resolve collisions
+        increaseSpacing(2.2, 2.0);
+
+        // Draw lines between nodes
+        function drawLines() {
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+        }
+
+        // Create nodes
+        nodes.forEach(node => {
+            const div = document.createElement('div');
+            div.className = 'node';
+            div.id = node.id;
+            div.style.left = `${node.x}px`;
+            div.style.top = `${node.y}px`;
+            div.innerHTML = node.title;
+            
+            // Add tier class based on y position
+            const tier = Math.floor((node.y - 50) / 200) + 1;
+            div.classList.add(`tier-${tier}`);
+            
+            // Add status indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'status-indicator';
+            const status = getNodeStatus(node.id);
+            indicator.classList.add(`status-${status}`);
+            
+            // Add progress bar
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.classList.add(status);
+            
+            // Set progress bar width based on status
+            if (status === 'in-progress') {
+                progressBar.style.width = '50%';
+            } else if (status === 'finished') {
+                progressBar.style.width = '100%';
+            } else {
+                progressBar.style.width = '0%';
+            }
+            
+            // Add progress tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'progress-tooltip';
+            tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            // Add click handler for status indicator
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent node click event
+                
+                const currentStatus = getNodeStatus(node.id);
+                let newStatus;
+                
+                // Cycle through statuses
+                if (currentStatus === 'not-started') {
+                    newStatus = 'in-progress';
+                } else if (currentStatus === 'in-progress') {
+                    newStatus = 'finished';
+                } else if (currentStatus === 'finished') {
+                    newStatus = 'not-started';
+                }
+                
+                updateNodeStatus(node.id, newStatus);
+                
+                // Update tooltip
+                tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
+            });
+            
+            // Show tooltip on hover
+            indicator.addEventListener('mouseenter', (e) => {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+                document.body.appendChild(tooltip);
+            });
+            
+            indicator.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY + 10}px`;
+            });
+            
+            indicator.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            });
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
+
+            // Add event listeners for highlighting connections
+            div.addEventListener('mouseenter', () => {
+                // Set selected node
+                selectedNodeId = node.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            });
+
+            div.addEventListener('mouseleave', () => {
+                // Clear selected node
+                selectedNodeId = null;
+                
+                // Remove highlight from all lines
+                document.querySelectorAll('.line.highlight').forEach(line => {
+                    line.classList.remove('highlight');
+                });
+                
+                // Reset info panel
+                infoTitle.textContent = "Algebra Tech Tree Information";
+                infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+                
+                // Reset time info
+                document.getElementById('estimated-time').textContent = "-";
+                document.getElementById('time-spent').textContent = "0 hrs";
+            });
+
+            canvas.appendChild(div);
+        });
+
+        // Draw lines after creating nodes
+        drawLines();
+
+        function updateNodeProgress() {
+            // Get progress for each node from nodeProgress object
+            nodes.forEach(node => {
+                const status = getNodeStatus(node.id);
+                const nodeElement = document.getElementById(node.id);
+                if (nodeElement) {
+                    const indicator = nodeElement.querySelector('.status-indicator');
+                    const progressBar = nodeElement.querySelector('.progress-bar');
+                    
+                    if (indicator && progressBar) {
+                        // Remove all status classes
+                        indicator.classList.remove('status-not-started', 'status-in-progress', 'status-finished');
+                        progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                        
+                        // Add current status class
+                        indicator.classList.add(`status-${status}`);
+                        progressBar.classList.add(status);
+                        
+                        // Set progress bar width based on status
+                        if (status === 'in-progress') {
+                            progressBar.style.width = '50%';
+                        } else if (status === 'finished') {
+                            progressBar.style.width = '100%';
+                        } else {
+                            progressBar.style.width = '0%';
+                        }
+                    }
+                }
+            });
+            
+            // Update progress summary
+            updateProgressSummary();
+        }
+
+        // Add click handler for nodes to update progress
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            nodes.forEach(node => {
+                if (Math.abs(node.x - x) < 30 && Math.abs(node.y - y) < 30) {
+                    const currentStatus = getNodeStatus(node.id);
+                    let newStatus;
+                    
+                    // Cycle through statuses
+                    if (currentStatus === 'not-started') {
+                        newStatus = 'in-progress';
+                    } else if (currentStatus === 'in-progress') {
+                        newStatus = 'finished';
+                    } else if (currentStatus === 'finished') {
+                        newStatus = 'not-started';
+                    }
+                    
+                    updateNodeStatus(node.id, newStatus);
+                }
+            });
+        });
+
+        // Call updateNodeProgress when the page loads
+        window.addEventListener('load', updateNodeProgress);
+        
+        // Export progress data
+        document.getElementById('export-button').addEventListener('click', () => {
+            // Collect all progress data
+            const progressData = {
+                algebraProgress: localStorage.getItem('algebraProgress') || '0',
+                algebraNodes: {}
+            };
+            
+            // Get all algebra node progress
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                    const nodeId = key.replace('algebra_', '').replace('_progress', '');
+                    progressData.algebraNodes[nodeId] = localStorage.getItem(key);
+                }
+            }
+            
+            // Create and download the file
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'algebra-progress.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Import progress data
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Clear existing algebra progress data
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('algebra_') && key.endsWith('_progress')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Restore algebra progress data
+                    if (progressData.algebraProgress) {
+                        localStorage.setItem('algebraProgress', progressData.algebraProgress);
+                    }
+                    
+                    // Restore algebra node progress
+                    if (progressData.algebraNodes) {
+                        Object.entries(progressData.algebraNodes).forEach(([nodeId, progress]) => {
+                            localStorage.setItem(`algebra_${nodeId}_progress`, progress);
+                        });
+                    }
+                    
+                    // Update the UI
+                    updateNodeProgress();
+                    
+                    // Show success message
+                    alert('Algebra progress data imported successfully!');
+                } catch (error) {
+                    console.error('Error importing progress data:', error);
+                    alert('Error importing progress data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Time tracking variables
+        let totalTimeSpent = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let selectedNodeId = null;  // Track currently selected node
+
+        // Format time for display
+        function formatTime(hours) {
+            if (hours === 0) return '0 hrs';
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            if (minutes === 0) return `${wholeHours} hrs`;
+            return `${wholeHours} hrs ${minutes} mins`;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            if (selectedNodeId) {
+                document.getElementById('time-spent').textContent = formatTime(totalTimeSpent);
+            }
+        }
+
+        // Add time manually
+        function addTime(hours) {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent += hours;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Reset time tracking
+        function resetTime() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            totalTimeSpent = 0;
+            updateTimeDisplay();
+            saveTime();
+        }
+
+        // Start/Stop timer
+        function toggleTimer() {
+            if (!selectedNodeId) {
+                alert('Please select a node first by hovering over it');
+                return;
+            }
+            
+            const timerButton = document.getElementById('start-timer');
+            const activeTimer = document.getElementById('active-timer');
+            
+            if (!startTime) {
+                // Start timer
+                startTime = new Date();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                timerButton.textContent = 'Stop Timer';
+                activeTimer.style.display = 'block';
+            } else {
+                // Stop timer
+                const endTime = new Date();
+                const elapsedHours = (endTime - startTime) / (1000 * 60 * 60);
+                totalTimeSpent += elapsedHours;
+                
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                
+                timerButton.textContent = 'Start Timer';
+                activeTimer.style.display = 'none';
+                document.getElementById('timer-display').textContent = '00:00:00';
+                
+                updateTimeDisplay();
+                saveTime();
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            if (!startTime) return;
+            
+            const currentTime = new Date();
+            const elapsedMs = currentTime - startTime;
+            const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsedMs % (1000 * 60)) / 1000);
+            
+            document.getElementById('timer-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Save time to localStorage
+        function saveTime() {
+            if (selectedNodeId) {
+                localStorage.setItem(`algebra_${selectedNodeId}_total_time`, totalTimeSpent.toString());
+            }
+        }
+
+        // Load time from localStorage
+        function loadTime() {
+            if (selectedNodeId) {
+                const savedTime = localStorage.getItem(`algebra_${selectedNodeId}_total_time`);
+                if (savedTime) {
+                    totalTimeSpent = parseFloat(savedTime);
+                } else {
+                    totalTimeSpent = 0;
+                }
+                updateTimeDisplay();
+            }
+        }
+
+        // Event listeners for time tracking
+        document.getElementById('add-time').addEventListener('click', () => {
+            const timeInput = document.getElementById('hours-input');
+            const hours = parseFloat(timeInput.value);
+            if (!isNaN(hours) && hours > 0) {
+                addTime(hours);
+                timeInput.value = '';
+            }
+        });
+
+        document.getElementById('reset-time').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the time tracking?')) {
+                resetTime();
+            }
+        });
+
+        document.getElementById('start-timer').addEventListener('click', toggleTimer);
+
+        // Initialize time tracking
+        loadTime();
+    </script>
+</body>
+</html> 
