@@ -859,11 +859,11 @@
     { id: "spatial_dynamics", x: 500, y: 150, title: "Spatial Dynamics", tooltip: "Positioning and motion geometry for robotics. Prereqs: Geometry. Unlocks: Spatial Reasoning (detailed tree). Projects: Drone, Spiderbot, Artemis", prereqs: ["geometry"], unlocks: ["spatial_reasoning"], time: { estimated: "15-20 hrs", spent: "0 hrs" }, class: "tier-1" },
     { id: "applied_geometry", x: 650, y: 150, title: "Applied Geometry", tooltip: "Advanced geometry for mechatronics systems. Prereqs: Geometry. Unlocks: Angles and Trigonometry, Advanced Applications (detailed tree). Projects: Artemis, Military Tech", prereqs: ["geometry"], unlocks: ["angles_trigonometry", "advanced_applications"], time: { estimated: "20-25 hrs", spent: "0 hrs" }, class: "tier-1" },
 
-    { id: "trigonometry", x: 700, y: 50, title: "Trigonometry", tooltip: "Angles and ratios. Prereqs: Algebra, Geometry. Unlocks: Calculus, Kinematics. Projects: Spiderbot, Artemis", prereqs: ["algebra", "geometry"], unlocks: ["calculus", "kinematics"], time: { estimated: "20-30 hrs", spent: "0 hrs" } },
-    { id: "trig_functions", x: 620, y: 150, title: "Trig Functions", tooltip: "Sine, cosine, tangent. Prereqs: Geometry. Unlocks: Trigonometry. Projects: All", prereqs: ["geometry"], unlocks: ["trigonometry"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-    { id: "trig_identities", x: 700, y: 150, title: "Trig Identities", tooltip: "Simplifying expressions. Prereqs: Trig Functions. Unlocks: Trigonometry. Projects: All", prereqs: ["trig_functions"], unlocks: ["trigonometry"], time: { estimated: "5-10 hrs", spent: "0 hrs" } },
-    { id: "unit_circle", x: 780, y: 150, title: "Unit Circle", tooltip: "Angle relationships. Prereqs: Trig Functions. Unlocks: Trigonometry. Projects: All", prereqs: ["trig_functions"], unlocks: ["trigonometry"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
-
+    { id: "trigonometry", x: 700, y: 50, title: "Trigonometry", tooltip: "Angles and ratios. Prereqs: Algebra, Geometry. Unlocks: Calculus, Kinematics, Core Trigonometry, Robotics Motion with Trig, Advanced Trig Applications. Projects: Spiderbot, Artemis", prereqs: ["algebra", "geometry"], unlocks: ["calculus", "kinematics", "core_trigonometry", "robotics_motion_trig", "advanced_trig_applications"], time: { estimated: "20-30 hrs", spent: "0 hrs" } },
+    { id: "core_trigonometry", x: 620, y: 150, title: "Core Trigonometry", tooltip: "Build a foundation in trigonometry with functions, identities, and angle relationships. Prereqs: Algebra, Geometry. Unlocks: Robotics Motion with Trig, Kinematics, Basic Trigonometric Functions, Angle Relationships (detailed tree). Projects: Drone, Spiderbot", prereqs: ["algebra", "geometry"], unlocks: ["robotics_motion_trig", "kinematics", "basic_trig_functions", "angle_relationships"], time: { estimated: "10-15 hrs", spent: "0 hrs" }, class: "tier-1" },
+    { id: "robotics_motion_trig", x: 700, y: 150, title: "Robotics Motion with Trig", tooltip: "Apply trigonometry to model motion and kinematics in robotics systems. Prereqs: Core Trigonometry, Mechanics. Unlocks: Kinematics, Control Systems (PID), Robotics (ROS), Trigonometric Applications, Angular Motion in Robotics (detailed tree). Projects: Drone, Spiderbot, Artemis", prereqs: ["core_trigonometry", "mechanics"], unlocks: ["kinematics", "control_systems_pid", "robotics_ros", "trigonometric_applications", "angular_motion_robotics"], time: { estimated: "15-20 hrs", spent: "0 hrs" }, class: "tier-1" },
+    { id: "advanced_trig_applications", x: 780, y: 150, title: "Advanced Trig Applications", tooltip: "Explore advanced trig for signal processing and navigation in robotics. Prereqs: Robotics Motion with Trig, Programming (Python). Unlocks: Simulation (MATLAB), Military Tech, AI & Machine Learning, Fourier Series for Robotics, Polar Coordinates and Trig (detailed tree). Projects: Artemis, Military Tech", prereqs: ["robotics_motion_trig", "programming_python"], unlocks: ["simulation", "military_tech", "ai_ml", "fourier_series_robotics", "polar_coordinates_trig"], time: { estimated: "10-15 hrs", spent: "0 hrs" }, class: "tier-1" },
+    
     { id: "calculus", x: 900, y: 50, title: "Calculus", tooltip: "Rates of change. Prereqs: Algebra, Trigonometry. Unlocks: Differential Equations, Dynamics. Projects: Drone, Artemis", prereqs: ["algebra", "trigonometry"], unlocks: ["diff_equations", "dynamics"], time: { estimated: "25-40 hrs", spent: "0 hrs" } },
     { id: "limits", x: 820, y: 150, title: "Limits", tooltip: "Approaching values. Prereqs: Algebra. Unlocks: Calculus. Projects: All", prereqs: ["algebra"], unlocks: ["calculus"], time: { estimated: "5-8 hrs", spent: "0 hrs" } },
     { id: "derivatives", x: 900, y: 150, title: "Derivatives", tooltip: "Rate of change. Prereqs: Limits. Unlocks: Calculus. Projects: All", prereqs: ["limits"], unlocks: ["calculus"], time: { estimated: "8-12 hrs", spent: "0 hrs" } },
@@ -1612,6 +1612,65 @@
                         clickTimer = null;
                         // Double click - follow link
                         window.location.href = 'geometry.html';
+                    } else {
+                        // Single click - just select the node
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                        }, 300);
+                    }
+                });
+            }
+
+            // Add click handler for Trigonometry node
+            if (node.id === 'trigonometry') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                let clickTimer = null;
+                
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked node
+                    div.classList.add('selected');
+                    
+                    // Set selected node
+                    selectedNodeId = node.id;
+                    
+                    // Load saved time for this node
+                    loadTime();
+                    
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    
+                    // Store the current node ID for time tracking
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    
+                    // Store the current node ID for timer
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - follow link
+                        window.location.href = 'trigonometry.html';
                     } else {
                         // Single click - just select the node
                         clickTimer = setTimeout(() => {

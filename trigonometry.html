@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trigonometry Tech Tree</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow: auto;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #info-panel {
+            width: 300px;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        #info-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        #time-info {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        #time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .time-button:hover {
+            background: #45a049;
+        }
+        .time-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        #canvas {
+            flex: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #fff;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #canvas::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .node, .line {
+            position: relative;
+            z-index: 2;
+        }
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #A29BFE, #81ECEC);
+            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+        }
+        .node.tier-5 {
+            background: linear-gradient(135deg, #55EFC4, #00B894);
+            box-shadow: 0 4px 15px rgba(85, 239, 196, 0.4);
+        }
+        .node.tier-6 {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            box-shadow: 0 4px 15px rgba(255, 234, 167, 0.4);
+        }
+        .node.tier-7 {
+            background: linear-gradient(135deg, #FAB1A0, #E17055);
+            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
+        }
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            z-index: 3;
+        }
+        .status-not-started {
+            background-color: #ccc;
+        }
+        .status-in-progress {
+            background-color: #FFC107;
+            animation: pulse 2s infinite;
+        }
+        .status-finished {
+            background-color: #4CAF50;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        .progress-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+        }
+        .storage-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .storage-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .storage-button:hover {
+            background: #45a049;
+        }
+        #file-input {
+            display: none;
+        }
+        #back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        #back-button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <button id="back-button" onclick="window.location.href='index.html'">← Back to Main Tree</button>
+    <div class="storage-controls">
+        <button id="export-button" class="storage-button">Export Progress</button>
+        <label for="file-input" class="storage-button">Import Progress</label>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+    <div class="container">
+        <div id="info-panel">
+            <div id="info-title">Trigonometry Tech Tree Information</div>
+            <div id="info-content">Hover over a node to see detailed information about that technology.</div>
+            <div style="flex-grow: 1;"></div>
+            <div id="time-info">
+                <div>Estimated Time: <span id="estimated-time">-</span> Hours</div>
+                <div>Time Spent: <span id="time-spent">0 hrs</span></div>
+                <div id="time-controls">
+                    <input type="number" id="hours-input" class="time-input" placeholder="Enter hours" min="0" step="0.5">
+                    <button id="add-time" class="time-button">Add Time</button>
+                    <button id="reset-time" class="time-button">Reset Time</button>
+                    <button id="start-timer" class="time-button">Start Timer</button>
+                    <div id="active-timer" style="display: none;">
+                        <div>Active Timer: <span id="timer-display">00:00:00</span></div>
+                        <button id="stop-timer" class="time-button">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+    <script>
+        const nodes = [
+            // Parent Node: Trigonometry (Tier 1 - Root)
+            { id: "trigonometry", x: 500, y: 50, title: "Trigonometry", tooltip: "Trigonometry is the study of angles and their relationships, a cornerstone for robotics motion and design. This tree equips you with tools to calculate drone flight angles, model spiderbot leg movements, and analyze Artemis' sensor trajectories. You'll progress from basic angle measurements to advanced applications like signal processing for periodic motion. Prereqs: Geometry (spatial understanding), Measuring Angles (angle basics). Unlocks: Basic Trigonometric Functions, Angle Relationships. Projects: Drone (flight dynamics), Spiderbot (gait planning), Artemis (sensor angles).", prereqs: ["geometry", "measuring_angles"], unlocks: ["basic_trig_functions", "angle_relationships"], time: { estimated: "35-50 hrs", spent: "0 hrs" }, class: "tier-1" },
+
+            // Main Branches (Tier 2)
+            { id: "basic_trig_functions", x: 400, y: 150, title: "Basic Trigonometric Functions", tooltip: "Learn the core trigonometric functions—sine, cosine, and tangent—and their definitions using right triangles. You'll use these to calculate the angle of a drone's ascent for optimal lift or the tilt of a spiderbot leg for balanced walking. This node introduces the unit circle and radian measure, setting the foundation for all trig applications in robotics. Prereqs: Trigonometry (root node). Unlocks: Right Triangle Trigonometry, Unit Circle Basics. Projects: Drone (ascent angles), Spiderbot (leg tilt).", prereqs: ["trigonometry"], unlocks: ["right_triangle_trig", "unit_circle_basics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            { id: "angle_relationships", x: 600, y: 150, title: "Angle Relationships", tooltip: "Dive into angle relationships like complementary, supplementary, and vertical angles, which are essential for ensuring stable designs in robotics. You'll apply these to align drone components for optimal performance or design spiderbot leg joints for stability during motion. This node builds on your Geometry skills, preparing you for more complex trigonometric relationships. Prereqs: Trigonometry (root node). Unlocks: Trigonometric Identities, Trigonometric Applications. Projects: Spiderbot (joint stability), Drone (component alignment).", prereqs: ["trigonometry"], unlocks: ["trig_identities", "trigonometric_applications"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-2" },
+
+            // Basic Trigonometric Functions Branch (Tier 3)
+            { id: "right_triangle_trig", x: 350, y: 250, title: "Right Triangle Trigonometry", tooltip: "Apply sine, cosine, and tangent to solve right triangle problems, a key skill for robotics design. You'll calculate the height a drone needs to reach a target altitude or the angle of a spiderbot leg to maintain balance on uneven terrain. This node focuses on practical problem-solving with right triangles. Prereqs: Basic Trigonometric Functions (core trig). Unlocks: Solving Right Triangles. Projects: Drone (altitude calculations), Spiderbot (leg angles).", prereqs: ["basic_trig_functions"], unlocks: ["solving_right_triangles"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "unit_circle_basics", x: 450, y: 250, title: "Unit Circle Basics", tooltip: "Understand the unit circle, a powerful tool for defining trig functions beyond right triangles. You'll use it to determine the sine and cosine of angles for drone propeller rotations or Artemis' sensor sweeps. This node introduces radians and key angle values (e.g., 30°, 45°, 60°), essential for advanced trig applications. Prereqs: Basic Trigonometric Functions (core trig). Unlocks: Radians and Degrees, Trigonometric Graphs. Projects: Drone (propeller motion), Artemis (sensor sweeps).", prereqs: ["basic_trig_functions"], unlocks: ["radians_degrees", "trig_graphs"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // Angle Relationships Branch (Tier 3)
+            { id: "trig_identities", x: 550, y: 250, title: "Trigonometric Identities", tooltip: "Learn fundamental trigonometric identities like Pythagorean, reciprocal, and quotient identities, which simplify complex trig expressions. You'll use these to optimize calculations for drone flight paths or spiderbot gait cycles, making your computations more efficient. This node is crucial for simplifying equations in robotics motion planning. Prereqs: Angle Relationships (angle basics). Unlocks: Sum and Difference Identities. Projects: Drone (flight path optimization), Spiderbot (gait efficiency).", prereqs: ["angle_relationships"], unlocks: ["sum_difference_identities"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            { id: "trigonometric_applications", x: 650, y: 250, title: "Trigonometric Applications", tooltip: "Apply trig functions to real-world robotics problems, such as calculating angles and distances. You'll determine the angle of a drone's ascent for optimal lift or the angle of a spiderbot leg for balanced walking. This node bridges basic trig with practical applications, preparing you for advanced motion analysis. Prereqs: Angle Relationships (angle basics). Unlocks: Inverse Trigonometry, Intro to Signals and Waves. Projects: Drone (ascent angles), Spiderbot (leg motion).", prereqs: ["angle_relationships"], unlocks: ["inverse_trig", "intro_signals_waves"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-3" },
+
+            // Basic Trigonometric Functions Branch (Tier 4)
+            { id: "solving_right_triangles", x: 350, y: 350, title: "Solving Right Triangles", tooltip: "Master solving right triangles by finding missing sides and angles using trig functions. You'll calculate the distance a drone needs to travel at a specific angle to reach a target or the height of a spiderbot leg for stability. This node builds problem-solving skills for real-world robotics scenarios. Prereqs: Right Triangle Trigonometry (right triangle basics). Unlocks: Law of Sines and Cosines. Projects: Drone (target distance), Spiderbot (leg height).", prereqs: ["right_triangle_trig"], unlocks: ["law_sines_cosines"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "radians_degrees", x: 400, y: 350, title: "Radians and Degrees", tooltip: "Learn to convert between radians and degrees, a critical skill for robotics programming and motion planning. You'll convert drone propeller angles from degrees to radians for control algorithms or calculate Artemis' sensor rotation in radians for precise positioning. This node ensures you're comfortable with both units of angle measurement. Prereqs: Unit Circle Basics (unit circle intro). Unlocks: Angular Motion in Robotics. Projects: Drone (propeller control), Artemis (sensor positioning).", prereqs: ["unit_circle_basics"], unlocks: ["angular_motion_robotics"], time: { estimated: "2-3 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "trig_graphs", x: 450, y: 350, title: "Trigonometric Graphs", tooltip: "Explore the graphs of sine, cosine, and tangent functions, understanding their amplitude, period, and phase shifts. You'll use this to model periodic motion, like the oscillation of a drone in windy conditions or the cyclic gait of a spiderbot. This node introduces visualization of trig functions, key for signal analysis in robotics. Prereqs: Unit Circle Basics (unit circle intro). Unlocks: Periodic Motion Analysis. Projects: Drone (oscillation modeling), Spiderbot (gait cycles).", prereqs: ["unit_circle_basics"], unlocks: ["periodic_motion_analysis"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // Angle Relationships Branch (Tier 4)
+            { id: "sum_difference_identities", x: 550, y: 350, title: "Sum and Difference Identities", tooltip: "Master sum and difference identities (e.g., sin(A ± B), cos(A ± B)) to simplify angle calculations in robotics. You'll use these to compute the resultant angle of a drone's tilt during a turn or the combined motion of spiderbot legs in a coordinated gait. This node enhances your ability to handle complex angle relationships. Prereqs: Trigonometric Identities (core identities). Unlocks: Double and Half Angle Identities. Projects: Drone (tilt calculations), Spiderbot (gait coordination).", prereqs: ["trig_identities"], unlocks: ["double_half_angle_identities"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "inverse_trig", x: 600, y: 350, title: "Inverse Trigonometry", tooltip: "Learn to use inverse trigonometric functions (arcsine, arccos, arctan) to find unknown angles in your designs. You'll calculate the angle of a spiderbot leg to achieve a specific height or the tilt of a drone during a turn. This node enhances your ability to solve for angles in complex motion scenarios, completing your trig foundation. Prereqs: Trigonometric Applications (trig basics). Unlocks: Solving Trig Equations. Projects: Spiderbot (leg angles), Drone (flight tilt).", prereqs: ["trigonometric_applications"], unlocks: ["solving_trig_equations"], time: { estimated: "3-5 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            { id: "intro_signals_waves", x: 650, y: 350, title: "Intro to Signals and Waves", tooltip: "Get introduced to the basics of signals and waves, focusing on periodic patterns relevant to robotics. You'll learn how to identify periodic motion in spiderbot gait cycles or drone sensor data, setting the stage for advanced signal processing techniques like Fourier series. This node bridges trigonometry with signal analysis. Suggested resource: 'Signals and Systems' course on edX. Prereqs: Trigonometric Applications (trig basics). Unlocks: Fourier Series for Robotics. Projects: Spiderbot (gait analysis), Drone (sensor data).", prereqs: ["trigonometric_applications"], unlocks: ["fourier_series_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-4" },
+
+            // Basic Trigonometric Functions Branch (Tier 5)
+            { id: "law_sines_cosines", x: 350, y: 450, title: "Law of Sines and Cosines", tooltip: "Apply the Law of Sines and Cosines to solve non-right triangles, a useful skill for complex robotics designs. You'll use these laws to calculate angles and distances in a triangular drone frame for stability or a spiderbot leg assembly for balance. This node extends your triangle-solving skills beyond right triangles. Prereqs: Solving Right Triangles (triangle solving). Unlocks: Triangle Applications in Robotics. Projects: Drone (frame stability), Spiderbot (leg assembly).", prereqs: ["solving_right_triangles"], unlocks: ["triangle_applications_robotics"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "angular_motion_robotics", x: 400, y: 450, title: "Angular Motion in Robotics", tooltip: "Understand angular motion using trigonometry, focusing on rotational speed and acceleration in robotics. You'll calculate the angular velocity of a drone propeller for flight control or Artemis' sensor rotation for scanning. This node applies radian-based trig to real-world motion, bridging geometry and physics. Prereqs: Radians and Degrees (angle conversion). Unlocks: Kinematics with Trigonometry. Projects: Drone (propeller speed), Artemis (sensor rotation).", prereqs: ["radians_degrees"], unlocks: ["kinematics_trig"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "periodic_motion_analysis", x: 450, y: 450, title: "Periodic Motion Analysis", tooltip: "Analyze periodic motion using trig graphs, such as oscillations in a drone's flight path or the cyclic motion of a spiderbot's legs. You'll learn to adjust amplitude and frequency to optimize performance, a key skill for motion smoothing in robotics. This node connects trig visualization to practical robotics applications. Prereqs: Trigonometric Graphs (trig visualization). Unlocks: Waveform Analysis in Robotics. Projects: Drone (flight oscillations), Spiderbot (leg cycles).", prereqs: ["trig_graphs"], unlocks: ["waveform_analysis_robotics"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            // Angle Relationships Branch (Tier 5)
+            { id: "double_half_angle_identities", x: 550, y: 450, title: "Double and Half Angle Identities", tooltip: "Learn double and half angle identities (e.g., sin(2A), cos(A/2)) to simplify complex trig calculations in robotics. You'll use these to compute precise angles for drone maneuvers or spiderbot leg adjustments, especially in scenarios requiring halved or doubled motion cycles. This node enhances your efficiency in angle computations. Prereqs: Sum and Difference Identities (angle identities). Unlocks: Advanced Trig Identities. Projects: Drone (maneuver angles), Spiderbot (leg adjustments).", prereqs: ["sum_difference_identities"], unlocks: ["advanced_trig_identities"], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "solving_trig_equations", x: 600, y: 450, title: "Solving Trigonometric Equations", tooltip: "Solve trigonometric equations to find unknown angles or variables in robotics scenarios. You'll solve equations to determine the exact angle a drone needs to tilt to maintain stability in wind or the timing of a spiderbot's leg motion for synchronization. This node builds your problem-solving skills for dynamic systems. Prereqs: Inverse Trigonometry (inverse trig). Unlocks: Trig in Dynamic Systems. Projects: Drone (stability angles), Spiderbot (motion timing).", prereqs: ["inverse_trig"], unlocks: ["trig_dynamic_systems"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            { id: "fourier_series_robotics", x: 650, y: 450, title: "Fourier Series for Robotics", tooltip: "Apply Fourier series to decompose periodic motion into sine and cosine components, a powerful technique for robotics. You'll analyze the cyclic gait of a spiderbot or the periodic sensor data from a drone, optimizing performance through signal decomposition. This node connects trig to advanced signal processing. Suggested resource: 'Fourier Series' tutorials on Brilliant.org. Prereqs: Intro to Signals and Waves (signal basics). Unlocks: Signal Processing with Trigonometry. Projects: Spiderbot (gait optimization), Drone (sensor data).", prereqs: ["intro_signals_waves"], unlocks: ["signal_processing_trig"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-5" },
+
+            // Basic Trigonometric Functions Branch (Tier 6)
+            { id: "triangle_applications_robotics", x: 350, y: 550, title: "Triangle Applications in Robotics", tooltip: "Use triangle laws (Sines, Cosines) to solve complex robotics problems involving non-right triangles. You'll calculate the angles of a triangular drone frame for aerodynamic stability or the geometry of a spiderbot leg assembly for balanced walking. This node applies triangle-solving skills to practical robotics design challenges. Prereqs: Law of Sines and Cosines (triangle laws). Unlocks: None. Projects: Drone (frame aerodynamics), Spiderbot (leg geometry).", prereqs: ["law_sines_cosines"], unlocks: [], time: { estimated: "4-6 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            { id: "kinematics_trig", x: 400, y: 550, title: "Kinematics with Trigonometry", tooltip: "Apply trigonometry to kinematics, modeling the motion of robotic systems. You'll use trig to calculate the angular acceleration of a drone propeller during takeoff or the motion path of a spiderbot leg during a step. This node bridges trig with physics, enabling precise motion planning in robotics. Prereqs: Angular Motion in Robotics (angular motion). Unlocks: Motion Planning with Trigonometry. Projects: Drone (propeller acceleration), Spiderbot (leg motion).", prereqs: ["angular_motion_robotics"], unlocks: ["motion_planning_trig"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            { id: "waveform_analysis_robotics", x: 450, y: 550, title: "Waveform Analysis in Robotics", tooltip: "Analyze waveforms using trig, focusing on periodic signals in robotics systems. You'll study the waveform of a drone's altitude sensor to detect patterns or optimize the cyclic motion of Artemis' sensors for better scanning. This node enhances your ability to interpret and manipulate periodic data in robotics. Prereqs: Periodic Motion Analysis (periodic motion). Unlocks: Advanced Signal Analysis. Projects: Drone (altitude patterns), Artemis (sensor optimization).", prereqs: ["periodic_motion_analysis"], unlocks: ["advanced_signal_analysis"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            // Angle Relationships Branch (Tier 6)
+            { id: "advanced_trig_identities", x: 550, y: 550, title: "Advanced Trigonometric Identities", tooltip: "Explore advanced trig identities like product-to-sum and sum-to-product identities, which simplify complex calculations in robotics. You'll use these to streamline angle computations for drone flight trajectories or spiderbot leg synchronization, making your motion planning more efficient. This node completes your mastery of trig identities. Prereqs: Double and Half Angle Identities (angle identities). Unlocks: Polar Coordinates and Trigonometry. Projects: Drone (trajectories), Spiderbot (leg synchronization).", prereqs: ["double_half_angle_identities"], unlocks: ["polar_coordinates_trig"], time: { estimated: "5-7 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            { id: "trig_dynamic_systems", x: 600, y: 550, title: "Trigonometry in Dynamic Systems", tooltip: "Use trigonometry to model dynamic systems, such as oscillations and vibrations in robotics. You'll solve trig equations to stabilize a drone in turbulent conditions or synchronize the motion of spiderbot legs for smooth walking. This node applies trig to real-time control and dynamics in robotic systems. Prereqs: Solving Trigonometric Equations (trig equations). Unlocks: Control Systems with Trigonometry. Projects: Drone (turbulence stability), Spiderbot (motion synchronization).", prereqs: ["solving_trig_equations"], unlocks: ["control_systems_trig"], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            { id: "signal_processing_trig", x: 650, y: 550, title: "Signal Processing with Trigonometry", tooltip: "Leverage trigonometry for signal processing, using Fourier series to analyze and optimize signals in robotics. You'll process sensor data from Artemis to improve scanning accuracy or optimize spiderbot gait cycles for energy efficiency. This node connects trig to advanced robotics applications in signal analysis. Prereqs: Fourier Series for Robotics (Fourier basics). Unlocks: None. Projects: Artemis (sensor accuracy), Spiderbot (gait efficiency).", prereqs: ["fourier_series_robotics"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-6" },
+
+            // Basic Trigonometric Functions Branch (Tier 7)
+            { id: "motion_planning_trig", x: 400, y: 650, title: "Motion Planning with Trigonometry", tooltip: "Apply trigonometry to advanced motion planning, designing precise trajectories for robotic systems. You'll plan a drone's flight path with smooth turns or a spiderbot's leg motion for complex terrain navigation. This node integrates trig with kinematics for high-level robotics applications. Prereqs: Kinematics with Trigonometry (kinematics basics). Unlocks: None. Projects: Drone (flight path planning), Spiderbot (terrain navigation).", prereqs: ["kinematics_trig"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            { id: "advanced_signal_analysis", x: 450, y: 650, title: "Advanced Signal Analysis", tooltip: "Dive deeper into signal analysis using trigonometry, focusing on advanced techniques for robotics. You'll analyze complex waveforms from drone sensors to detect anomalies or optimize Artemis' periodic scans for better performance. This node completes your signal analysis skills, preparing you for cutting-edge robotics applications. Suggested resource: 'Digital Signal Processing' course on Coursera. Prereqs: Waveform Analysis in Robotics (waveform basics). Unlocks: None. Projects: Drone (sensor anomaly detection), Artemis (scan optimization).", prereqs: ["waveform_analysis_robotics"], unlocks: [], time: { estimated: "8-10 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            // Angle Relationships Branch (Tier 7)
+            { id: "polar_coordinates_trig", x: 550, y: 650, title: "Polar Coordinates and Trigonometry", tooltip: "Explore polar coordinates and their relationship with trigonometry, a useful framework for robotics navigation. You'll use polar coordinates to model a drone's circular flight path for surveillance or Artemis' radial sensor scans for 360-degree coverage. This node introduces a new perspective on trig for advanced applications. Prereqs: Advanced Trigonometric Identities (trig identities). Unlocks: None. Projects: Drone (circular paths), Artemis (radial scans).", prereqs: ["advanced_trig_identities"], unlocks: [], time: { estimated: "6-8 hrs", spent: "0 hrs" }, class: "tier-7" },
+
+            { id: "control_systems_trig", x: 600, y: 650, title: "Control Systems with Trigonometry", tooltip: "Apply trigonometry to control systems, designing feedback loops for robotic stability. You'll use trig to fine-tune a drone's response to wind disturbances or ensure spiderbot legs move in harmony for smooth walking. This node integrates trig with control theory, a key skill for advanced robotics engineering. Prereqs: Trigonometry in Dynamic Systems (dynamic systems). Unlocks: None. Projects: Drone (wind response), Spiderbot (leg harmony).", prereqs: ["trig_dynamic_systems"], unlocks: [], time: { estimated: "8-10 hrs", spent: "0 hrs" }, class: "tier-7" }
+        ];
+
+        let timeSpent = 0;
+        let timerInterval;
+        let startTime;
+
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('trigonometryProgress');
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                nodes.forEach(node => {
+                    if (progress[node.id]) {
+                        node.status = progress[node.id].status;
+                        node.progress = progress[node.id].progress;
+                    }
+                });
+                timeSpent = progress.timeSpent || 0;
+                updateTimeDisplay();
+            }
+        }
+
+        function saveProgress() {
+            const progress = {};
+            nodes.forEach(node => {
+                progress[node.id] = {
+                    status: node.status,
+                    progress: node.progress
+                };
+            });
+            progress.timeSpent = timeSpent;
+            localStorage.setItem('trigonometryProgress', JSON.stringify(progress));
+        }
+
+        function updateNodeStatus(nodeId, status) {
+            const node = nodes.find(n => n.id === nodeId);
+            if (node) {
+                node.status = status;
+                node.progress = status === 'finished' ? 100 : (status === 'in-progress' ? 50 : 0);
+                updateNodeVisuals(nodeId);
+                saveProgress();
+            }
+        }
+
+        function updateNodeVisuals(nodeId) {
+            const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+            if (nodeElement) {
+                const node = nodes.find(n => n.id === nodeId);
+                const statusIndicator = nodeElement.querySelector('.status-indicator');
+                const progressBar = nodeElement.querySelector('.progress-bar');
+                
+                statusIndicator.className = 'status-indicator status-' + (node.status || 'not-started');
+                progressBar.style.width = `${node.progress || 0}%`;
+            }
+        }
+
+        function updateTimeDisplay() {
+            document.getElementById('time-spent').textContent = `${timeSpent.toFixed(1)} hrs`;
+            
+            // Calculate total estimated time from all nodes
+            const totalEstimated = nodes.reduce((sum, node) => {
+                // Extract the first number from the estimated time string (e.g., "5-7 hrs" -> 5)
+                const estimatedTimeStr = node.time.estimated;
+                const match = estimatedTimeStr.match(/(\d+)/);
+                if (match) {
+                    return sum + parseInt(match[1]);
+                }
+                return sum;
+            }, 0);
+            
+            document.getElementById('estimated-time').textContent = totalEstimated.toFixed(1);
+        }
+
+        function addTime(hours) {
+            timeSpent += parseFloat(hours);
+            updateTimeDisplay();
+            saveProgress();
+        }
+
+        function resetTime() {
+            timeSpent = 0;
+            updateTimeDisplay();
+            saveProgress();
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / (1000 * 60 * 60);
+                document.getElementById('timer-display').textContent = 
+                    new Date(elapsed * 3600000).toISOString().substr(11, 8);
+            }, 1000);
+            document.getElementById('start-timer').style.display = 'none';
+            document.getElementById('active-timer').style.display = 'block';
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            const elapsed = (Date.now() - startTime) / (1000 * 60 * 60);
+            timeSpent += elapsed;
+            updateTimeDisplay();
+            saveProgress();
+            document.getElementById('start-timer').style.display = 'block';
+            document.getElementById('active-timer').style.display = 'none';
+        }
+
+        function exportProgress() {
+            const progress = {
+                nodes: nodes.map(node => ({
+                    id: node.id,
+                    status: node.status,
+                    progress: node.progress
+                })),
+                timeSpent: timeSpent
+            };
+            const blob = new Blob([JSON.stringify(progress, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'trigonometry-progress.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importProgress(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const progress = JSON.parse(e.target.result);
+                    progress.nodes.forEach(importedNode => {
+                        const node = nodes.find(n => n.id === importedNode.id);
+                        if (node) {
+                            node.status = importedNode.status;
+                            node.progress = importedNode.progress;
+                            updateNodeVisuals(node.id);
+                        }
+                    });
+                    timeSpent = progress.timeSpent || 0;
+                    updateTimeDisplay();
+                    saveProgress();
+                } catch (error) {
+                    alert('Error importing progress: Invalid file format');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+            
+            // Initialize canvas and create nodes
+            const canvas = document.getElementById("canvas");
+            const infoTitle = document.getElementById("info-title");
+            const infoContent = document.getElementById("info-content");
+            const infoPanel = document.getElementById("info-panel");
+
+            // Add collision detection and resolution
+            function checkCollision(node1, node2) {
+                const padding = 20; // Minimum space between nodes
+                return !(node1.x + 140 + padding < node2.x || 
+                        node1.x > node2.x + 140 + padding || 
+                        node1.y + 40 + padding < node2.y || 
+                        node1.y > node2.y + 40 + padding);
+            }
+
+            function resolveCollisions() {
+                let hasCollision = true;
+                let iterations = 0;
+                const maxIterations = 100; // Prevent infinite loops
+                
+                while (hasCollision && iterations < maxIterations) {
+                    hasCollision = false;
+                    iterations++;
+                    
+                    for (let i = 0; i < nodes.length; i++) {
+                        for (let j = i + 1; j < nodes.length; j++) {
+                            if (checkCollision(nodes[i], nodes[j])) {
+                                hasCollision = true;
+                                
+                                // Calculate the direction to move nodes apart
+                                const dx = nodes[j].x - nodes[i].x;
+                                const dy = nodes[j].y - nodes[i].y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                
+                                if (distance === 0) {
+                                    // If nodes are exactly on top of each other, move them apart randomly
+                                    nodes[i].x -= 50;
+                                    nodes[j].x += 50;
+                                } else {
+                                    // Move nodes apart along their center line
+                                    const moveX = (dx / distance) * 25;
+                                    const moveY = (dy / distance) * 25;
+                                    
+                                    nodes[i].x -= moveX;
+                                    nodes[i].y -= moveY;
+                                    nodes[j].x += moveX;
+                                    nodes[j].y += moveY;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Function to ensure nodes are not behind the sidebar
+            function ensureNodesNotBehindSidebar() {
+                const sidebarWidth = 300; // Width of the info panel
+                const buffer = 50; // Additional buffer space
+                const minX = sidebarWidth + buffer; // Minimum x position for any node
+                
+                // Find the minimum x position of all nodes
+                const minNodeX = Math.min(...nodes.map(node => node.x));
+                
+                // If any node is behind the sidebar, shift all nodes to the right
+                if (minNodeX < minX) {
+                    const shiftAmount = minX - minNodeX;
+                    nodes.forEach(node => {
+                        node.x += shiftAmount;
+                    });
+                }
+            }
+
+            // Function to increase spacing between nodes
+            function increaseSpacing(horizontalFactor = 2.0, verticalFactor = 2.0) {
+                // Add offset to move everything right of info panel
+                const infoPanelOffset = 450; // Increased from 400 to 450 for more space
+                
+                // Find the minimum x and y to maintain relative positioning
+                const minX = Math.min(...nodes.map(node => node.x));
+                const minY = Math.min(...nodes.map(node => node.y));
+                
+                // Apply spacing to each node
+                nodes.forEach(node => {
+                    // Calculate new position relative to minimum values
+                    const relativeX = node.x - minX;
+                    const relativeY = node.y - minY;
+                    
+                    // Apply spacing factors and restore offset with additional right shift
+                    node.x = minX + (relativeX * horizontalFactor) + infoPanelOffset;
+                    node.y = minY + (relativeY * verticalFactor);
+                });
+
+                // Ensure no nodes are behind the sidebar
+                ensureNodesNotBehindSidebar();
+                
+                // Resolve any collisions after spacing
+                resolveCollisions();
+                
+                // Final check to ensure no nodes are overlapping
+                ensureNoOverlap();
+            }
+            
+            // Function to ensure no nodes are overlapping after all positioning
+            function ensureNoOverlap() {
+                // Sort nodes by x position to handle left-to-right
+                const sortedNodes = [...nodes].sort((a, b) => a.x - b.x);
+                
+                for (let i = 0; i < sortedNodes.length; i++) {
+                    for (let j = i + 1; j < sortedNodes.length; j++) {
+                        if (checkCollision(sortedNodes[i], sortedNodes[j])) {
+                            // Move the right node further right
+                            sortedNodes[j].x += 60;
+                        }
+                    }
+                }
+            }
+
+            // Apply increased spacing
+            increaseSpacing(2.2, 2.0);
+
+            // Create nodes
+            nodes.forEach(node => {
+                const div = document.createElement('div');
+                div.className = 'node';
+                div.id = node.id;
+                div.setAttribute('data-node-id', node.id);
+                div.style.left = `${node.x}px`;
+                div.style.top = `${node.y}px`;
+                div.innerHTML = node.title;
+                
+                // Add tier class based on y position
+                const tier = Math.floor((node.y - 50) / 200) + 1;
+                div.classList.add(`tier-${tier}`);
+                
+                // Add status indicator
+                const indicator = document.createElement('div');
+                indicator.className = 'status-indicator';
+                const status = node.status || 'not-started';
+                indicator.classList.add(`status-${status}`);
+                
+                // Add progress bar
+                const progressBar = document.createElement('div');
+                progressBar.className = 'progress-bar';
+                progressBar.classList.add(status);
+                
+                // Set progress bar width based on status
+                if (status === 'in-progress') {
+                    progressBar.style.width = '50%';
+                } else if (status === 'finished') {
+                    progressBar.style.width = '100%';
+                } else {
+                    progressBar.style.width = '0%';
+                }
+                
+                // Add progress tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'progress-tooltip';
+                tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+                
+                // Add click handler for status indicator
+                indicator.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const currentStatus = node.status || 'not-started';
+                    let newStatus;
+                    
+                    if (currentStatus === 'not-started') {
+                        newStatus = 'in-progress';
+                    } else if (currentStatus === 'in-progress') {
+                        newStatus = 'finished';
+                    } else {
+                        newStatus = 'not-started';
+                    }
+                    
+                    updateNodeStatus(node.id, newStatus);
+                });
+                
+                // Add hover handlers for the entire node
+                div.addEventListener('mouseenter', () => {
+                    // Highlight outgoing connections
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    // Highlight incoming connections
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    
+                    // Update info panel
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    
+                    // Update time info
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = formatTime(timeSpent);
+                });
+                
+                div.addEventListener('mouseleave', () => {
+                    // Remove highlight from all lines
+                    document.querySelectorAll('.line.highlight').forEach(line => {
+                        line.classList.remove('highlight');
+                    });
+                    
+                    // Reset info panel
+                    infoTitle.textContent = "Trigonometry Tech Tree Information";
+                    infoContent.textContent = "Hover over a node to see detailed information about that technology.";
+                    
+                    // Reset time info
+                    document.getElementById('estimated-time').textContent = "-";
+                    document.getElementById('time-spent').textContent = "0 hrs";
+                });
+                
+                // Add elements to node
+                div.appendChild(indicator);
+                div.appendChild(progressBar);
+                div.appendChild(tooltip);
+                
+                // Add node to canvas
+                canvas.appendChild(div);
+            });
+
+            // Draw lines between nodes
+            nodes.forEach(node => {
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 70 - (node.x + 70);
+                        const dy = target.y - node.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 70}px`;
+                        line.style.top = `${node.y + 20}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        canvas.appendChild(line);
+                    }
+                });
+            });
+            
+            document.getElementById('add-time').addEventListener('click', () => {
+                const hours = document.getElementById('hours-input').value;
+                if (hours && !isNaN(hours)) {
+                    addTime(hours);
+                    document.getElementById('hours-input').value = '';
+                }
+            });
+
+            document.getElementById('reset-time').addEventListener('click', resetTime);
+            document.getElementById('start-timer').addEventListener('click', startTimer);
+            document.getElementById('stop-timer').addEventListener('click', stopTimer);
+            document.getElementById('export-button').addEventListener('click', exportProgress);
+            document.getElementById('file-input').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    importProgress(e.target.files[0]);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
