@@ -995,6 +995,8 @@
     
     // Statistics Node
     { id: "statistics", x: 1300, y: 50, title: "Statistics", tooltip: "Data analysis and visualization. Track your progress and analyze your learning journey. Prereqs: Arithmetic, Algebra, Programming (Python). Unlocks: None. Projects: All. Tip: Use this to monitor your progress!", prereqs: ["arithmetic", "algebra", "programming_python"], unlocks: [], class: "tier-1", time: { estimated: "5-10 hrs", spent: "0 hrs" } },
+
+    // Robotics Node
     ];
 
         const canvas = document.getElementById("canvas");
@@ -1492,12 +1494,39 @@
                     // Reset time info to default state
                     document.getElementById('estimated-time').textContent = "-";
                     document.getElementById('time-spent').textContent = "0 hrs";
-                    
-                    // Reset visual feedback
-                    div.style.transform = '';
-                    div.style.boxShadow = '';
                 }
             });
+
+            // Add click handler for Robotics (ROS) node
+            if (node.id === 'robotics_ros') {
+                div.style.cursor = 'pointer';
+                div.classList.add('clickable');
+                div.addEventListener('click', (e) => {
+                    // Clear selected class from all nodes
+                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                        selectedNode.classList.remove('selected');
+                    });
+                    div.classList.add('selected');
+                    selectedNodeId = node.id;
+                    loadTime();
+                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                        line.classList.add('highlight');
+                    });
+                    infoTitle.textContent = node.title;
+                    infoContent.textContent = node.tooltip;
+                    document.getElementById('estimated-time').textContent = node.time.estimated;
+                    document.getElementById('time-spent').textContent = node.time.spent;
+                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+                    if (e.detail === 2) {
+                        window.location.href = 'robotics.html';
+                    }
+                });
+            }
 
             // Add click handler for Arithmetic node
             if (node.id === 'arithmetic') {
@@ -1914,65 +1943,6 @@
 
             // Add click handler for Differential Equations node
             if (node.id === 'diff_equations') {
-                div.style.cursor = 'pointer';
-                div.classList.add('clickable');
-                let clickTimer = null;
-                
-                div.addEventListener('click', (e) => {
-                    // Clear selected class from all nodes
-                    document.querySelectorAll('.node.selected').forEach(selectedNode => {
-                        selectedNode.classList.remove('selected');
-                    });
-                    
-                    // Add selected class to clicked node
-                    div.classList.add('selected');
-                    
-                    // Set selected node
-                    selectedNodeId = node.id;
-                    
-                    // Load saved time for this node
-                    loadTime();
-                    
-                    // Highlight outgoing connections
-                    document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
-                        line.classList.add('highlight');
-                    });
-                    // Highlight incoming connections
-                    document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
-                        line.classList.add('highlight');
-                    });
-                    
-                    // Update info panel
-                    infoTitle.textContent = node.title;
-                    infoContent.textContent = node.tooltip;
-                    
-                    // Update time info
-                    document.getElementById('estimated-time').textContent = node.time.estimated;
-                    document.getElementById('time-spent').textContent = node.time.spent;
-                    
-                    // Store the current node ID for time tracking
-                    document.getElementById('add-time').setAttribute('data-node-id', node.id);
-                    document.getElementById('reset-time').setAttribute('data-node-id', node.id);
-                    
-                    // Store the current node ID for timer
-                    document.getElementById('start-timer').setAttribute('data-node-id', node.id);
-
-                    if (clickTimer) {
-                        clearTimeout(clickTimer);
-                        clickTimer = null;
-                        // Double click - follow link
-                        window.location.href = 'differentialequations.html';
-                    } else {
-                        // Single click - just select the node
-                        clickTimer = setTimeout(() => {
-                            clickTimer = null;
-                        }, 300);
-                    }
-                });
-            }
-
-            // Add click handler for Statistics node
-            if (node.id === 'statistics') {
                 div.style.cursor = 'pointer';
                 div.classList.add('clickable');
                 let clickTimer = null;
@@ -3043,6 +3013,108 @@
 
                 if (e.detail === 2) {
                     window.location.href = 'droneengineering.html';
+                }
+            });
+        }
+
+        // Add click handler for Robotics node
+        if (node.id === 'robotics') {
+            div.style.cursor = 'pointer';
+            div.classList.add('clickable');
+            
+            div.addEventListener('click', (e) => {
+                // Clear selected class from all nodes
+                document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                    selectedNode.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked node
+                div.classList.add('selected');
+                
+                // Set selected node
+                selectedNodeId = node.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = node.time.spent;
+                
+                // Store the current node ID for time tracking
+                document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                
+                // Store the current node ID for timer
+                document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+                
+                // Handle double click to navigate to robotics.html
+                if (e.detail === 2) {
+                    window.location.href = 'robotics.html';
+                }
+            });
+        }
+
+        // Add click handler for Robotics (ROS) node
+        if (node.id === 'robotics_ros') {
+            div.style.cursor = 'pointer';
+            div.classList.add('clickable');
+            
+            div.addEventListener('click', (e) => {
+                // Clear selected class from all nodes
+                document.querySelectorAll('.node.selected').forEach(selectedNode => {
+                    selectedNode.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked node
+                div.classList.add('selected');
+                
+                // Set selected node
+                selectedNodeId = node.id;
+                
+                // Load saved time for this node
+                loadTime();
+                
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${node.id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                
+                // Update info panel
+                infoTitle.textContent = node.title;
+                infoContent.textContent = node.tooltip;
+                
+                // Update time info
+                document.getElementById('estimated-time').textContent = node.time.estimated;
+                document.getElementById('time-spent').textContent = node.time.spent;
+                
+                // Store the current node ID for time tracking
+                document.getElementById('add-time').setAttribute('data-node-id', node.id);
+                document.getElementById('reset-time').setAttribute('data-node-id', node.id);
+                
+                // Store the current node ID for timer
+                document.getElementById('start-timer').setAttribute('data-node-id', node.id);
+
+                if (e.detail === 2) {
+                    // Double click - follow link
+                    window.location.href = 'robotics.html';
                 }
             });
         }
