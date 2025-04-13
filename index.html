@@ -387,8 +387,28 @@
             left: 0;
             height: 4px;
             background: linear-gradient(90deg, #4CAF50, #8BC34A);
-            transition: width 0.3s;
+            transition: width 0.3s ease-out;
             border-radius: 0 0 5px 5px;
+            overflow: hidden;
+        }
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         .progress-bar.in-progress {
             background: linear-gradient(90deg, #FFC107, #FF9800);
@@ -398,6 +418,19 @@
         }
         .progress-bar.not-started {
             width: 0 !important;
+        }
+        .progress-percentage {
+            position: absolute;
+            bottom: -18px;
+            left: 0;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        .node:hover .progress-percentage {
+            opacity: 1;
         }
         .progress-tooltip {
             position: absolute;
@@ -687,40 +720,39 @@
         }
         
         function calculateSubpageProgress(nodeId) {
-            // For nodes with subpages (arithmetic, algebra)
-            if (nodeId === 'arithmetic' || nodeId === 'algebra') {
-                const subpageId = nodeId === 'arithmetic' ? 'arithmetic' : 'algebra';
-                const subpageProgress = localStorage.getItem(`${subpageId}Progress`);
-                
-                if (subpageProgress) {
+            // Get the progress data from localStorage
+            const subpageProgress = localStorage.getItem(`${nodeId}Progress`);
+            if (subpageProgress) {
+                try {
                     const progress = JSON.parse(subpageProgress);
                     const totalNodes = Object.keys(progress).length;
                     const completedNodes = Object.values(progress).filter(status => status === 'finished').length;
+                    const progressPercentage = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
                     
-                    return totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
+                    // Save the calculated progress
+                    localStorage.setItem(`${nodeId}MainProgress`, progressPercentage.toString());
+                    return progressPercentage;
+                } catch (e) {
+                    console.error(`Error calculating progress for ${nodeId}:`, e);
+                    return 0;
                 }
             }
             return 0;
+            
         }
-        
-        function updateSubpageProgress(nodeId, progress) {
-            if (nodeId === 'arithmetic' || nodeId === 'algebra') {
-                localStorage.setItem(`${nodeId}Progress`, JSON.stringify(progress));
+
+        function updateMainNodeProgress(nodeId) {
+            const mainNode = document.querySelector(`.node[data-id="${nodeId}"]`);
+            if (mainNode) {
+                const progressBar = mainNode.querySelector('.progress-bar');
+                const percentageIndicator = mainNode.querySelector('.progress-percentage');
+                const progress = calculateSubpageProgress(nodeId);
                 
-                // Update the main node's progress bar
-                const node = document.getElementById(nodeId);
-                if (node) {
-                    const progressBar = node.querySelector('.progress-bar');
+                if (progressBar) {
                     progressBar.style.width = `${progress}%`;
-                    
-                    // Update status based on progress
-                    if (progress === 0) {
-                        updateNodeStatus(nodeId, 'not-started');
-                    } else if (progress === 100) {
-                        updateNodeStatus(nodeId, 'finished');
-                    } else {
-                        updateNodeStatus(nodeId, 'in-progress');
-                    }
+                }
+                if (percentageIndicator) {
+                    percentageIndicator.textContent = `${Math.round(progress)}%`;
                 }
             }
         }
@@ -1236,21 +1268,58 @@
             // Add progress bar
             const progressBar = document.createElement('div');
             progressBar.className = 'progress-bar';
-            progressBar.classList.add(status);
             
-            // Set progress bar width based on status
-            if (status === 'in-progress') {
-                progressBar.style.width = '50%';
-            } else if (status === 'finished') {
-                progressBar.style.width = '100%';
+            // Calculate progress percentage
+            let progressPercentage = 0;
+            if (node.id === 'arithmetic' || node.id === 'algebra' || node.id === 'geometry') {
+                // For main nodes with subpages, calculate progress from subpage statuses
+                const subpageProgress = localStorage.getItem(`${node.id}Progress`);
+                if (subpageProgress) {
+                    try {
+                        const progress = JSON.parse(subpageProgress);
+                        const totalNodes = Object.keys(progress).length;
+                        const completedNodes = Object.values(progress).filter(status => status === 'finished').length;
+                        progressPercentage = totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
+                        
+                        // Save the calculated progress for this main node
+                        localStorage.setItem(`${node.id}MainProgress`, progressPercentage.toString());
+                    } catch (e) {
+                        console.error(`Error parsing progress for ${node.id}:`, e);
+                        progressPercentage = 0;
+                    }
+                }
             } else {
-                progressBar.style.width = '0%';
+                // For regular nodes, calculate based on status
+                if (status === 'in-progress') {
+                    progressPercentage = 50;
+                } else if (status === 'finished') {
+                    progressPercentage = 100;
+                }
             }
+            
+            // Set progress bar width and class based on percentage
+            progressBar.style.width = `${progressPercentage}%`;
+            if (progressPercentage === 0) {
+                progressBar.classList.add('not-started');
+            } else if (progressPercentage === 100) {
+                progressBar.classList.add('finished');
+            } else {
+                progressBar.classList.add('in-progress');
+            }
+            
+            // Add percentage indicator
+            const percentageIndicator = document.createElement('div');
+            percentageIndicator.className = 'progress-percentage';
+            percentageIndicator.textContent = `${Math.round(progressPercentage)}%`;
             
             // Add progress tooltip
             const tooltip = document.createElement('div');
             tooltip.className = 'progress-tooltip';
             tooltip.textContent = `Status: ${status.replace('-', ' ')}`;
+            
+            div.appendChild(indicator);
+            div.appendChild(progressBar);
+            div.appendChild(percentageIndicator);
             
             // Add click handler for status indicator
             indicator.addEventListener('click', (e) => {
@@ -1258,25 +1327,39 @@
                 
                 const currentStatus = getNodeStatus(node.id);
                 let newStatus;
-                
-                console.log(`Current status for ${node.id}:`, currentStatus);
-                console.log('Current nodeProgress:', nodeProgress);
+                let newProgress = 0;
                 
                 // Cycle through statuses: not-started -> in-progress -> finished -> not-started
                 if (currentStatus === 'not-started') {
                     newStatus = 'in-progress';
+                    newProgress = 50;
                 } else if (currentStatus === 'in-progress') {
                     newStatus = 'finished';
+                    newProgress = 100;
                 } else if (currentStatus === 'finished') {
                     newStatus = 'not-started';
+                    newProgress = 0;
                 } else {
                     newStatus = 'not-started';
+                    newProgress = 0;
                 }
-                
-                console.log(`Setting new status for ${node.id} to:`, newStatus);
                 
                 // Update the status
                 updateNodeStatus(node.id, newStatus);
+                
+                // Update progress bar
+                progressBar.style.width = `${newProgress}%`;
+                progressBar.classList.remove('not-started', 'in-progress', 'finished');
+                if (newProgress === 0) {
+                    progressBar.classList.add('not-started');
+                } else if (newProgress === 100) {
+                    progressBar.classList.add('finished');
+                } else {
+                    progressBar.classList.add('in-progress');
+                }
+                
+                // Update percentage indicator
+                percentageIndicator.textContent = `${newProgress}%`;
                 
                 // Update tooltip
                 tooltip.textContent = `Status: ${newStatus.replace('-', ' ')}`;
@@ -1304,6 +1387,7 @@
             
             div.appendChild(indicator);
             div.appendChild(progressBar);
+            div.appendChild(percentageIndicator);
 
             // Add event listeners for highlighting connections
             div.addEventListener('mouseenter', () => {
