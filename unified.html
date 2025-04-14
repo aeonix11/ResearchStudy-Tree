@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            height: 100%;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .node-list {
+            list-style: none;
+        }
+
+        .node-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #34495e;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .node-item:hover {
+            background-color: #3498db;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            position: relative;
+            overflow: auto;
+            background-image: url('wp3703442-iron-man-4k-wallpapers.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .main-content::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .node {
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .node.tier-1 {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .node.tier-2 {
+            background: linear-gradient(135deg, #4ECDC4, #45B7AF);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .node.tier-3 {
+            background: linear-gradient(135deg, #A29BFE, #81ECEC);
+            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+        }
+        .node.tier-4 {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+        }
+        .node.tier-5 {
+            background: linear-gradient(135deg, #55EFC4, #00B894);
+            box-shadow: 0 4px 15px rgba(85, 239, 196, 0.4);
+        }
+        .node.tier-6 {
+            background: linear-gradient(135deg, #FFEAA7, #FDCB6E);
+            box-shadow: 0 4px 15px rgba(255, 234, 167, 0.4);
+        }
+        .node.tier-7 {
+            background: linear-gradient(135deg, #FAB1A0, #E17055);
+            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
+        }
+        .node.tier-8 {
+            background: linear-gradient(135deg, #FF7675, #D63031);
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
+        }
+        .node.tier-9 {
+            background: linear-gradient(135deg, #81ECEC, #00CEC9);
+            box-shadow: 0 4px 15px rgba(129, 236, 236, 0.4);
+        }
+        .node.tier-10 {
+            background: linear-gradient(135deg, #A8E6CF, #1DE9B6);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+        .node.tier-11 {
+            background: linear-gradient(135deg, #B39DDB, #9575CD);
+            box-shadow: 0 4px 15px rgba(179, 157, 219, 0.4);
+        }
+        .node.tier-12 {
+            background: linear-gradient(135deg, #90CAF9, #42A5F5);
+            box-shadow: 0 4px 15px rgba(144, 202, 249, 0.4);
+        }
+
+        .node.tier-1:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7676);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        .node.tier-2:hover {
+            background: linear-gradient(135deg, #3DBEB6, #34A8A0);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        .node.tier-3:hover {
+            background: linear-gradient(135deg, #34A8A0, #2B938B);
+            box-shadow: 0 6px 20px rgba(69, 183, 175, 0.6);
+        }
+        .node.tier-4:hover {
+            background: linear-gradient(135deg, #2B938B, #227E77);
+            box-shadow: 0 6px 20px rgba(60, 162, 154, 0.6);
+        }
+
+        .node.selected {
+            transform: scale(1.05);
+            border: 3px solid #9370DB;
+            box-shadow: 0 0 20px #9370DB, 0 0 30px rgba(147, 112, 219, 0.8);
+            z-index: 3;
+        }
+
+        .node.clickable {
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
+        }
+
+        .line {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.3s;
+            z-index: 1;
+            opacity: 0.7;
+            background: linear-gradient(90deg, #00FF9D, #00B8FF);
+            height: 2px;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
+        }
+
+        .line.highlight {
+            opacity: 1;
+            height: 3px !important;
+            z-index: 1;
+            background: linear-gradient(90deg, #00CC7E, #00FF9D);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+
+        .delete-button {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 20px;
+            height: 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0;
+            z-index: 4;
+        }
+
+        .edit-button {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0;
+            z-index: 4;
+        }
+
+        .node:hover .delete-button,
+        .node:hover .edit-button,
+        .node.selected .delete-button,
+        .node.selected .edit-button {
+            display: block;
+        }
+
+        .delete-button:hover {
+            background-color: #c0392b;
+        }
+
+        .edit-button:hover {
+            background-color: #2980b9;
+        }
+
+        .confirmation-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            text-align: center;
+        }
+
+        .confirmation-dialog.visible {
+            display: block;
+        }
+
+        .confirmation-dialog-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .confirmation-dialog button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .confirm-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .cancel-delete {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .save-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+
+        .save-button:hover {
+            background-color: #27ae60;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .time-inputs input {
+            width: 50%;
+        }
+
+        .prereq-unlock-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .prereq-unlock-container .form-group {
+            flex: 1;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .tag {
+            background-color: #e0e0e0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tag button {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+        }
+
+        .add-tag-button {
+            background-color: #f0f0f0;
+            border: 1px dashed #ccc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .create-node-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .create-node-button:hover {
+            background-color: #2980b9;
+        }
+
+        .add-node-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+
+        .add-node-button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Node Creator</h2>
+    </div>
+    <div class="main-content" id="mainContent">
+        <!-- Nodes will be added here dynamically -->
+    </div>
+    <button class="save-button" id="saveButton">Save Nodes</button>
+    <button class="add-node-button" id="addNodeButton">Add Node</button>
+
+    <!-- Confirmation Dialog -->
+    <div class="confirmation-dialog" id="confirmationDialog">
+        <p>Are you sure you want to delete this node?</p>
+        <div class="confirmation-dialog-buttons">
+            <button class="confirm-delete" id="confirmDelete">Delete</button>
+            <button class="cancel-delete" id="cancelDelete">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Node Creator Modal -->
+    <div class="modal" id="nodeCreatorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Node</h2>
+                <button class="close-button" id="closeModal">&times;</button>
+            </div>
+            <form id="nodeForm">
+                <div class="form-group">
+                    <label for="nodeId">ID:</label>
+                    <input type="text" id="nodeId" required placeholder="Enter node ID">
+                </div>
+                <div class="form-group">
+                    <label for="nodeTitle">Title:</label>
+                    <input type="text" id="nodeTitle" required placeholder="Enter node title">
+                </div>
+                <div class="form-group">
+                    <label for="nodeTooltip">Tooltip:</label>
+                    <textarea id="nodeTooltip" required placeholder="Enter node tooltip"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Time:</label>
+                    <div class="time-inputs">
+                        <input type="text" id="timeEstimated" placeholder="Estimated time (e.g., 80-100 hrs)">
+                        <input type="text" id="timeSpent" placeholder="Time spent (e.g., 0 hrs)">
+                    </div>
+                </div>
+                <div class="prereq-unlock-container">
+                    <div class="form-group">
+                        <label>Prerequisites:</label>
+                        <div id="prereqTags" class="tag-container"></div>
+                        <input type="text" id="prereqInput" placeholder="Add prerequisite">
+                        <button type="button" class="add-tag-button" id="addPrereq">+ Add</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Unlocks:</label>
+                        <div id="unlockTags" class="tag-container"></div>
+                        <input type="text" id="unlockInput" placeholder="Add unlock">
+                        <button type="button" class="add-tag-button" id="addUnlock">+ Add</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="nodeClass">Class:</label>
+                    <select id="nodeClass">
+                        <option value="tier-1">Tier 1</option>
+                        <option value="tier-2">Tier 2</option>
+                        <option value="tier-3">Tier 3</option>
+                        <option value="tier-4">Tier 4</option>
+                        <option value="tier-5">Tier 5</option>
+                        <option value="tier-6">Tier 6</option>
+                        <option value="tier-7">Tier 7</option>
+                        <option value="tier-8">Tier 8</option>
+                        <option value="tier-9">Tier 9</option>
+                        <option value="tier-10">Tier 10</option>
+                        <option value="tier-11">Tier 11</option>
+                        <option value="tier-12">Tier 12</option>
+                    </select>
+                </div>
+                <button type="submit" class="create-node-button">Create Node</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Node Modal -->
+    <div class="modal" id="editNodeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Node</h2>
+                <button class="close-button" id="closeEditModal">&times;</button>
+            </div>
+            <form id="editNodeForm">
+                <div class="form-group">
+                    <label for="editNodeId">ID:</label>
+                    <input type="text" id="editNodeId" required placeholder="Enter node ID">
+                </div>
+                <div class="form-group">
+                    <label for="editNodeTitle">Title:</label>
+                    <input type="text" id="editNodeTitle" required placeholder="Enter node title">
+                </div>
+                <div class="form-group">
+                    <label for="editNodeTooltip">Tooltip:</label>
+                    <textarea id="editNodeTooltip" required placeholder="Enter node tooltip"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Time:</label>
+                    <div class="time-inputs">
+                        <input type="text" id="editTimeEstimated" placeholder="Estimated time (e.g., 80-100 hrs)">
+                        <input type="text" id="editTimeSpent" placeholder="Time spent (e.g., 0 hrs)">
+                    </div>
+                </div>
+                <div class="prereq-unlock-container">
+                    <div class="form-group">
+                        <label>Prerequisites:</label>
+                        <div id="editPrereqTags" class="tag-container"></div>
+                        <input type="text" id="editPrereqInput" placeholder="Add prerequisite">
+                        <button type="button" class="add-tag-button" id="addEditPrereq">+ Add</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Unlocks:</label>
+                        <div id="editUnlockTags" class="tag-container"></div>
+                        <input type="text" id="editUnlockInput" placeholder="Add unlock">
+                        <button type="button" class="add-tag-button" id="addEditUnlock">+ Add</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editNodeClass">Class:</label>
+                    <select id="editNodeClass">
+                        <option value="tier-1">Tier 1</option>
+                        <option value="tier-2">Tier 2</option>
+                        <option value="tier-3">Tier 3</option>
+                        <option value="tier-4">Tier 4</option>
+                        <option value="tier-5">Tier 5</option>
+                        <option value="tier-6">Tier 6</option>
+                        <option value="tier-7">Tier 7</option>
+                        <option value="tier-8">Tier 8</option>
+                        <option value="tier-9">Tier 9</option>
+                        <option value="tier-10">Tier 10</option>
+                        <option value="tier-11">Tier 11</option>
+                        <option value="tier-12">Tier 12</option>
+                    </select>
+                </div>
+                <button type="submit" class="create-node-button">Update Node</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        const modal = document.getElementById('nodeCreatorModal');
+        const editModal = document.getElementById('editNodeModal');
+        const addNodeButton = document.getElementById('addNodeButton');
+        const closeModal = document.getElementById('closeModal');
+        const closeEditModal = document.getElementById('closeEditModal');
+        const nodeForm = document.getElementById('nodeForm');
+        const editNodeForm = document.getElementById('editNodeForm');
+        const prereqTags = document.getElementById('prereqTags');
+        const unlockTags = document.getElementById('unlockTags');
+        const editPrereqTags = document.getElementById('editPrereqTags');
+        const editUnlockTags = document.getElementById('editUnlockTags');
+        const prereqInput = document.getElementById('prereqInput');
+        const unlockInput = document.getElementById('unlockInput');
+        const editPrereqInput = document.getElementById('editPrereqInput');
+        const editUnlockInput = document.getElementById('editUnlockInput');
+        const addPrereqBtn = document.getElementById('addPrereq');
+        const addUnlockBtn = document.getElementById('addUnlock');
+        const addEditPrereqBtn = document.getElementById('addEditPrereq');
+        const addEditUnlockBtn = document.getElementById('addEditUnlock');
+
+        let prereqs = [];
+        let unlocks = [];
+        let editPrereqs = [];
+        let editUnlocks = [];
+        let nodeToEdit = null;
+
+        function createTag(text, container, array) {
+            const tag = document.createElement('div');
+            tag.className = 'tag';
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = text;
+            
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.textContent = '×';
+            removeButton.addEventListener('click', () => {
+                tag.remove();
+                const index = array.indexOf(text);
+                if (index > -1) {
+                    array.splice(index, 1);
+                }
+            });
+            
+            tag.appendChild(textSpan);
+            tag.appendChild(removeButton);
+            container.appendChild(tag);
+            array.push(text);
+        }
+
+        addPrereqBtn.addEventListener('click', () => {
+            const text = prereqInput.value.trim();
+            if (text) {
+                createTag(text, prereqTags, prereqs);
+                prereqInput.value = '';
+            }
+        });
+
+        addUnlockBtn.addEventListener('click', () => {
+            const text = unlockInput.value.trim();
+            if (text) {
+                createTag(text, unlockTags, unlocks);
+                unlockInput.value = '';
+            }
+        });
+
+        addEditPrereqBtn.addEventListener('click', () => {
+            const text = editPrereqInput.value.trim();
+            if (text) {
+                createTag(text, editPrereqTags, editPrereqs);
+                editPrereqInput.value = '';
+            }
+        });
+
+        addEditUnlockBtn.addEventListener('click', () => {
+            const text = editUnlockInput.value.trim();
+            if (text) {
+                createTag(text, editUnlockTags, editUnlocks);
+                editUnlockInput.value = '';
+            }
+        });
+
+        addNodeButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+            nodeForm.reset();
+            prereqTags.innerHTML = '';
+            unlockTags.innerHTML = '';
+            prereqs = [];
+            unlocks = [];
+        });
+
+        closeEditModal.addEventListener('click', () => {
+            editModal.style.display = 'none';
+            editNodeForm.reset();
+            editPrereqTags.innerHTML = '';
+            editUnlockTags.innerHTML = '';
+            editPrereqs = [];
+            editUnlocks = [];
+            nodeToEdit = null;
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal.click();
+            }
+            if (e.target === editModal) {
+                closeEditModal.click();
+            }
+        });
+
+        nodeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nodeData = {
+                id: document.getElementById('nodeId').value,
+                x: Math.random() * (mainContent.offsetWidth - 100),
+                y: Math.random() * (mainContent.offsetHeight - 100),
+                title: document.getElementById('nodeTitle').value,
+                tooltip: document.getElementById('nodeTooltip').value,
+                prereqs: [...prereqs],
+                unlocks: [...unlocks],
+                time: {
+                    estimated: document.getElementById('timeEstimated').value,
+                    spent: document.getElementById('timeSpent').value
+                },
+                class: document.getElementById('nodeClass').value
+            };
+
+            mainContent.appendChild(createNode(nodeData));
+            closeModal.click();
+        });
+
+        editNodeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (nodeToEdit) {
+                const nodeData = {
+                    id: document.getElementById('editNodeId').value,
+                    x: parseFloat(nodeToEdit.style.left),
+                    y: parseFloat(nodeToEdit.style.top),
+                    title: document.getElementById('editNodeTitle').value,
+                    tooltip: document.getElementById('editNodeTooltip').value,
+                    prereqs: [...editPrereqs],
+                    unlocks: [...editUnlocks],
+                    time: {
+                        estimated: document.getElementById('editTimeEstimated').value,
+                        spent: document.getElementById('editTimeSpent').value
+                    },
+                    class: document.getElementById('editNodeClass').value
+                };
+
+                // Update the node's appearance
+                nodeToEdit.className = `node ${nodeData.class}`;
+                nodeToEdit.textContent = nodeData.title;
+                nodeToEdit.title = nodeData.tooltip;
+                nodeToEdit.dataset.nodeInfo = JSON.stringify(nodeData);
+                
+                // Reattach event listeners to the node
+                reattachNodeEventListeners(nodeToEdit);
+
+                closeEditModal.click();
+            }
+        });
+
+        function openEditModal(node) {
+            try {
+                const nodeData = JSON.parse(node.dataset.nodeInfo);
+                
+                // Populate the edit form
+                document.getElementById('editNodeId').value = nodeData.id || '';
+                document.getElementById('editNodeTitle').value = nodeData.title || '';
+                document.getElementById('editNodeTooltip').value = nodeData.tooltip || '';
+                document.getElementById('editTimeEstimated').value = nodeData.time?.estimated || '';
+                document.getElementById('editTimeSpent').value = nodeData.time?.spent || '';
+                document.getElementById('editNodeClass').value = nodeData.class || 'tier-1';
+                
+                // Clear and populate tags
+                editPrereqTags.innerHTML = '';
+                editUnlockTags.innerHTML = '';
+                editPrereqs = [];
+                editUnlocks = [];
+                
+                if (Array.isArray(nodeData.prereqs)) {
+                    nodeData.prereqs.forEach(prereq => {
+                        createTag(prereq, editPrereqTags, editPrereqs);
+                    });
+                }
+                
+                if (Array.isArray(nodeData.unlocks)) {
+                    nodeData.unlocks.forEach(unlock => {
+                        createTag(unlock, editUnlockTags, editUnlocks);
+                    });
+                }
+                
+                nodeToEdit = node;
+                editModal.style.display = 'block';
+            } catch (error) {
+                console.error('Error opening edit modal:', error);
+                alert('There was an error editing this node. Please try again.');
+            }
+        }
+
+        // Function to save nodes to localStorage
+        function saveNodes() {
+            const nodes = Array.from(document.querySelectorAll('.node')).map(node => ({
+                ...JSON.parse(node.dataset.nodeInfo),
+                x: parseFloat(node.style.left),
+                y: parseFloat(node.style.top),
+                transform: node.style.transform
+            }));
+            localStorage.setItem('savedNodes', JSON.stringify(nodes));
+            alert('Nodes saved successfully!');
+        }
+
+        // Function to load nodes from localStorage
+        function loadSavedNodes() {
+            const savedNodes = localStorage.getItem('savedNodes');
+            if (savedNodes) {
+                const nodes = JSON.parse(savedNodes);
+                nodes.forEach(node => {
+                    const newNode = createNode(node);
+                    newNode.style.transform = node.transform;
+                    mainContent.appendChild(newNode);
+                });
+                return true;
+            }
+            return false;
+        }
+
+        // Add confirmation dialog functionality
+        const confirmationDialog = document.getElementById('confirmationDialog');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const cancelDelete = document.getElementById('cancelDelete');
+        let nodeToDelete = null;
+
+        confirmDelete.addEventListener('click', () => {
+            if (nodeToDelete) {
+                nodeToDelete.remove();
+                nodeToDelete = null;
+                confirmationDialog.classList.remove('visible');
+            }
+        });
+
+        cancelDelete.addEventListener('click', () => {
+            nodeToDelete = null;
+            confirmationDialog.classList.remove('visible');
+        });
+
+        // Add node selection functionality
+        let selectedNode = null;
+
+        function deselectAllNodes() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('selected');
+            });
+            selectedNode = null;
+        }
+
+        // Add click handler to main content for deselection
+        document.getElementById('mainContent').addEventListener('click', (e) => {
+            if (e.target === mainContent) {
+                deselectAllNodes();
+            }
+        });
+
+        // Function to create a new node
+        function createNode(nodeData) {
+            const node = document.createElement('div');
+            node.className = `node ${nodeData.class || 'tier-1'}`;
+            node.textContent = nodeData.title || 'Untitled Node';
+            node.style.left = (nodeData.x || 0) + 'px';
+            node.style.top = (nodeData.y || 0) + 'px';
+            
+            // Ensure all required properties exist
+            const safeNodeData = {
+                id: nodeData.id || 'untitled',
+                title: nodeData.title || 'Untitled Node',
+                tooltip: nodeData.tooltip || 'No description available',
+                prereqs: Array.isArray(nodeData.prereqs) ? nodeData.prereqs : [],
+                unlocks: Array.isArray(nodeData.unlocks) ? nodeData.unlocks : [],
+                time: {
+                    estimated: nodeData.time?.estimated || '',
+                    spent: nodeData.time?.spent || ''
+                },
+                class: nodeData.class || 'tier-1'
+            };
+            
+            node.dataset.nodeInfo = JSON.stringify(safeNodeData);
+            
+            // Add tooltip
+            node.title = safeNodeData.tooltip;
+
+            // Add buttons and event listeners
+            reattachNodeEventListeners(node);
+            
+            // Add dragging functionality
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+
+            return node;
+        }
+
+        // Function to reattach event listeners to a node
+        function reattachNodeEventListeners(node) {
+            // Remove existing buttons
+            const existingDeleteButton = node.querySelector('.delete-button');
+            const existingEditButton = node.querySelector('.edit-button');
+            
+            if (existingDeleteButton) {
+                existingDeleteButton.remove();
+            }
+            
+            if (existingEditButton) {
+                existingEditButton.remove();
+            }
+            
+            // Add delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.innerHTML = '×';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                nodeToDelete = node;
+                confirmationDialog.classList.add('visible');
+            });
+            node.appendChild(deleteButton);
+
+            // Add edit button
+            const editButton = document.createElement('button');
+            editButton.className = 'edit-button';
+            editButton.innerHTML = '✎';
+            editButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(node);
+            });
+            node.appendChild(editButton);
+            
+            // Reattach click event for selection
+            node.removeEventListener('click', nodeClickHandler);
+            node.addEventListener('click', nodeClickHandler);
+            
+            // Reattach drag events
+            node.removeEventListener('mousedown', dragStart);
+            node.addEventListener('mousedown', dragStart);
+        }
+        
+        // Node click handler function
+        function nodeClickHandler(e) {
+            const deleteButton = this.querySelector('.delete-button');
+            const editButton = this.querySelector('.edit-button');
+            
+            if (e.target === deleteButton || e.target === editButton) return;
+            
+            e.stopPropagation();
+            if (selectedNode === this) {
+                deselectAllNodes();
+            } else {
+                deselectAllNodes();
+                this.classList.add('selected');
+                selectedNode = this;
+            }
+        }
+        
+        // Drag functions
+        function dragStart(e) {
+            const deleteButton = this.querySelector('.delete-button');
+            const editButton = this.querySelector('.edit-button');
+            
+            if (e.target === deleteButton || e.target === editButton) return;
+            
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+
+            if (e.target === this) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, this);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+
+        // Add some initial nodes
+        const mainContent = document.getElementById('mainContent');
+        
+        // Try to load saved nodes first
+        const hasSavedNodes = loadSavedNodes();
+        
+        // If no saved nodes, create default nodes
+        if (!hasSavedNodes) {
+            const defaultNodes = [
+                {
+                    id: "algebra",
+                    x: 300,
+                    y: 50,
+                    title: "Algebra",
+                    tooltip: "Core of abstract math: variables, equations, functions. Essential for robotics modeling (e.g., kinematics, control systems). Prereqs: Arithmetic. Unlocks: Trigonometry, Calculus. Projects: All. Tip: Focus on solving step-by-step!",
+                    prereqs: ["arithmetic"],
+                    unlocks: ["trigonometry", "calculus"],
+                    time: { estimated: "80-100 hrs", spent: "0 hrs" },
+                    class: "tier-1"
+                }
+            ];
+
+            defaultNodes.forEach(node => {
+                mainContent.appendChild(createNode(node));
+            });
+        }
+
+        // Add save button functionality
+        document.getElementById('saveButton').addEventListener('click', saveNodes);
+    </script>
+</body>
+</html>
