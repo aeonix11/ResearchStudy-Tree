@@ -94,6 +94,17 @@
             z-index: 2;
         }
 
+        .node.parent {
+            border: 2px dashed #3498db;
+            animation: pulse-blue 2s infinite;
+        }
+
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 15px rgba(52, 152, 219, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(52, 152, 219, 0.9); }
+            100% { box-shadow: 0 0 15px rgba(52, 152, 219, 0.7); }
+        }
+
         .node.tier-1 {
             background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
@@ -456,6 +467,40 @@
         .add-node-button:hover {
             background-color: #2980b9;
         }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 270px;
+            padding: 8px 16px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            z-index: 10;
+            display: none;
+        }
+
+        .back-button:hover {
+            background-color: #c0392b;
+        }
+
+        .node-set-title {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(44, 62, 80, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 18px;
+            z-index: 10;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -467,6 +512,8 @@
     </div>
     <button class="save-button" id="saveButton">Save Nodes</button>
     <button class="add-node-button" id="addNodeButton">Add Node</button>
+    <button class="back-button" id="backButton">Back to Parent</button>
+    <div class="node-set-title" id="nodeSetTitle"></div>
 
     <!-- Confirmation Dialog -->
     <div class="confirmation-dialog" id="confirmationDialog">
@@ -535,6 +582,14 @@
                         <option value="tier-12">Tier 12</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="isParentNode">Parent Node:</label>
+                    <input type="checkbox" id="isParentNode">
+                </div>
+                <div class="form-group" id="childNodeSetGroup" style="display: none;">
+                    <label for="childNodeSet">Child Node Set ID:</label>
+                    <input type="text" id="childNodeSet" placeholder="Enter child node set ID">
+                </div>
                 <button type="submit" class="create-node-button">Create Node</button>
             </form>
         </div>
@@ -598,6 +653,14 @@
                         <option value="tier-12">Tier 12</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="editIsParentNode">Parent Node:</label>
+                    <input type="checkbox" id="editIsParentNode">
+                </div>
+                <div class="form-group" id="editChildNodeSetGroup" style="display: none;">
+                    <label for="editChildNodeSet">Child Node Set ID:</label>
+                    <input type="text" id="editChildNodeSet" placeholder="Enter child node set ID">
+                </div>
                 <button type="submit" class="create-node-button">Update Node</button>
             </form>
         </div>
@@ -624,6 +687,12 @@
         const addUnlockBtn = document.getElementById('addUnlock');
         const addEditPrereqBtn = document.getElementById('addEditPrereq');
         const addEditUnlockBtn = document.getElementById('addEditUnlock');
+        const isParentNode = document.getElementById('isParentNode');
+        const childNodeSetGroup = document.getElementById('childNodeSetGroup');
+        const childNodeSet = document.getElementById('childNodeSet');
+        const editIsParentNode = document.getElementById('editIsParentNode');
+        const editChildNodeSetGroup = document.getElementById('editChildNodeSetGroup');
+        const editChildNodeSet = document.getElementById('editChildNodeSet');
 
         let prereqs = [];
         let unlocks = [];
@@ -689,6 +758,10 @@
 
         addNodeButton.addEventListener('click', () => {
             modal.style.display = 'block';
+            // Reset parent node fields
+            isParentNode.checked = false;
+            childNodeSetGroup.style.display = 'none';
+            childNodeSet.value = '';
         });
 
         closeModal.addEventListener('click', () => {
@@ -698,6 +771,10 @@
             unlockTags.innerHTML = '';
             prereqs = [];
             unlocks = [];
+            // Reset parent node fields
+            isParentNode.checked = false;
+            childNodeSetGroup.style.display = 'none';
+            childNodeSet.value = '';
         });
 
         closeEditModal.addEventListener('click', () => {
@@ -708,6 +785,10 @@
             editPrereqs = [];
             editUnlocks = [];
             nodeToEdit = null;
+            // Reset parent node fields
+            editIsParentNode.checked = false;
+            editChildNodeSetGroup.style.display = 'none';
+            editChildNodeSet.value = '';
         });
 
         window.addEventListener('click', (e) => {
@@ -733,7 +814,9 @@
                     estimated: document.getElementById('timeEstimated').value,
                     spent: document.getElementById('timeSpent').value
                 },
-                class: document.getElementById('nodeClass').value
+                class: document.getElementById('nodeClass').value,
+                isParent: isParentNode.checked,
+                childNodeSet: isParentNode.checked ? childNodeSet.value : null
             };
 
             mainContent.appendChild(createNode(nodeData));
@@ -755,11 +838,18 @@
                         estimated: document.getElementById('editTimeEstimated').value,
                         spent: document.getElementById('editTimeSpent').value
                     },
-                    class: document.getElementById('editNodeClass').value
+                    class: document.getElementById('editNodeClass').value,
+                    isParent: editIsParentNode.checked,
+                    childNodeSet: editIsParentNode.checked ? editChildNodeSet.value : null
                 };
 
                 // Update the node's appearance
                 nodeToEdit.className = `node ${nodeData.class}`;
+                if (nodeData.isParent) {
+                    nodeToEdit.classList.add('parent');
+                } else {
+                    nodeToEdit.classList.remove('parent');
+                }
                 nodeToEdit.textContent = nodeData.title;
                 nodeToEdit.title = nodeData.tooltip;
                 nodeToEdit.dataset.nodeInfo = JSON.stringify(nodeData);
@@ -782,6 +872,11 @@
                 document.getElementById('editTimeEstimated').value = nodeData.time?.estimated || '';
                 document.getElementById('editTimeSpent').value = nodeData.time?.spent || '';
                 document.getElementById('editNodeClass').value = nodeData.class || 'tier-1';
+                
+                // Set parent node fields
+                editIsParentNode.checked = nodeData.isParent || false;
+                editChildNodeSetGroup.style.display = editIsParentNode.checked ? 'block' : 'none';
+                editChildNodeSet.value = nodeData.childNodeSet || '';
                 
                 // Clear and populate tags
                 editPrereqTags.innerHTML = '';
@@ -809,69 +904,6 @@
             }
         }
 
-        // Function to save nodes to localStorage
-        function saveNodes() {
-            const nodes = Array.from(document.querySelectorAll('.node')).map(node => ({
-                ...JSON.parse(node.dataset.nodeInfo),
-                x: parseFloat(node.style.left),
-                y: parseFloat(node.style.top),
-                transform: node.style.transform
-            }));
-            localStorage.setItem('savedNodes', JSON.stringify(nodes));
-            alert('Nodes saved successfully!');
-        }
-
-        // Function to load nodes from localStorage
-        function loadSavedNodes() {
-            const savedNodes = localStorage.getItem('savedNodes');
-            if (savedNodes) {
-                const nodes = JSON.parse(savedNodes);
-                nodes.forEach(node => {
-                    const newNode = createNode(node);
-                    newNode.style.transform = node.transform;
-                    mainContent.appendChild(newNode);
-                });
-                return true;
-            }
-            return false;
-        }
-
-        // Add confirmation dialog functionality
-        const confirmationDialog = document.getElementById('confirmationDialog');
-        const confirmDelete = document.getElementById('confirmDelete');
-        const cancelDelete = document.getElementById('cancelDelete');
-        let nodeToDelete = null;
-
-        confirmDelete.addEventListener('click', () => {
-            if (nodeToDelete) {
-                nodeToDelete.remove();
-                nodeToDelete = null;
-                confirmationDialog.classList.remove('visible');
-            }
-        });
-
-        cancelDelete.addEventListener('click', () => {
-            nodeToDelete = null;
-            confirmationDialog.classList.remove('visible');
-        });
-
-        // Add node selection functionality
-        let selectedNode = null;
-
-        function deselectAllNodes() {
-            document.querySelectorAll('.node').forEach(node => {
-                node.classList.remove('selected');
-            });
-            selectedNode = null;
-        }
-
-        // Add click handler to main content for deselection
-        document.getElementById('mainContent').addEventListener('click', (e) => {
-            if (e.target === mainContent) {
-                deselectAllNodes();
-            }
-        });
-
         // Function to create a new node
         function createNode(nodeData) {
             const node = document.createElement('div');
@@ -891,8 +923,15 @@
                     estimated: nodeData.time?.estimated || '',
                     spent: nodeData.time?.spent || ''
                 },
-                class: nodeData.class || 'tier-1'
+                class: nodeData.class || 'tier-1',
+                isParent: nodeData.isParent || false,
+                childNodeSet: nodeData.childNodeSet || null
             };
+            
+            // Add parent class if this is a parent node
+            if (safeNodeData.isParent) {
+                node.classList.add('parent');
+            }
             
             node.dataset.nodeInfo = JSON.stringify(safeNodeData);
             
@@ -901,18 +940,6 @@
 
             // Add buttons and event listeners
             reattachNodeEventListeners(node);
-            
-            // Add dragging functionality
-            let isDragging = false;
-            let currentX;
-            let currentY;
-            let initialX;
-            let initialY;
-            let xOffset = 0;
-            let yOffset = 0;
-
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('mouseup', dragEnd);
 
             return node;
         }
@@ -956,9 +983,65 @@
             node.removeEventListener('click', nodeClickHandler);
             node.addEventListener('click', nodeClickHandler);
             
-            // Reattach drag events
-            node.removeEventListener('mousedown', dragStart);
-            node.addEventListener('mousedown', dragStart);
+            // Add double-click event for parent nodes
+            node.removeEventListener('dblclick', nodeDoubleClickHandler);
+            node.addEventListener('dblclick', nodeDoubleClickHandler);
+            
+            // Add simple drag functionality
+            let isDragging = false;
+            let startX, startY;
+            let initialNodeX, initialNodeY;
+            
+            node.addEventListener('mousedown', function(e) {
+                // Ignore if clicking on buttons
+                if (e.target === deleteButton || e.target === editButton) return;
+                
+                isDragging = true;
+                
+                // Store the initial mouse position
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                // Store the initial node position
+                initialNodeX = parseInt(node.style.left) || 0;
+                initialNodeY = parseInt(node.style.top) || 0;
+                
+                // Add a class to indicate dragging
+                node.classList.add('dragging');
+                
+                // Add document-level event listeners
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                
+                e.preventDefault();
+            });
+            
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                
+                // Calculate the distance moved
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                // Calculate new position based on initial position plus distance moved
+                const newX = initialNodeX + deltaX;
+                const newY = initialNodeY + deltaY;
+                
+                // Update node position
+                node.style.left = `${newX}px`;
+                node.style.top = `${newY}px`;
+            }
+            
+            function onMouseUp() {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                node.classList.remove('dragging');
+                
+                // Remove document-level event listeners
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
         }
         
         // Node click handler function
@@ -969,6 +1052,8 @@
             if (e.target === deleteButton || e.target === editButton) return;
             
             e.stopPropagation();
+            
+            // Regular node selection
             if (selectedNode === this) {
                 deselectAllNodes();
             } else {
@@ -977,43 +1062,27 @@
                 selectedNode = this;
             }
         }
-        
-        // Drag functions
-        function dragStart(e) {
+
+        // Add double-click handler for parent nodes
+        function nodeDoubleClickHandler(e) {
             const deleteButton = this.querySelector('.delete-button');
             const editButton = this.querySelector('.edit-button');
             
             if (e.target === deleteButton || e.target === editButton) return;
             
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-
-            if (e.target === this) {
-                isDragging = true;
+            e.stopPropagation();
+            
+            // Check if this is a parent node
+            try {
+                const nodeData = JSON.parse(this.dataset.nodeInfo);
+                if (nodeData.isParent && nodeData.childNodeSet) {
+                    // Load the child node set
+                    loadNodeSet(nodeData.childNodeSet, nodeData.title);
+                    return;
+                }
+            } catch (error) {
+                console.error('Error parsing node data:', error);
             }
-        }
-
-        function drag(e) {
-            if (isDragging) {
-                e.preventDefault();
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
-
-                xOffset = currentX;
-                yOffset = currentY;
-
-                setTranslate(currentX, currentY, this);
-            }
-        }
-
-        function setTranslate(xPos, yPos, el) {
-            el.style.transform = `translate(${xPos}px, ${yPos}px)`;
-        }
-
-        function dragEnd(e) {
-            initialX = currentX;
-            initialY = currentY;
-            isDragging = false;
         }
 
         // Add some initial nodes
@@ -1035,6 +1104,32 @@
                     unlocks: ["trigonometry", "calculus"],
                     time: { estimated: "80-100 hrs", spent: "0 hrs" },
                     class: "tier-1"
+                },
+                {
+                    id: "mathematics",
+                    x: 500,
+                    y: 150,
+                    title: "Mathematics",
+                    tooltip: "Click to explore the mathematics skill tree",
+                    prereqs: [],
+                    unlocks: [],
+                    time: { estimated: "200-300 hrs", spent: "0 hrs" },
+                    class: "tier-2",
+                    isParent: true,
+                    childNodeSet: "mathematics"
+                },
+                {
+                    id: "physics",
+                    x: 700,
+                    y: 250,
+                    title: "Physics",
+                    tooltip: "Click to explore the physics skill tree",
+                    prereqs: [],
+                    unlocks: [],
+                    time: { estimated: "150-200 hrs", spent: "0 hrs" },
+                    class: "tier-3",
+                    isParent: true,
+                    childNodeSet: "physics"
                 }
             ];
 
@@ -1045,6 +1140,358 @@
 
         // Add save button functionality
         document.getElementById('saveButton').addEventListener('click', saveNodes);
+
+        // Function to load a specific node set
+        function loadNodeSet(nodeSetId, nodeSetTitle) {
+            console.log('Loading node set:', nodeSetId, nodeSetTitle);
+            
+            // Clear the current nodes
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = '';
+            
+            // Show the back button and node set title
+            const backButton = document.getElementById('backButton');
+            const nodeSetTitleElement = document.getElementById('nodeSetTitle');
+            backButton.style.display = 'block';
+            nodeSetTitleElement.style.display = 'block';
+            nodeSetTitleElement.textContent = nodeSetTitle || 'Node Set';
+            
+            // Try to load the node set from localStorage
+            let nodeSet = null;
+            try {
+                const savedNodeSets = localStorage.getItem('nodeSets');
+                if (savedNodeSets) {
+                    const allNodeSets = JSON.parse(savedNodeSets);
+                    nodeSet = allNodeSets[nodeSetId];
+                    console.log('Found node set in localStorage:', nodeSet);
+                }
+            } catch (error) {
+                console.error('Error loading node set from localStorage:', error);
+            }
+            
+            // If we found a valid node set, load its nodes
+            if (nodeSet && Array.isArray(nodeSet.nodes) && nodeSet.nodes.length > 0) {
+                console.log('Loading nodes from saved node set:', nodeSet.nodes);
+                nodeSet.nodes.forEach(node => {
+                    mainContent.appendChild(createNode(node));
+                });
+                return;
+            }
+            
+            // If no valid node set was found, create default nodes
+            console.log('Creating default nodes for node set:', nodeSetId);
+            const defaultNodes = [
+                {
+                    id: `${nodeSetId}-node1`,
+                    x: 300,
+                    y: 50,
+                    title: "Node 1",
+                    tooltip: "This is a node in the " + nodeSetTitle + " set",
+                    prereqs: [],
+                    unlocks: [],
+                    time: { estimated: "10-20 hrs", spent: "0 hrs" },
+                    class: "tier-1"
+                },
+                {
+                    id: `${nodeSetId}-node2`,
+                    x: 500,
+                    y: 150,
+                    title: "Node 2",
+                    tooltip: "Another node in the " + nodeSetTitle + " set",
+                    prereqs: [`${nodeSetId}-node1`],
+                    unlocks: [],
+                    time: { estimated: "15-25 hrs", spent: "0 hrs" },
+                    class: "tier-2"
+                }
+            ];
+            
+            // Add the default nodes to the UI
+            defaultNodes.forEach(node => {
+                mainContent.appendChild(createNode(node));
+            });
+            
+            // Save the default nodes to localStorage
+            try {
+                // Get all existing node sets
+                let allNodeSets = {};
+                const savedNodeSets = localStorage.getItem('nodeSets');
+                if (savedNodeSets) {
+                    allNodeSets = JSON.parse(savedNodeSets);
+                }
+                
+                // Add this node set
+                allNodeSets[nodeSetId] = {
+                    title: nodeSetTitle,
+                    nodes: defaultNodes
+                };
+                
+                // Save all node sets back to localStorage
+                localStorage.setItem('nodeSets', JSON.stringify(allNodeSets));
+                console.log('Saved default nodes to localStorage:', nodeSetId, defaultNodes);
+            } catch (error) {
+                console.error('Error saving default nodes to localStorage:', error);
+            }
+        }
+        
+        // Function to go back to the parent node set
+        function goBackToParent() {
+            console.log('Going back to parent node set');
+            
+            // Clear the current nodes
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = '';
+            
+            // Hide the back button and node set title
+            const backButton = document.getElementById('backButton');
+            const nodeSetTitle = document.getElementById('nodeSetTitle');
+            backButton.style.display = 'none';
+            nodeSetTitle.style.display = 'none';
+            
+            // Load the main node set
+            const hasLoadedNodes = loadSavedNodes();
+            
+            // If no nodes were loaded, create default nodes
+            if (!hasLoadedNodes) {
+                console.log('No saved nodes found, creating default nodes');
+                const defaultNodes = [
+                    {
+                        id: "algebra",
+                        x: 300,
+                        y: 50,
+                        title: "Algebra",
+                        tooltip: "Core of abstract math: variables, equations, functions. Essential for robotics modeling (e.g., kinematics, control systems). Prereqs: Arithmetic. Unlocks: Trigonometry, Calculus. Projects: All. Tip: Focus on solving step-by-step!",
+                        prereqs: ["arithmetic"],
+                        unlocks: ["trigonometry", "calculus"],
+                        time: { estimated: "80-100 hrs", spent: "0 hrs" },
+                        class: "tier-1"
+                    },
+                    {
+                        id: "mathematics",
+                        x: 500,
+                        y: 150,
+                        title: "Mathematics",
+                        tooltip: "Click to explore the mathematics skill tree",
+                        prereqs: [],
+                        unlocks: [],
+                        time: { estimated: "200-300 hrs", spent: "0 hrs" },
+                        class: "tier-2",
+                        isParent: true,
+                        childNodeSet: "mathematics"
+                    },
+                    {
+                        id: "physics",
+                        x: 700,
+                        y: 250,
+                        title: "Physics",
+                        tooltip: "Click to explore the physics skill tree",
+                        prereqs: [],
+                        unlocks: [],
+                        time: { estimated: "150-200 hrs", spent: "0 hrs" },
+                        class: "tier-3",
+                        isParent: true,
+                        childNodeSet: "physics"
+                    }
+                ];
+
+                defaultNodes.forEach(node => {
+                    mainContent.appendChild(createNode(node));
+                });
+                
+                // Save these default nodes
+                saveNodes();
+            }
+        }
+        
+        // Add back button functionality
+        document.getElementById('backButton').addEventListener('click', goBackToParent);
+
+        // Function to save nodes to localStorage
+        function saveNodes() {
+            // Get all nodes from the current view
+            const nodes = Array.from(document.querySelectorAll('.node')).map(node => {
+                try {
+                    return {
+                        ...JSON.parse(node.dataset.nodeInfo),
+                        x: parseFloat(node.style.left),
+                        y: parseFloat(node.style.top),
+                        transform: node.style.transform
+                    };
+                } catch (error) {
+                    console.error('Error parsing node data:', error);
+                    return null;
+                }
+            }).filter(node => node !== null);
+            
+            // Check if we're in a child node set
+            const nodeSetTitle = document.getElementById('nodeSetTitle');
+            if (nodeSetTitle.style.display === 'block') {
+                // We're in a child node set, save to that set
+                const nodeSetId = nodeSetTitle.textContent.toLowerCase().replace(/\s+/g, '-');
+                
+                // Create a new object for this node set
+                const nodeSet = {
+                    title: nodeSetTitle.textContent,
+                    nodes: nodes
+                };
+                
+                // Get all existing node sets
+                let allNodeSets = {};
+                try {
+                    const savedNodeSets = localStorage.getItem('nodeSets');
+                    if (savedNodeSets) {
+                        allNodeSets = JSON.parse(savedNodeSets);
+                    }
+                } catch (error) {
+                    console.error('Error parsing saved node sets:', error);
+                }
+                
+                // Update this specific node set
+                allNodeSets[nodeSetId] = nodeSet;
+                
+                // Save all node sets back to localStorage
+                try {
+                    localStorage.setItem('nodeSets', JSON.stringify(allNodeSets));
+                    console.log('Saved child node set:', nodeSetId, nodes);
+                } catch (error) {
+                    console.error('Error saving node sets:', error);
+                    alert('Error saving nodes. Your browser may be in private/incognito mode or storage is full.');
+                    return;
+                }
+            } else {
+                // We're in the main node set
+                try {
+                    localStorage.setItem('savedNodes', JSON.stringify(nodes));
+                    console.log('Saved main nodes:', nodes);
+                } catch (error) {
+                    console.error('Error saving main nodes:', error);
+                    alert('Error saving nodes. Your browser may be in private/incognito mode or storage is full.');
+                    return;
+                }
+            }
+            
+            alert('Nodes saved successfully!');
+        }
+        
+        // Function to load nodes from localStorage
+        function loadSavedNodes() {
+            const mainContent = document.getElementById('mainContent');
+            const savedNodes = localStorage.getItem('savedNodes');
+            
+            if (savedNodes) {
+                try {
+                    const nodes = JSON.parse(savedNodes);
+                    nodes.forEach(node => {
+                        const newNode = createNode(node);
+                        if (node.transform) {
+                            newNode.style.transform = node.transform;
+                        }
+                        mainContent.appendChild(newNode);
+                    });
+                    console.log('Loaded main nodes:', nodes);
+                    return true;
+                } catch (error) {
+                    console.error('Error loading saved nodes:', error);
+                    return false;
+                }
+            }
+            return false;
+        }
+        
+        // Add confirmation dialog functionality
+        const confirmationDialog = document.getElementById('confirmationDialog');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const cancelDelete = document.getElementById('cancelDelete');
+        let nodeToDelete = null;
+        
+        confirmDelete.addEventListener('click', () => {
+            if (nodeToDelete) {
+                nodeToDelete.remove();
+                nodeToDelete = null;
+                confirmationDialog.classList.remove('visible');
+            }
+        });
+        
+        cancelDelete.addEventListener('click', () => {
+            nodeToDelete = null;
+            confirmationDialog.classList.remove('visible');
+        });
+        
+        // Add node selection functionality
+        let selectedNode = null;
+        
+        function deselectAllNodes() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('selected');
+            });
+            selectedNode = null;
+        }
+        
+        // Add click handler to main content for deselection
+        document.getElementById('mainContent').addEventListener('click', (e) => {
+            if (e.target === mainContent) {
+                deselectAllNodes();
+            }
+        });
+
+        // Add parent node checkbox functionality
+        isParentNode.addEventListener('change', () => {
+            childNodeSetGroup.style.display = isParentNode.checked ? 'block' : 'none';
+        });
+
+        editIsParentNode.addEventListener('change', () => {
+            editChildNodeSetGroup.style.display = editIsParentNode.checked ? 'block' : 'none';
+        });
+
+        // Add a debug function to check localStorage
+        function debugLocalStorage() {
+            console.log('--- DEBUG LOCALSTORAGE ---');
+            console.log('savedNodes:', localStorage.getItem('savedNodes'));
+            console.log('nodeSets:', localStorage.getItem('nodeSets'));
+            console.log('------------------------');
+        }
+        
+        // Add a debug button to the UI
+        const debugButton = document.createElement('button');
+        debugButton.textContent = 'Debug Storage';
+        debugButton.style.position = 'fixed';
+        debugButton.style.bottom = '20px';
+        debugButton.style.left = '50%';
+        debugButton.style.transform = 'translateX(-50%)';
+        debugButton.style.padding = '10px 20px';
+        debugButton.style.backgroundColor = '#f39c12';
+        debugButton.style.color = 'white';
+        debugButton.style.border = 'none';
+        debugButton.style.borderRadius = '4px';
+        debugButton.style.cursor = 'pointer';
+        debugButton.style.zIndex = '1000';
+        debugButton.addEventListener('click', () => {
+            debugLocalStorage();
+            alert('Debug info logged to console');
+        });
+        document.body.appendChild(debugButton);
+        
+        // Add a clear storage button
+        const clearStorageButton = document.createElement('button');
+        clearStorageButton.textContent = 'Clear Storage';
+        clearStorageButton.style.position = 'fixed';
+        clearStorageButton.style.bottom = '60px';
+        clearStorageButton.style.left = '50%';
+        clearStorageButton.style.transform = 'translateX(-50%)';
+        clearStorageButton.style.padding = '10px 20px';
+        clearStorageButton.style.backgroundColor = '#e74c3c';
+        clearStorageButton.style.color = 'white';
+        clearStorageButton.style.border = 'none';
+        clearStorageButton.style.borderRadius = '4px';
+        clearStorageButton.style.cursor = 'pointer';
+        clearStorageButton.style.zIndex = '1000';
+        clearStorageButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all saved data? This cannot be undone.')) {
+                localStorage.removeItem('savedNodes');
+                localStorage.removeItem('nodeSets');
+                alert('All saved data has been cleared. Please refresh the page.');
+            }
+        });
+        document.body.appendChild(clearStorageButton);
     </script>
 </body>
 </html>
