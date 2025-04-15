@@ -19,7 +19,7 @@
         }
 
         .sidebar {
-            width: 250px;
+            width: 350px;
             background-color: #2c3e50;
             color: white;
             padding: 20px;
@@ -32,6 +32,126 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid #34495e;
+        }
+
+        .node-info {
+            padding: 15px;
+            background-color: #34495e;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .node-info h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .node-info p {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #ecf0f1;
+        }
+
+        .node-info .label {
+            color: #3498db;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .node-info .time-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: #2c3e50;
+            border-radius: 4px;
+        }
+
+        .node-info .prereqs, .node-info .unlocks {
+            margin: 10px 0;
+        }
+
+        .node-info .tag {
+            display: inline-block;
+            background-color: #2980b9;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            font-size: 12px;
+        }
+
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #2c3e50;
+            border-radius: 4px;
+        }
+
+        .timer-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ecf0f1;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .timer-buttons {
+            display: flex;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .timer-button {
+            padding: 8px 12px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .timer-button.start {
+            background-color: #2ecc71;
+        }
+
+        .timer-button.start:hover {
+            background-color: #27ae60;
+        }
+
+        .timer-button.pause {
+            background-color: #f39c12;
+        }
+
+        .timer-button.pause:hover {
+            background-color: #e67e22;
+        }
+
+        .timer-button.stop {
+            background-color: #e74c3c;
+        }
+
+        .timer-button.stop:hover {
+            background-color: #c0392b;
+        }
+
+        .timer-button.hidden {
+            display: none;
+        }
+
+        .no-selection {
+            color: #95a5a6;
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
         }
 
         .node-list {
@@ -471,7 +591,7 @@
         .back-button {
             position: fixed;
             top: 20px;
-            left: 270px;
+            left: 370px;
             padding: 8px 16px;
             background-color: #e74c3c;
             color: white;
@@ -505,7 +625,10 @@
 </head>
 <body>
     <div class="sidebar">
-        <h2>Node Creator</h2>
+        <h2>Information Panel</h2>
+        <div id="nodeInfo">
+            <div class="no-selection">Select a node to view its information</div>
+        </div>
     </div>
     <div class="main-content" id="mainContent">
         <!-- Nodes will be added here dynamically -->
@@ -1056,10 +1179,12 @@
             // Regular node selection
             if (selectedNode === this) {
                 deselectAllNodes();
+                updateNodeInfo(null);
             } else {
                 deselectAllNodes();
                 this.classList.add('selected');
                 selectedNode = this;
+                updateNodeInfo(this);
             }
         }
 
@@ -1492,6 +1617,310 @@
             }
         });
         document.body.appendChild(clearStorageButton);
+
+        // Timer variables
+        let timerIntervals = {};
+        let timerStartTimes = {};
+        let timerTotalTimes = {};
+        let timerPauseTimes = {};
+        
+        // Function to handle timer button clicks
+        function handleTimerClick(button, node) {
+            const nodeId = node.dataset.nodeInfo ? JSON.parse(node.dataset.nodeInfo).id : null;
+            if (!nodeId) return;
+            
+            const action = button.classList.contains('start') ? 'start' : 
+                          button.classList.contains('pause') ? 'pause' : 'stop';
+            
+            switch(action) {
+                case 'start':
+                    startTimer(button, node, nodeId);
+                    break;
+                case 'pause':
+                    pauseTimer(button, node, nodeId);
+                    break;
+                case 'stop':
+                    stopTimer(button, node, nodeId);
+                    break;
+            }
+        }
+        
+        // Function to start the timer
+        function startTimer(button, node, nodeId) {
+            // Hide start button, show pause button
+            const startButton = document.querySelector(`#startButton-${nodeId}`);
+            const pauseButton = document.querySelector(`#pauseButton-${nodeId}`);
+            const stopButton = document.querySelector(`#stopButton-${nodeId}`);
+            
+            startButton.classList.add('hidden');
+            pauseButton.classList.remove('hidden');
+            stopButton.classList.remove('hidden');
+            
+            // If resuming from pause, adjust the start time to account for pause duration
+            if (timerPauseTimes[nodeId]) {
+                const pauseDuration = Date.now() - timerPauseTimes[nodeId];
+                timerStartTimes[nodeId] += pauseDuration;
+                delete timerPauseTimes[nodeId];
+            } else {
+                // New timer start
+                timerStartTimes[nodeId] = Date.now();
+                timerTotalTimes[nodeId] = 0;
+            }
+            
+            // Update the timer display every second
+            timerIntervals[nodeId] = setInterval(() => {
+                updateTimerDisplay(nodeId);
+            }, 1000);
+        }
+        
+        // Function to pause the timer
+        function pauseTimer(button, node, nodeId) {
+            if (!timerIntervals[nodeId]) return;
+            
+            // Clear the interval
+            clearInterval(timerIntervals[nodeId]);
+            timerIntervals[nodeId] = null;
+            
+            // Store the pause time
+            timerPauseTimes[nodeId] = Date.now();
+            
+            // Update button states
+            const startButton = document.querySelector(`#startButton-${nodeId}`);
+            const pauseButton = document.querySelector(`#pauseButton-${nodeId}`);
+            
+            startButton.classList.remove('hidden');
+            pauseButton.classList.add('hidden');
+            startButton.textContent = 'Resume Timer';
+        }
+        
+        // Function to update the timer display
+        function updateTimerDisplay(nodeId) {
+            const currentTime = Date.now();
+            let elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
+            
+            // If paused, don't count the pause time
+            if (timerPauseTimes[nodeId]) {
+                elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
+            }
+            
+            const totalTime = timerTotalTimes[nodeId] + elapsedTime;
+            
+            const hours = Math.floor(totalTime / 3600);
+            const minutes = Math.floor((totalTime % 3600) / 60);
+            const seconds = totalTime % 60;
+            
+            const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
+            if (timerDisplay) {
+                timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+        }
+        
+        // Function to stop the timer
+        function stopTimer(button, node, nodeId) {
+            if (!timerIntervals[nodeId] && !timerPauseTimes[nodeId]) return;
+            
+            // Clear the interval if it exists
+            if (timerIntervals[nodeId]) {
+                clearInterval(timerIntervals[nodeId]);
+                timerIntervals[nodeId] = null;
+            }
+            
+            // Calculate the total elapsed time
+            const currentTime = Date.now();
+            let elapsedTime = 0;
+            
+            if (timerPauseTimes[nodeId]) {
+                // If paused, calculate time up to pause
+                elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
+            } else {
+                // If running, calculate time up to now
+                elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
+            }
+            
+            const totalElapsedTime = (timerTotalTimes[nodeId] || 0) + elapsedTime;
+            
+            // Convert to hours and minutes
+            const hours = Math.floor(totalElapsedTime / 3600);
+            const minutes = Math.floor((totalElapsedTime % 3600) / 60);
+            
+            // Add the elapsed time to the node's spent time
+            if (hours > 0 || minutes > 0) {
+                updateNodeTime(node, hours, true); // Add hours
+                if (minutes > 0) {
+                    updateNodeTime(node, minutes, false); // Add minutes
+                }
+            }
+            
+            // Reset the timer display
+            const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
+            if (timerDisplay) {
+                timerDisplay.textContent = '00:00:00';
+            }
+            
+            // Reset all buttons
+            const startButton = document.querySelector(`#startButton-${nodeId}`);
+            const pauseButton = document.querySelector(`#pauseButton-${nodeId}`);
+            const stopButton = document.querySelector(`#stopButton-${nodeId}`);
+            
+            startButton.classList.remove('hidden');
+            pauseButton.classList.add('hidden');
+            stopButton.classList.add('hidden');
+            startButton.textContent = 'Start Timer';
+            
+            // Clean up the timer data
+            delete timerStartTimes[nodeId];
+            delete timerTotalTimes[nodeId];
+            delete timerPauseTimes[nodeId];
+        }
+        
+        // Function to update the time spent on a node
+        function updateNodeTime(nodeElement, amount, isHours) {
+            try {
+                const nodeData = JSON.parse(nodeElement.dataset.nodeInfo);
+                
+                // Parse the current time spent
+                let currentTimeSpent = nodeData.time.spent || "0 hrs";
+                let totalMinutes = 0;
+                
+                // Extract hours and minutes from the current time spent
+                const hoursMatch = currentTimeSpent.match(/(\d+)\s*hrs?/);
+                const minutesMatch = currentTimeSpent.match(/(\d+)\s*min/);
+                
+                if (hoursMatch) {
+                    totalMinutes += parseInt(hoursMatch[1]) * 60;
+                }
+                
+                if (minutesMatch) {
+                    totalMinutes += parseInt(minutesMatch[1]);
+                }
+                
+                // Add the new time
+                if (isHours) {
+                    totalMinutes += amount * 60;
+                } else {
+                    totalMinutes += amount;
+                }
+                
+                // Convert back to hours and minutes
+                const newHours = Math.floor(totalMinutes / 60);
+                const newMinutes = totalMinutes % 60;
+                
+                // Format the new time string
+                let newTimeSpent = "";
+                if (newHours > 0) {
+                    newTimeSpent += `${newHours} hr${newHours !== 1 ? 's' : ''}`;
+                }
+                if (newMinutes > 0) {
+                    if (newTimeSpent) newTimeSpent += " ";
+                    newTimeSpent += `${newMinutes} min`;
+                }
+                
+                // Update the node data
+                nodeData.time.spent = newTimeSpent;
+                nodeElement.dataset.nodeInfo = JSON.stringify(nodeData);
+                
+                // Update the node info display
+                updateNodeInfo(nodeElement);
+                
+                // Save the changes
+                saveNodes();
+            } catch (error) {
+                console.error('Error updating node time:', error);
+                alert('Error updating time. Please try again.');
+            }
+        }
+
+        // Function to update node information in the sidebar
+        function updateNodeInfo(node) {
+            const nodeInfo = document.getElementById('nodeInfo');
+            
+            if (!node) {
+                nodeInfo.innerHTML = '<div class="no-selection">Select a node to view its information</div>';
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(node.dataset.nodeInfo);
+                const nodeId = data.id;
+                
+                // Check if this node has a running timer
+                const isTimerRunning = timerIntervals[nodeId] !== undefined;
+                
+                // Calculate the current timer display value
+                let timerDisplayValue = '00:00:00';
+                if (isTimerRunning) {
+                    let totalTime = timerTotalTimes[nodeId] || 0;
+                    
+                    const currentTime = Date.now();
+                    const elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
+                    totalTime += elapsedTime;
+                    
+                    const hours = Math.floor(totalTime / 3600);
+                    const minutes = Math.floor((totalTime % 3600) / 60);
+                    const seconds = totalTime % 60;
+                    
+                    timerDisplayValue = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+                
+                let html = `
+                    <div class="node-info">
+                        <h3>${data.title}</h3>
+                        <p>${data.tooltip}</p>
+                        
+                        <div class="time-info">
+                            <span>
+                                <span class="label">Est:</span>
+                                ${data.time.estimated}
+                            </span>
+                            <span>
+                                <span class="label">Spent:</span>
+                                ${data.time.spent}
+                            </span>
+                        </div>
+                        
+                        <div class="prereqs">
+                            <span class="label">Prerequisites:</span><br>
+                            ${data.prereqs.map(prereq => `<span class="tag">${prereq}</span>`).join(' ')}
+                        </div>
+                        
+                        <div class="unlocks">
+                            <span class="label">Unlocks:</span><br>
+                            ${data.unlocks.map(unlock => `<span class="tag">${unlock}</span>`).join(' ')}
+                        </div>
+                        
+                        ${data.isParent ? '<p><span class="label">Type:</span> Parent Node (Double-click to explore)</p>' : ''}
+                        ${data.childNodeSet ? `<p><span class="label">Child Set:</span> ${data.childNodeSet}</p>` : ''}
+                        
+                        <div class="timer-container">
+                            <div class="timer-display" id="timerDisplay-${nodeId}">${timerDisplayValue}</div>
+                            <div class="timer-buttons">
+                                <button class="timer-button start ${isTimerRunning ? 'hidden' : ''}" id="startButton-${nodeId}" data-node-id="${nodeId}">
+                                    Start Timer
+                                </button>
+                                <button class="timer-button pause ${!isTimerRunning ? 'hidden' : ''}" id="pauseButton-${nodeId}" data-node-id="${nodeId}">
+                                    Pause
+                                </button>
+                                <button class="timer-button stop ${!isTimerRunning ? 'hidden' : ''}" id="stopButton-${nodeId}" data-node-id="${nodeId}">
+                                    Stop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                nodeInfo.innerHTML = html;
+                
+                // Add event listeners to the timer buttons
+                const timerButtons = nodeInfo.querySelectorAll('.timer-button');
+                timerButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        handleTimerClick(button, node);
+                    });
+                });
+            } catch (error) {
+                console.error('Error updating node info:', error);
+                nodeInfo.innerHTML = '<div class="no-selection">Error displaying node information</div>';
+            }
+        }
     </script>
 </body>
 </html>
