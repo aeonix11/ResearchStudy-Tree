@@ -1696,6 +1696,15 @@
         // Function to update the timer display
         function updateTimerDisplay(nodeId) {
             try {
+                if (!timerStartTimes[nodeId]) {
+                    // If no start time, reset display
+                    const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
+                    if (timerDisplay) {
+                        timerDisplay.textContent = '00:00:00';
+                    }
+                    return;
+                }
+                
                 const currentTime = Date.now();
                 let elapsedTime = 0;
                 
@@ -1707,14 +1716,14 @@
                 }
                 
                 // Ensure elapsedTime is a valid number
-                if (isNaN(elapsedTime)) {
+                if (isNaN(elapsedTime) || elapsedTime < 0) {
                     elapsedTime = 0;
                 }
                 
                 const totalTime = (timerTotalTimes[nodeId] || 0) + elapsedTime;
                 
                 // Ensure totalTime is a valid number
-                if (isNaN(totalTime)) {
+                if (isNaN(totalTime) || totalTime < 0) {
                     totalTime = 0;
                 }
                 
@@ -1753,20 +1762,20 @@
                 if (timerPauseTimes[nodeId]) {
                     // If paused, calculate time up to pause
                     elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
-                } else {
+                } else if (timerStartTimes[nodeId]) {
                     // If running, calculate time up to now
                     elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
                 }
                 
                 // Ensure elapsedTime is a valid number
-                if (isNaN(elapsedTime)) {
+                if (isNaN(elapsedTime) || elapsedTime < 0) {
                     elapsedTime = 0;
                 }
                 
                 const totalElapsedTime = (timerTotalTimes[nodeId] || 0) + elapsedTime;
                 
                 // Ensure totalElapsedTime is a valid number
-                if (isNaN(totalElapsedTime)) {
+                if (isNaN(totalElapsedTime) || totalElapsedTime < 0) {
                     totalElapsedTime = 0;
                 }
                 
@@ -1883,22 +1892,45 @@
                 const nodeId = data.id;
                 
                 // Check if this node has a running timer
-                const isTimerRunning = timerIntervals[nodeId] !== undefined;
+                const isTimerRunning = timerIntervals[nodeId] !== undefined && timerStartTimes[nodeId] !== undefined;
                 
                 // Calculate the current timer display value
                 let timerDisplayValue = '00:00:00';
+                
                 if (isTimerRunning) {
-                    let totalTime = timerTotalTimes[nodeId] || 0;
-                    
-                    const currentTime = Date.now();
-                    const elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
-                    totalTime += elapsedTime;
-                    
-                    const hours = Math.floor(totalTime / 3600);
-                    const minutes = Math.floor((totalTime % 3600) / 60);
-                    const seconds = totalTime % 60;
-                    
-                    timerDisplayValue = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    try {
+                        const currentTime = Date.now();
+                        let elapsedTime = 0;
+                        
+                        if (timerPauseTimes[nodeId]) {
+                            // If paused, calculate time up to pause
+                            elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
+                        } else {
+                            // If running, calculate time up to now
+                            elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
+                        }
+                        
+                        // Ensure elapsedTime is a valid number
+                        if (isNaN(elapsedTime) || elapsedTime < 0) {
+                            elapsedTime = 0;
+                        }
+                        
+                        const totalTime = (timerTotalTimes[nodeId] || 0) + elapsedTime;
+                        
+                        // Ensure totalTime is a valid number
+                        if (isNaN(totalTime) || totalTime < 0) {
+                            totalTime = 0;
+                        }
+                        
+                        const hours = Math.floor(totalTime / 3600);
+                        const minutes = Math.floor((totalTime % 3600) / 60);
+                        const seconds = totalTime % 60;
+                        
+                        timerDisplayValue = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    } catch (error) {
+                        console.error('Error calculating timer display:', error);
+                        timerDisplayValue = '00:00:00';
+                    }
                 }
                 
                 let html = `
