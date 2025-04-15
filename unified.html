@@ -309,23 +309,19 @@
             100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
         }
 
+        /* Connection lines */
         .line {
             position: absolute;
-            transform-origin: 0 0;
-            transition: all 0.3s;
-            z-index: 1;
-            opacity: 0.7;
-            background: linear-gradient(90deg, #00FF9D, #00B8FF);
             height: 2px;
-            box-shadow: 0 0 5px rgba(0, 255, 157, 0.3);
-        }
-
-        .line.highlight {
-            opacity: 1;
-            height: 3px !important;
+            background-color: #666;
+            transform-origin: left center;
+            pointer-events: none;
             z-index: 1;
-            background: linear-gradient(90deg, #00CC7E, #00FF9D);
-            box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        }
+        
+        .line.highlight {
+            background-color: #ff4444;
+            height: 3px;
         }
 
         .delete-button {
@@ -621,6 +617,68 @@
             z-index: 10;
             display: none;
         }
+        
+        /* Import/Export styles */
+        .import-export-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #34495e;
+            border-radius: 8px;
+        }
+        
+        .import-export-section h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .import-export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .import-export-btn {
+            padding: 8px 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .import-export-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        #importJson {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        #processImportBtn {
+            background-color: #2ecc71;
+        }
+        
+        #processImportBtn:hover {
+            background-color: #27ae60;
+        }
+        
+        #cancelImportBtn {
+            background-color: #e74c3c;
+        }
+        
+        #cancelImportBtn:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -629,7 +687,22 @@
         <div id="nodeInfo">
             <div class="no-selection">Select a node to view its information</div>
         </div>
+        
+        <!-- Add Import/Export section -->
+        <div class="import-export-section">
+            <h3>Import/Export Nodes</h3>
+            <div class="import-export-buttons">
+                <button id="exportNodesBtn" class="import-export-btn">Export Nodes</button>
+                <button id="importNodesBtn" class="import-export-btn">Import Nodes</button>
+            </div>
+            <div id="importArea" style="display: none;">
+                <textarea id="importJson" placeholder="Paste JSON data here..."></textarea>
+                <button id="processImportBtn" class="import-export-btn">Process Import</button>
+                <button id="cancelImportBtn" class="import-export-btn">Cancel</button>
+            </div>
+        </div>
     </div>
+    
     <div class="main-content" id="mainContent">
         <!-- Nodes will be added here dynamically -->
     </div>
@@ -1027,44 +1100,69 @@
             }
         }
 
-        // Function to create a new node
-        function createNode(nodeData) {
-            const node = document.createElement('div');
-            node.className = `node ${nodeData.class || 'tier-1'}`;
-            node.textContent = nodeData.title || 'Untitled Node';
-            node.style.left = (nodeData.x || 0) + 'px';
-            node.style.top = (nodeData.y || 0) + 'px';
+        // Function to draw lines between nodes
+        function drawLines() {
+            // Clear existing lines
+            document.querySelectorAll('.line').forEach(line => line.remove());
             
-            // Ensure all required properties exist
-            const safeNodeData = {
-                id: nodeData.id || 'untitled',
-                title: nodeData.title || 'Untitled Node',
-                tooltip: nodeData.tooltip || 'No description available',
-                prereqs: Array.isArray(nodeData.prereqs) ? nodeData.prereqs : [],
-                unlocks: Array.isArray(nodeData.unlocks) ? nodeData.unlocks : [],
-                time: {
-                    estimated: nodeData.time?.estimated || '',
-                    spent: nodeData.time?.spent || ''
-                },
-                class: nodeData.class || 'tier-1',
-                isParent: nodeData.isParent || false,
-                childNodeSet: nodeData.childNodeSet || null
-            };
+            // Get all nodes in the current view
+            const nodes = Array.from(document.querySelectorAll('.node')).map(node => {
+                try {
+                    return {
+                        ...JSON.parse(node.dataset.nodeInfo),
+                        x: parseFloat(node.style.left),
+                        y: parseFloat(node.style.top)
+                    };
+                } catch (error) {
+                    console.error('Error parsing node data:', error);
+                    return null;
+                }
+            }).filter(node => node !== null);
             
-            // Add parent class if this is a parent node
-            if (safeNodeData.isParent) {
-                node.classList.add('parent');
-            }
-            
-            node.dataset.nodeInfo = JSON.stringify(safeNodeData);
-            
-            // Add tooltip
-            node.title = safeNodeData.tooltip;
+            // Draw lines for each node
+            nodes.forEach(node => {
+                // Draw lines for unlocks (outgoing connections)
+                node.unlocks.forEach(unlockId => {
+                    const target = nodes.find(n => n.id === unlockId);
+                    if (target) {
+                        const line = document.createElement("div");
+                        const dx = target.x + 75 - (node.x + 75);
+                        const dy = target.y + 30 - (node.y + 30);
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        line.className = "line";
+                        line.setAttribute("data-from", node.id);
+                        line.setAttribute("data-to", target.id);
+                        line.style.width = `${length}px`;
+                        line.style.left = `${node.x + 75}px`;
+                        line.style.top = `${node.y + 30}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        mainContent.appendChild(line);
+                    }
+                });
 
-            // Add buttons and event listeners
-            reattachNodeEventListeners(node);
-
-            return node;
+                // Draw lines for prereqs (incoming connections)
+                if (node.prereqs && node.prereqs.length > 0) {
+                    node.prereqs.forEach(prereqId => {
+                        const source = nodes.find(n => n.id === prereqId);
+                        if (source) {
+                            const line = document.createElement("div");
+                            const dx = node.x + 75 - (source.x + 75);
+                            const dy = node.y + 30 - (source.y + 30);
+                            const length = Math.sqrt(dx * dx + dy * dy);
+                            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                            line.className = "line";
+                            line.setAttribute("data-from", source.id);
+                            line.setAttribute("data-to", node.id);
+                            line.style.width = `${length}px`;
+                            line.style.left = `${source.x + 75}px`;
+                            line.style.top = `${source.y + 30}px`;
+                            line.style.transform = `rotate(${angle}deg)`;
+                            mainContent.appendChild(line);
+                        }
+                    });
+                }
+            });
         }
 
         // Function to reattach event listeners to a node
@@ -1110,6 +1208,25 @@
             node.removeEventListener('dblclick', nodeDoubleClickHandler);
             node.addEventListener('dblclick', nodeDoubleClickHandler);
             
+            // Add mouseenter/mouseleave events for line highlighting
+            node.addEventListener('mouseenter', () => {
+                // Highlight outgoing connections
+                document.querySelectorAll(`.line[data-from="${JSON.parse(node.dataset.nodeInfo).id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+                // Highlight incoming connections
+                document.querySelectorAll(`.line[data-to="${JSON.parse(node.dataset.nodeInfo).id}"]`).forEach(line => {
+                    line.classList.add('highlight');
+                });
+            });
+
+            node.addEventListener('mouseleave', () => {
+                // Remove highlight from all lines
+                document.querySelectorAll('.line.highlight').forEach(line => {
+                    line.classList.remove('highlight');
+                });
+            });
+            
             // Add simple drag functionality
             let isDragging = false;
             let startX, startY;
@@ -1153,6 +1270,9 @@
                 // Update node position
                 node.style.left = `${newX}px`;
                 node.style.top = `${newY}px`;
+                
+                // Redraw lines after node movement
+                drawLines();
             }
             
             function onMouseUp() {
@@ -1166,7 +1286,53 @@
                 document.removeEventListener('mouseup', onMouseUp);
             }
         }
-        
+
+        // Function to create a new node
+        function createNode(nodeData) {
+            const node = document.createElement('div');
+            node.className = `node ${nodeData.class || 'tier-1'}`;
+            node.textContent = nodeData.title || 'Untitled Node';
+            node.style.left = (nodeData.x || 0) + 'px';
+            node.style.top = (nodeData.y || 0) + 'px';
+            
+            // Ensure all required properties exist
+            const safeNodeData = {
+                id: nodeData.id || 'untitled',
+                title: nodeData.title || 'Untitled Node',
+                tooltip: nodeData.tooltip || 'No description available',
+                prereqs: Array.isArray(nodeData.prereqs) ? nodeData.prereqs : [],
+                unlocks: Array.isArray(nodeData.unlocks) ? nodeData.unlocks : [],
+                time: {
+                    estimated: nodeData.time?.estimated || '',
+                    spent: nodeData.time?.spent || ''
+                },
+                class: nodeData.class || 'tier-1',
+                isParent: nodeData.isParent || false,
+                childNodeSet: nodeData.childNodeSet || null
+            };
+            
+            // Add parent class if this is a parent node
+            if (safeNodeData.isParent) {
+                node.classList.add('parent');
+            }
+            
+            node.dataset.nodeInfo = JSON.stringify(safeNodeData);
+            
+            // Add tooltip
+            node.title = safeNodeData.tooltip;
+
+            // Add buttons and event listeners
+            reattachNodeEventListeners(node);
+
+            // Add the node to the main content
+            mainContent.appendChild(node);
+
+            // Draw lines after adding the node
+            drawLines();
+
+            return node;
+        }
+
         // Node click handler function
         function nodeClickHandler(e) {
             const deleteButton = this.querySelector('.delete-button');
@@ -2144,6 +2310,104 @@
                 nodeInfo.innerHTML = '<div class="no-selection">Error displaying node information</div>';
             }
         }
+        
+        // Import/Export functionality
+        document.getElementById('exportNodesBtn').addEventListener('click', () => {
+            // Get all nodes from the current view
+            const nodes = Array.from(document.querySelectorAll('.node')).map(node => {
+                try {
+                    return {
+                        ...JSON.parse(node.dataset.nodeInfo),
+                        x: parseFloat(node.style.left),
+                        y: parseFloat(node.style.top)
+                    };
+                } catch (error) {
+                    console.error('Error parsing node data:', error);
+                    return null;
+                }
+            }).filter(node => node !== null);
+            
+            // Create a JSON string with proper formatting
+            const jsonString = JSON.stringify(nodes, null, 2);
+            
+            // Create a blob and download link
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'nodes_export.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        document.getElementById('importNodesBtn').addEventListener('click', () => {
+            const importArea = document.getElementById('importArea');
+            importArea.style.display = 'block';
+        });
+        
+        document.getElementById('cancelImportBtn').addEventListener('click', () => {
+            const importArea = document.getElementById('importArea');
+            importArea.style.display = 'none';
+            document.getElementById('importJson').value = '';
+        });
+        
+        document.getElementById('processImportBtn').addEventListener('click', () => {
+            try {
+                const jsonText = document.getElementById('importJson').value;
+                if (!jsonText.trim()) {
+                    alert('Please enter JSON data to import');
+                    return;
+                }
+                
+                const nodes = JSON.parse(jsonText);
+                
+                // Validate the imported data
+                if (!Array.isArray(nodes)) {
+                    throw new Error('Imported data must be an array of nodes');
+                }
+                
+                // Clear the current nodes
+                const mainContent = document.getElementById('mainContent');
+                mainContent.innerHTML = '';
+                
+                // Add each node
+                nodes.forEach(node => {
+                    // Ensure required properties exist
+                    const safeNode = {
+                        id: node.id || 'untitled-' + Math.random().toString(36).substr(2, 9),
+                        title: node.title || 'Untitled Node',
+                        tooltip: node.tooltip || 'No description available',
+                        prereqs: Array.isArray(node.prereqs) ? node.prereqs : [],
+                        unlocks: Array.isArray(node.unlocks) ? node.unlocks : [],
+                        time: {
+                            estimated: node.time?.estimated || '',
+                            spent: node.time?.spent || ''
+                        },
+                        class: node.class || 'tier-1',
+                        isParent: node.isParent || false,
+                        childNodeSet: node.childNodeSet || null,
+                        x: node.x || Math.random() * (mainContent.offsetWidth - 100),
+                        y: node.y || Math.random() * (mainContent.offsetHeight - 100)
+                    };
+                    
+                    mainContent.appendChild(createNode(safeNode));
+                });
+                
+                // Save the imported nodes
+                saveNodes();
+                
+                // Hide the import area
+                document.getElementById('importArea').style.display = 'none';
+                document.getElementById('importJson').value = '';
+                
+                alert('Nodes imported successfully!');
+            } catch (error) {
+                console.error('Error importing nodes:', error);
+                alert('Error importing nodes: ' + error.message);
+            }
+        });
     </script>
 </body>
 </html>
