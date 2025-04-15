@@ -1366,9 +1366,13 @@
             // Check if this is a parent node
             try {
                 const nodeData = JSON.parse(this.dataset.nodeInfo);
-                if (nodeData.isParent && nodeData.childNodeSet) {
+                if (nodeData.isParent) {
+                    // Use the node's title as the node set ID if childNodeSet is not specified
+                    const nodeSetId = nodeData.childNodeSet || nodeData.title.toLowerCase().replace(/\s+/g, '-');
+                    console.log('Loading node set with ID:', nodeSetId);
+                    
                     // Load the child node set
-                    loadNodeSet(nodeData.childNodeSet, nodeData.title);
+                    loadNodeSet(nodeSetId, nodeData.title);
                     return;
                 }
             } catch (error) {
@@ -1451,10 +1455,13 @@
             let nodeSet = null;
             try {
                 const savedNodeSets = localStorage.getItem('nodeSets');
+                console.log('Saved node sets from localStorage:', savedNodeSets);
+                
                 if (savedNodeSets) {
                     const allNodeSets = JSON.parse(savedNodeSets);
+                    console.log('Parsed node sets:', allNodeSets);
                     nodeSet = allNodeSets[nodeSetId];
-                    console.log('Found node set in localStorage:', nodeSet);
+                    console.log('Found node set:', nodeSet);
                 }
             } catch (error) {
                 console.error('Error loading node set from localStorage:', error);
@@ -1464,44 +1471,16 @@
             if (nodeSet && Array.isArray(nodeSet.nodes) && nodeSet.nodes.length > 0) {
                 console.log('Loading nodes from saved node set:', nodeSet.nodes);
                 nodeSet.nodes.forEach(node => {
-                    mainContent.appendChild(createNode(node));
+                    const newNode = createNode(node);
+                    mainContent.appendChild(newNode);
                 });
-                return;
+                return true;
             }
             
-            // If no valid node set was found, create default nodes
-            console.log('Creating default nodes for node set:', nodeSetId);
-            const defaultNodes = [
-                {
-                    id: `${nodeSetId}-node1`,
-                    x: 300,
-                    y: 50,
-                    title: "Node 1",
-                    tooltip: "This is a node in the " + nodeSetTitle + " set",
-                    prereqs: [],
-                    unlocks: [],
-                    time: { estimated: "10-20 hrs", spent: "0 hrs" },
-                    class: "tier-1"
-                },
-                {
-                    id: `${nodeSetId}-node2`,
-                    x: 500,
-                    y: 150,
-                    title: "Node 2",
-                    tooltip: "Another node in the " + nodeSetTitle + " set",
-                    prereqs: [`${nodeSetId}-node1`],
-                    unlocks: [],
-                    time: { estimated: "15-25 hrs", spent: "0 hrs" },
-                    class: "tier-2"
-                }
-            ];
+            // If no valid node set was found, create an empty node set
+            console.log('No valid node set found, creating empty node set');
             
-            // Add the default nodes to the UI
-            defaultNodes.forEach(node => {
-                mainContent.appendChild(createNode(node));
-            });
-            
-            // Save the default nodes to localStorage
+            // Save the empty node set to localStorage
             try {
                 // Get all existing node sets
                 let allNodeSets = {};
@@ -1510,18 +1489,20 @@
                     allNodeSets = JSON.parse(savedNodeSets);
                 }
                 
-                // Add this node set
+                // Add this empty node set
                 allNodeSets[nodeSetId] = {
                     title: nodeSetTitle,
-                    nodes: defaultNodes
+                    nodes: []
                 };
                 
                 // Save all node sets back to localStorage
                 localStorage.setItem('nodeSets', JSON.stringify(allNodeSets));
-                console.log('Saved default nodes to localStorage:', nodeSetId, defaultNodes);
+                console.log('Created empty node set:', nodeSetId);
             } catch (error) {
-                console.error('Error saving default nodes to localStorage:', error);
+                console.error('Error creating empty node set:', error);
             }
+            
+            return false;
         }
         
         // Function to go back to the parent node set
@@ -1598,69 +1579,73 @@
 
         // Function to save nodes to localStorage
         function saveNodes() {
-            // Get all nodes from the current view
-            const nodes = Array.from(document.querySelectorAll('.node')).map(node => {
-                try {
-                    return {
-                        ...JSON.parse(node.dataset.nodeInfo),
-                        x: parseFloat(node.style.left),
-                        y: parseFloat(node.style.top),
-                        transform: node.style.transform
+            try {
+                // Get all nodes from the current view
+                const nodes = Array.from(document.querySelectorAll('.node')).map(node => {
+                    try {
+                        const nodeData = JSON.parse(node.dataset.nodeInfo);
+                        return {
+                            ...nodeData,
+                            x: parseFloat(node.style.left),
+                            y: parseFloat(node.style.top)
+                        };
+                    } catch (error) {
+                        console.error('Error parsing node data:', error);
+                        return null;
+                    }
+                }).filter(node => node !== null);
+                
+                console.log('Current nodes to save:', nodes);
+                
+                // Check if we're in a child node set
+                const nodeSetTitle = document.getElementById('nodeSetTitle');
+                if (nodeSetTitle.style.display === 'block') {
+                    // We're in a child node set
+                    const nodeSetId = nodeSetTitle.textContent.toLowerCase().replace(/\s+/g, '-');
+                    console.log('Saving to child node set:', nodeSetId);
+                    
+                    // Create node set object
+                    const nodeSet = {
+                        title: nodeSetTitle.textContent,
+                        nodes: nodes
                     };
-                } catch (error) {
-                    console.error('Error parsing node data:', error);
-                    return null;
-                }
-            }).filter(node => node !== null);
-            
-            // Check if we're in a child node set
-            const nodeSetTitle = document.getElementById('nodeSetTitle');
-            if (nodeSetTitle.style.display === 'block') {
-                // We're in a child node set, save to that set
-                const nodeSetId = nodeSetTitle.textContent.toLowerCase().replace(/\s+/g, '-');
-                
-                // Create a new object for this node set
-                const nodeSet = {
-                    title: nodeSetTitle.textContent,
-                    nodes: nodes
-                };
-                
-                // Get all existing node sets
-                let allNodeSets = {};
-                try {
+                    
+                    // Get existing node sets
+                    let allNodeSets = {};
                     const savedNodeSets = localStorage.getItem('nodeSets');
                     if (savedNodeSets) {
                         allNodeSets = JSON.parse(savedNodeSets);
                     }
-                } catch (error) {
-                    console.error('Error parsing saved node sets:', error);
-                }
-                
-                // Update this specific node set
-                allNodeSets[nodeSetId] = nodeSet;
-                
-                // Save all node sets back to localStorage
-                try {
+                    
+                    // Update this node set
+                    allNodeSets[nodeSetId] = nodeSet;
+                    
+                    // Save to localStorage
                     localStorage.setItem('nodeSets', JSON.stringify(allNodeSets));
-                    console.log('Saved child node set:', nodeSetId, nodes);
-                } catch (error) {
-                    console.error('Error saving node sets:', error);
-                    alert('Error saving nodes. Your browser may be in private/incognito mode or storage is full.');
-                    return;
-                }
-            } else {
-                // We're in the main node set
-                try {
+                    console.log('Saved child node set:', nodeSetId, nodeSet);
+                    
+                    // Update parent node reference
+                    const mainNodes = localStorage.getItem('savedNodes');
+                    if (mainNodes) {
+                        const mainNodesArray = JSON.parse(mainNodes);
+                        const parentNode = mainNodesArray.find(n => n.isParent && n.childNodeSet === nodeSetId);
+                        if (parentNode) {
+                            parentNode.childNodeSet = nodeSetId;
+                            localStorage.setItem('savedNodes', JSON.stringify(mainNodesArray));
+                            console.log('Updated parent node reference:', parentNode);
+                        }
+                    }
+                } else {
+                    // We're in the main node set
                     localStorage.setItem('savedNodes', JSON.stringify(nodes));
                     console.log('Saved main nodes:', nodes);
-                } catch (error) {
-                    console.error('Error saving main nodes:', error);
-                    alert('Error saving nodes. Your browser may be in private/incognito mode or storage is full.');
-                    return;
                 }
+                
+                alert('Nodes saved successfully!');
+            } catch (error) {
+                console.error('Error saving nodes:', error);
+                alert('Error saving nodes: ' + error.message);
             }
-            
-            alert('Nodes saved successfully!');
         }
         
         // Function to load nodes from localStorage
@@ -2395,14 +2380,40 @@
                     mainContent.appendChild(createNode(safeNode));
                 });
                 
-                // Save the imported nodes
-                saveNodes();
+                // Immediately save the imported nodes
+                const nodeSetTitle = document.getElementById('nodeSetTitle');
+                if (nodeSetTitle.style.display === 'block') {
+                    // We're in a child node set
+                    const nodeSetId = nodeSetTitle.textContent.toLowerCase().replace(/\s+/g, '-');
+                    const nodeSet = {
+                        title: nodeSetTitle.textContent,
+                        nodes: nodes
+                    };
+                    
+                    // Get existing node sets
+                    let allNodeSets = {};
+                    const savedNodeSets = localStorage.getItem('nodeSets');
+                    if (savedNodeSets) {
+                        allNodeSets = JSON.parse(savedNodeSets);
+                    }
+                    
+                    // Update this node set
+                    allNodeSets[nodeSetId] = nodeSet;
+                    
+                    // Save to localStorage
+                    localStorage.setItem('nodeSets', JSON.stringify(allNodeSets));
+                    console.log('Imported and saved nodes to node set:', nodeSetId, nodes);
+                } else {
+                    // We're in the main node set
+                    localStorage.setItem('savedNodes', JSON.stringify(nodes));
+                    console.log('Imported and saved main nodes:', nodes);
+                }
                 
                 // Hide the import area
                 document.getElementById('importArea').style.display = 'none';
                 document.getElementById('importJson').value = '';
                 
-                alert('Nodes imported successfully!');
+                alert('Nodes imported and saved successfully!');
             } catch (error) {
                 console.error('Error importing nodes:', error);
                 alert('Error importing nodes: ' + error.message);
