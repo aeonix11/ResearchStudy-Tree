@@ -1695,82 +1695,121 @@
         
         // Function to update the timer display
         function updateTimerDisplay(nodeId) {
-            const currentTime = Date.now();
-            let elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
-            
-            // If paused, don't count the pause time
-            if (timerPauseTimes[nodeId]) {
-                elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
-            }
-            
-            const totalTime = timerTotalTimes[nodeId] + elapsedTime;
-            
-            const hours = Math.floor(totalTime / 3600);
-            const minutes = Math.floor((totalTime % 3600) / 60);
-            const seconds = totalTime % 60;
-            
-            const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
-            if (timerDisplay) {
-                timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            try {
+                const currentTime = Date.now();
+                let elapsedTime = 0;
+                
+                // If paused, don't count the pause time
+                if (timerPauseTimes[nodeId]) {
+                    elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
+                } else {
+                    elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
+                }
+                
+                // Ensure elapsedTime is a valid number
+                if (isNaN(elapsedTime)) {
+                    elapsedTime = 0;
+                }
+                
+                const totalTime = (timerTotalTimes[nodeId] || 0) + elapsedTime;
+                
+                // Ensure totalTime is a valid number
+                if (isNaN(totalTime)) {
+                    totalTime = 0;
+                }
+                
+                const hours = Math.floor(totalTime / 3600);
+                const minutes = Math.floor((totalTime % 3600) / 60);
+                const seconds = totalTime % 60;
+                
+                const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
+                if (timerDisplay) {
+                    timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+            } catch (error) {
+                console.error('Error updating timer display:', error);
+                const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
+                if (timerDisplay) {
+                    timerDisplay.textContent = '00:00:00';
+                }
             }
         }
         
         // Function to stop the timer
         function stopTimer(button, node, nodeId) {
-            if (!timerIntervals[nodeId] && !timerPauseTimes[nodeId]) return;
-            
-            // Clear the interval if it exists
-            if (timerIntervals[nodeId]) {
-                clearInterval(timerIntervals[nodeId]);
-                timerIntervals[nodeId] = null;
-            }
-            
-            // Calculate the total elapsed time
-            const currentTime = Date.now();
-            let elapsedTime = 0;
-            
-            if (timerPauseTimes[nodeId]) {
-                // If paused, calculate time up to pause
-                elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
-            } else {
-                // If running, calculate time up to now
-                elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
-            }
-            
-            const totalElapsedTime = (timerTotalTimes[nodeId] || 0) + elapsedTime;
-            
-            // Convert to hours and minutes
-            const hours = Math.floor(totalElapsedTime / 3600);
-            const minutes = Math.floor((totalElapsedTime % 3600) / 60);
-            
-            // Add the elapsed time to the node's spent time
-            if (hours > 0 || minutes > 0) {
-                updateNodeTime(node, hours, true); // Add hours
-                if (minutes > 0) {
-                    updateNodeTime(node, minutes, false); // Add minutes
+            try {
+                if (!timerIntervals[nodeId] && !timerPauseTimes[nodeId]) return;
+                
+                // Clear the interval if it exists
+                if (timerIntervals[nodeId]) {
+                    clearInterval(timerIntervals[nodeId]);
+                    timerIntervals[nodeId] = null;
+                }
+                
+                // Calculate the total elapsed time
+                const currentTime = Date.now();
+                let elapsedTime = 0;
+                
+                if (timerPauseTimes[nodeId]) {
+                    // If paused, calculate time up to pause
+                    elapsedTime = Math.floor((timerPauseTimes[nodeId] - timerStartTimes[nodeId]) / 1000);
+                } else {
+                    // If running, calculate time up to now
+                    elapsedTime = Math.floor((currentTime - timerStartTimes[nodeId]) / 1000);
+                }
+                
+                // Ensure elapsedTime is a valid number
+                if (isNaN(elapsedTime)) {
+                    elapsedTime = 0;
+                }
+                
+                const totalElapsedTime = (timerTotalTimes[nodeId] || 0) + elapsedTime;
+                
+                // Ensure totalElapsedTime is a valid number
+                if (isNaN(totalElapsedTime)) {
+                    totalElapsedTime = 0;
+                }
+                
+                // Convert to hours and minutes
+                const hours = Math.floor(totalElapsedTime / 3600);
+                const minutes = Math.floor((totalElapsedTime % 3600) / 60);
+                
+                // Add the elapsed time to the node's spent time
+                if (hours > 0 || minutes > 0) {
+                    updateNodeTime(node, hours, true); // Add hours
+                    if (minutes > 0) {
+                        updateNodeTime(node, minutes, false); // Add minutes
+                    }
+                }
+                
+                // Reset the timer display
+                const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
+                if (timerDisplay) {
+                    timerDisplay.textContent = '00:00:00';
+                }
+                
+                // Reset all buttons
+                const startButton = document.querySelector(`#startButton-${nodeId}`);
+                const pauseButton = document.querySelector(`#pauseButton-${nodeId}`);
+                const stopButton = document.querySelector(`#stopButton-${nodeId}`);
+                
+                startButton.classList.remove('hidden');
+                pauseButton.classList.add('hidden');
+                stopButton.classList.add('hidden');
+                startButton.textContent = 'Start Timer';
+                
+                // Clean up the timer data
+                delete timerStartTimes[nodeId];
+                delete timerTotalTimes[nodeId];
+                delete timerPauseTimes[nodeId];
+            } catch (error) {
+                console.error('Error stopping timer:', error);
+                // Reset timer display in case of error
+                const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
+                if (timerDisplay) {
+                    timerDisplay.textContent = '00:00:00';
                 }
             }
-            
-            // Reset the timer display
-            const timerDisplay = document.querySelector(`#timerDisplay-${nodeId}`);
-            if (timerDisplay) {
-                timerDisplay.textContent = '00:00:00';
-            }
-            
-            // Reset all buttons
-            const startButton = document.querySelector(`#startButton-${nodeId}`);
-            const pauseButton = document.querySelector(`#pauseButton-${nodeId}`);
-            const stopButton = document.querySelector(`#stopButton-${nodeId}`);
-            
-            startButton.classList.remove('hidden');
-            pauseButton.classList.add('hidden');
-            stopButton.classList.add('hidden');
-            startButton.textContent = 'Start Timer';
-            
-            // Clean up the timer data
-            delete timerStartTimes[nodeId];
-            delete timerTotalTimes[nodeId];
-            delete timerPauseTimes[nodeId];
         }
         
         // Function to update the time spent on a node
