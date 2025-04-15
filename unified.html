@@ -679,6 +679,37 @@
         #cancelImportBtn:hover {
             background-color: #c0392b;
         }
+
+        /* Add styles for the auto-layout button */
+        .auto-layout-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+
+        .auto-layout-button:hover {
+            background-color: #8e44ad;
+        }
+
+        .auto-layout-button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Add styles for nodes during layout animation */
+        .node.layouting {
+            transition: left 0.3s ease-out, top 0.3s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -701,11 +732,18 @@
                 <button id="cancelImportBtn" class="import-export-btn">Cancel</button>
             </div>
         </div>
+
+        <!-- Add Auto Layout section -->
+        <div class="import-export-section">
+            <h3>Layout Tools</h3>
+            <button id="autoLayoutButton" class="import-export-btn" style="width: 100%;">Auto Layout Nodes</button>
+        </div>
     </div>
     
     <div class="main-content" id="mainContent">
         <!-- Nodes will be added here dynamically -->
     </div>
+    <button class="auto-layout-button" id="autoLayoutButton">Auto Layout</button>
     <button class="save-button" id="saveButton">Save Nodes</button>
     <button class="add-node-button" id="addNodeButton">Add Node</button>
     <button class="back-button" id="backButton">Back to Parent</button>
@@ -2419,6 +2457,117 @@
                 alert('Error importing nodes: ' + error.message);
             }
         });
+
+        // Add auto-layout functionality
+        const autoLayoutButton = document.getElementById('autoLayoutButton');
+        let isLayouting = false;
+
+        // Layout parameters
+        const LAYOUT = {
+            rowHeight: 120, // Vertical space between rows
+            nodeSpacing: 180, // Horizontal space between nodes
+            leftMargin: 50, // Left margin for the first node
+            topMargin: 50, // Top margin for the first row
+            nodeWidth: 150, // Width of a node
+            nodeHeight: 60, // Height of a node
+            animationDuration: 500 // Duration of movement animation in ms
+        };
+
+        // Function to apply tier-based layout
+        async function applyTierLayout() {
+            if (isLayouting) return;
+            isLayouting = true;
+            autoLayoutButton.disabled = true;
+            autoLayoutButton.textContent = 'Layouting...';
+
+            const nodes = Array.from(document.querySelectorAll('.node'));
+            
+            // Group nodes by tier
+            const nodesByTier = {};
+            nodes.forEach(node => {
+                try {
+                    const nodeData = JSON.parse(node.dataset.nodeInfo);
+                    const tier = nodeData.class || 'tier-1';
+                    if (!nodesByTier[tier]) {
+                        nodesByTier[tier] = [];
+                    }
+                    nodesByTier[tier].push(node);
+                } catch (error) {
+                    console.error('Error parsing node data:', error);
+                }
+            });
+
+            // Sort tiers
+            const sortedTiers = Object.keys(nodesByTier).sort((a, b) => {
+                const tierA = parseInt(a.split('-')[1]) || 0;
+                const tierB = parseInt(b.split('-')[1]) || 0;
+                return tierA - tierB;
+            });
+
+            // Calculate positions for each node
+            const positions = new Map();
+            let maxRowWidth = 0;
+
+            sortedTiers.forEach((tier, tierIndex) => {
+                const tierNodes = nodesByTier[tier];
+                const rowY = LAYOUT.topMargin + (tierIndex * LAYOUT.rowHeight);
+                
+                // Sort nodes within tier by their connections
+                tierNodes.sort((a, b) => {
+                    try {
+                        const aData = JSON.parse(a.dataset.nodeInfo);
+                        const bData = JSON.parse(b.dataset.nodeInfo);
+                        // Prioritize nodes with more connections
+                        return (bData.unlocks.length + bData.prereqs.length) - 
+                               (aData.unlocks.length + aData.prereqs.length);
+                    } catch (error) {
+                        return 0;
+                    }
+                });
+
+                // Calculate positions for nodes in this tier
+                tierNodes.forEach((node, nodeIndex) => {
+                    const x = LAYOUT.leftMargin + (nodeIndex * LAYOUT.nodeSpacing);
+                    positions.set(node, { x, y: rowY });
+                    maxRowWidth = Math.max(maxRowWidth, x + LAYOUT.nodeWidth);
+                });
+            });
+
+            // Animate nodes to their new positions
+            const animationPromises = nodes.map(node => {
+                return new Promise(resolve => {
+                    const pos = positions.get(node);
+                    if (!pos) return resolve();
+
+                    // Add transition class
+                    node.classList.add('layouting');
+                    
+                    // Set new position
+                    node.style.left = `${pos.x}px`;
+                    node.style.top = `${pos.y}px`;
+
+                    // Remove transition class after animation
+                    setTimeout(() => {
+                        node.classList.remove('layouting');
+                        resolve();
+                    }, LAYOUT.animationDuration);
+                });
+            });
+
+            // Wait for all animations to complete
+            await Promise.all(animationPromises);
+
+            // Clean up
+            autoLayoutButton.disabled = false;
+            autoLayoutButton.textContent = 'Auto Layout Nodes';
+            isLayouting = false;
+
+            // Redraw connections
+            drawLines();
+        }
+
+        // Add event listener for auto-layout button
+        autoLayoutButton.addEventListener('click', applyTierLayout);
     </script>
 </body>
 </html>
