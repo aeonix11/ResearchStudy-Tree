@@ -1744,6 +1744,63 @@
             }
         }
         
+        // Function to update parent node times
+        function updateParentNodeTimes(nodeId, hours, minutes) {
+            // Get all nodes in the current view
+            const allNodes = document.querySelectorAll('.node');
+            
+            // Find parent nodes
+            allNodes.forEach(node => {
+                try {
+                    const nodeData = JSON.parse(node.dataset.nodeInfo);
+                    if (nodeData.isParent && nodeData.childNodeSet) {
+                        // Get the current time spent
+                        let currentTimeSpent = nodeData.time.spent || "0 hrs";
+                        let totalMinutes = 0;
+                        
+                        // Extract current hours and minutes
+                        const hoursMatch = currentTimeSpent.match(/(\d+)\s*hrs?/);
+                        const minutesMatch = currentTimeSpent.match(/(\d+)\s*min/);
+                        
+                        if (hoursMatch) {
+                            totalMinutes += parseInt(hoursMatch[1]) * 60;
+                        }
+                        if (minutesMatch) {
+                            totalMinutes += parseInt(minutesMatch[1]);
+                        }
+                        
+                        // Add the new time
+                        totalMinutes += (hours * 60) + minutes;
+                        
+                        // Convert back to hours and minutes
+                        const newHours = Math.floor(totalMinutes / 60);
+                        const newMinutes = totalMinutes % 60;
+                        
+                        // Format the new time string
+                        let newTimeSpent = "";
+                        if (newHours > 0) {
+                            newTimeSpent += `${newHours} hr${newHours !== 1 ? 's' : ''}`;
+                        }
+                        if (newMinutes > 0) {
+                            if (newTimeSpent) newTimeSpent += " ";
+                            newTimeSpent += `${newMinutes} min`;
+                        }
+                        
+                        // Update the parent node data
+                        nodeData.time.spent = newTimeSpent;
+                        node.dataset.nodeInfo = JSON.stringify(nodeData);
+                        
+                        // Update the display if the parent node is selected
+                        if (node.classList.contains('selected')) {
+                            updateNodeInfo(node);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating parent node time:', error);
+                }
+            });
+        }
+
         // Function to stop the timer
         function stopTimer(button, node, nodeId) {
             try {
@@ -1789,6 +1846,9 @@
                     if (minutes > 0) {
                         updateNodeTime(node, minutes, false); // Add minutes
                     }
+                    
+                    // Update parent node times
+                    updateParentNodeTimes(nodeId, hours, minutes);
                 }
                 
                 // Reset the timer display
@@ -1821,6 +1881,33 @@
             }
         }
         
+        // Function to find parent nodes for a given node
+        function findParentNodes(nodeId) {
+            const parentNodes = [];
+            const allNodes = document.querySelectorAll('.node');
+            
+            allNodes.forEach(node => {
+                try {
+                    const nodeData = JSON.parse(node.dataset.nodeInfo);
+                    if (nodeData.isParent && nodeData.childNodeSet) {
+                        // Check if this node is in the child node set
+                        const childNodeSet = localStorage.getItem('nodeSets');
+                        if (childNodeSet) {
+                            const nodeSets = JSON.parse(childNodeSet);
+                            const childNodes = nodeSets[nodeData.childNodeSet]?.nodes || [];
+                            if (childNodes.some(child => child.id === nodeId)) {
+                                parentNodes.push(node);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing node data:', error);
+                }
+            });
+            
+            return parentNodes;
+        }
+
         // Function to update the time spent on a node
         function updateNodeTime(nodeElement, amount, isHours) {
             try {
@@ -1869,6 +1956,71 @@
                 
                 // Update the node info display
                 updateNodeInfo(nodeElement);
+
+                // Check if we're in a child node set
+                const nodeSetTitle = document.getElementById('nodeSetTitle');
+                if (nodeSetTitle && nodeSetTitle.style.display === 'block') {
+                    // We're in a child node set, update the parent node
+                    const parentNodeSet = localStorage.getItem('nodeSets');
+                    if (parentNodeSet) {
+                        const nodeSets = JSON.parse(parentNodeSet);
+                        const currentSetId = nodeSetTitle.textContent.toLowerCase().replace(/\s+/g, '-');
+                        const currentSet = nodeSets[currentSetId];
+                        
+                        if (currentSet) {
+                            // Find the parent node in the main view
+                            const mainNodes = localStorage.getItem('savedNodes');
+                            if (mainNodes) {
+                                const nodes = JSON.parse(mainNodes);
+                                const parentNode = nodes.find(n => n.isParent && n.childNodeSet === currentSetId);
+                                
+                                if (parentNode) {
+                                    // Update parent node's time
+                                    let parentTimeSpent = parentNode.time.spent || "0 hrs";
+                                    let parentTotalMinutes = 0;
+                                    
+                                    // Extract parent's current time
+                                    const parentHoursMatch = parentTimeSpent.match(/(\d+)\s*hrs?/);
+                                    const parentMinutesMatch = parentTimeSpent.match(/(\d+)\s*min/);
+                                    
+                                    if (parentHoursMatch) {
+                                        parentTotalMinutes += parseInt(parentHoursMatch[1]) * 60;
+                                    }
+                                    if (parentMinutesMatch) {
+                                        parentTotalMinutes += parseInt(parentMinutesMatch[1]);
+                                    }
+                                    
+                                    // Add the child node's time
+                                    if (isHours) {
+                                        parentTotalMinutes += amount * 60;
+                                    } else {
+                                        parentTotalMinutes += amount;
+                                    }
+                                    
+                                    // Convert back to hours and minutes
+                                    const parentNewHours = Math.floor(parentTotalMinutes / 60);
+                                    const parentNewMinutes = parentTotalMinutes % 60;
+                                    
+                                    // Format parent's new time string
+                                    let parentNewTimeSpent = "";
+                                    if (parentNewHours > 0) {
+                                        parentNewTimeSpent += `${parentNewHours} hr${parentNewHours !== 1 ? 's' : ''}`;
+                                    }
+                                    if (parentNewMinutes > 0) {
+                                        if (parentNewTimeSpent) parentNewTimeSpent += " ";
+                                        parentNewTimeSpent += `${parentNewMinutes} min`;
+                                    }
+                                    
+                                    // Update parent node's time
+                                    parentNode.time.spent = parentNewTimeSpent;
+                                    
+                                    // Save the updated nodes
+                                    localStorage.setItem('savedNodes', JSON.stringify(nodes));
+                                }
+                            }
+                        }
+                    }
+                }
                 
                 // Save the changes
                 saveNodes();
